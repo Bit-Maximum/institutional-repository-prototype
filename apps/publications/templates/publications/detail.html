@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ publication.title }}{% endblock %}
+
+{% block content %}
+  <h1>{{ publication.title }}</h1>
+  <p><strong>Тип:</strong> {{ publication.publication_type.name }}</p>
+  <p><strong>Год:</strong> {{ publication.publication_year|default:"—" }}</p>
+  <p><strong>Язык:</strong> {{ publication.language }}</p>
+  <p><strong>Статус индексации:</strong> {{ publication.get_vector_state_display }}</p>
+  <p>{{ publication.abstract }}</p>
+  {% if publication.file %}
+    <p><a href="{{ publication.file.url }}">Скачать файл</a></p>
+  {% endif %}
+{% endblock %}

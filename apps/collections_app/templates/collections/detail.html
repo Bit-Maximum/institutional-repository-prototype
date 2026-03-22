@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ collection.name }}{% endblock %}
+
+{% block content %}
+  <h1>{{ collection.name }}</h1>
+  <p>{{ collection.description }}</p>
+  <ul>
+    {% for publication in collection.publications.all %}
+      <li><a href="{% url 'publications:detail' publication.slug %}">{{ publication.title }}</a></li>
+    {% empty %}
+      <li>В коллекции пока нет изданий.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

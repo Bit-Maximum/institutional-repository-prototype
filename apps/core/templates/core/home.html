@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+  <h1>Институциональный репозиторий</h1>
+  <p>С возможностью семантического поиска.</p>
+
+  <section>
+    <h2>Последние издания</h2>
+    <ul>
+      {% for publication in latest_publications %}
+        <li><a href="{% url 'publications:detail' publication.slug %}">{{ publication.title }}</a></li>
+      {% empty %}
+        <li>Пока нет опубликованных изданий.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Последние объявления</h2>
+    <ul>
+      {% for announcement in latest_announcements %}
+        <li><a href="{{ announcement.url }}">{{ announcement.title }}</a></li>
+      {% empty %}
+        <li>Пока нет опубликованных объявлений.</li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endblock %}

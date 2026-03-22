@@ -1,0 +1,35 @@
+[project]
+name = "institutional-repository-prototype"
+version = "0.1.0"
+description = "Prototype of an institutional repository with semantic search, based on the dissertation architecture."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "Django>=5.2,<5.3",
+  "wagtail>=7.0,<7.1",
+  "psycopg[binary]>=3.2,<3.3",
+  "Pillow>=11.0,<12.0",
+  "pypdf>=5.0,<6.0",
+  "python-docx>=1.1,<2.0",
+  "pymilvus[model]>=2.6,<2.7",
+  "scipy>=1.14,<2.0",
+  "whitenoise>=6.9,<7.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3,<9.0",
+  "pytest-django>=4.11,<5.0",
+  "ruff>=0.11,<0.12",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.local"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
