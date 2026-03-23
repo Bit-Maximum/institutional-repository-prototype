@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import re
 import tempfile
@@ -10,6 +12,7 @@ from typing import Any
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
 from django.core.files.uploadedfile import UploadedFile
+from django.utils import timezone
 from docx import Document
 from pypdf import PdfReader
 
@@ -448,6 +451,64 @@ def build_search_document(publication: Publication, extracted_text: str = "") ->
     return "\n\n".join(part for part in parts if part).strip()
 
 
+def build_chunk_vector_document(publication: Publication, chunk_text: str, source_kind: str = "fulltext") -> str:
+    header = _build_chunk_context_header(publication)
+    prefix = "Фрагмент документа" if source_kind == "fulltext" else "Метаданные документа"
+    return normalize_text(f"{header}\n\n{prefix}: {chunk_text}" if header else chunk_text)
+
+def compute_publication_index_signature(publication: Publication) -> str:
+    file_info: dict[str, str | int | None] = {
+        "name": getattr(publication.file, "name", "") or "",
+        "exists": False,
+        "size": None,
+        "mtime_ns": None,
+    }
+    try:
+        file_name = getattr(publication.file, "name", "") or ""
+        storage = getattr(publication.file, "storage", None)
+        if file_name and storage and storage.exists(file_name):
+            file_info["exists"] = True
+            try:
+                file_info["size"] = int(storage.size(file_name))
+            except Exception:
+                file_info["size"] = None
+            try:
+                file_path = publication.file.path
+                stat = Path(file_path).stat()
+                file_info["mtime_ns"] = int(stat.st_mtime_ns)
+            except Exception:
+                file_info["mtime_ns"] = None
+    except Exception:
+        pass
+
+    payload = {
+        "schema_version": getattr(settings, "VECTOR_INDEX_SCHEMA_VERSION", "v1"),
+        "model": getattr(settings, "MILVUS_BGE_M3_MODEL", "BAAI/bge-m3"),
+        "chunk_words": int(getattr(settings, "VECTOR_CHUNK_MAX_WORDS", 320)),
+        "chunk_overlap": int(getattr(settings, "VECTOR_CHUNK_OVERLAP_WORDS", 40)),
+        "chunk_chars": int(getattr(settings, "VECTOR_CHUNK_MAX_CHARS", 2200)),
+        "min_text_chars": int(getattr(settings, "INGESTION_MIN_TEXT_CHARS", 120)),
+        "min_text_words": int(getattr(settings, "INGESTION_MIN_TEXT_WORDS", 25)),
+        "min_chunk_quality": float(getattr(settings, "VECTOR_CHUNK_MIN_INDEX_QUALITY", 0.28)),
+        "title": publication.title,
+        "contents": publication.contents,
+        "grif_text": publication.grif_text,
+        "grant_text": publication.grant_text,
+        "publication_year": publication.publication_year,
+        "language": publication.language.name if publication.language else "",
+        "publication_type": publication.publication_type.name if publication.publication_type else "",
+        "publication_subtype": publication.publication_subtype.name if publication.publication_subtype else "",
+        "authors": [author.full_name for author in publication.authors.all()],
+        "keywords": [keyword.name for keyword in publication.keywords.all()],
+        "publishers": [publisher.name for publisher in publication.publishers.all()],
+        "places": [place.name for place in publication.publication_places.all()],
+        "supervisors": [supervisor.full_name for supervisor in publication.scientific_supervisors.all()],
+        "file": file_info,
+    }
+    serialized = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+
 def _build_chunk_context_header(publication: Publication) -> str:
     metadata_parts = [publication.title]
     authors = ", ".join(author.full_name for author in publication.authors.all())
@@ -503,12 +564,9 @@ def build_publication_chunks(
             for index, chunk_text in enumerate(combined_chunks)
             if chunk_text
         ]
-
-    header = _build_chunk_context_header(publication)
     payloads: list[ChunkPayload] = []
     for raw_chunk in raw_chunks:
-        prefix = "Фрагмент документа" if raw_chunk.source_kind == "fulltext" else "Метаданные документа"
-        contextual_text = normalize_text(f"{header}\n\n{prefix}: {raw_chunk.text}" if header else raw_chunk.text)
+        contextual_text = build_chunk_vector_document(publication, raw_chunk.text, raw_chunk.source_kind)
         payloads.append(
             ChunkPayload(
                 chunk_index=raw_chunk.chunk_index,
@@ -546,7 +604,14 @@ def sync_publication_chunks(publication: Publication, chunk_payloads: list[Chunk
     return list(created_objects)
 
 
-def ingest_publication(publication: Publication, index_in_vector_store: bool = True) -> Publication:
+def get_existing_publication_chunks(publication: Publication) -> list[PublicationChunk]:
+    chunks = list(publication.chunks.all().order_by("chunk_index"))
+    for chunk in chunks:
+        chunk.publication = publication
+    return chunks
+
+
+def rebuild_publication_chunks(publication: Publication) -> tuple[FileExtractionAnalysis, list[PublicationChunk]]:
     analysis = analyze_publication_for_ingestion(publication)
     update_fields = ["file_extension", "text_extraction_status", "text_extraction_notes", "has_extracted_text"]
     publication.file_extension = analysis.file_extension
@@ -557,10 +622,21 @@ def ingest_publication(publication: Publication, index_in_vector_store: bool = T
 
     chunk_payloads = build_publication_chunks(publication, analysis=analysis, extracted_text=analysis.extracted_text)
     chunk_objects = sync_publication_chunks(publication, chunk_payloads)
+    for chunk in chunk_objects:
+        chunk.publication = publication
+    return analysis, chunk_objects
+
+
+def ingest_publication(publication: Publication, index_in_vector_store: bool = True) -> Publication:
+    _, chunk_objects = rebuild_publication_chunks(publication)
+    signature = compute_publication_index_signature(publication)
 
     if index_in_vector_store and not publication.is_draft:
         service = VectorStoreService()
         service.replace_publication_chunks(publication=publication, chunks=chunk_objects)
+        publication.vector_indexed_at = timezone.now()
+        publication.vector_index_signature = signature
+        publication.save(update_fields=["vector_indexed_at", "vector_index_signature"])
     return publication
 
 

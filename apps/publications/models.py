@@ -257,6 +257,8 @@ class Publication(models.Model):
     )
     text_extraction_notes = models.TextField(blank=True)
     has_extracted_text = models.BooleanField(default=False)
+    vector_index_signature = models.CharField(max_length=64, blank=True, default="")
+    vector_indexed_at = models.DateTimeField(null=True, blank=True)
     grant_text = models.TextField(blank=True)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -367,6 +369,7 @@ class Publication(models.Model):
             models.Index(fields=["periodicity"], name="idx_pubs_period_id"),
             models.Index(fields=["language"], name="idx_publications_language_id"),
             models.Index(fields=["text_extraction_status"], name="idx_pubs_extract_status"),
+            models.Index(fields=["vector_index_signature"], name="idx_pubs_vector_sig"),
         ]
 
     def __str__(self) -> str:

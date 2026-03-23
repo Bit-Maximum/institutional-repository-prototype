@@ -182,3 +182,57 @@ SEARCH_HYBRID_RELATIVE_CUTOFF=0.4
 ```
 
 Значение трактуется как доля от score лучшего результата в выдаче. Например, `0.5` означает: показывать только материалы с score не ниже 50% от лучшего совпадения.
+
+
+## Benchmark-режим поиска
+
+В проект добавлена management-команда для повторяемого замера качества и скорости поиска по контрольному набору запросов. Она умеет прогревать Milvus/модели, запускать кейсы во всех режимах поиска и сохранять JSON/CSV-отчёты.
+
+Базовый запуск:
+
+```bash
+uv run python manage.py benchmark_search
+```
+
+По умолчанию команда читает спецификацию `benchmarks/search_benchmark.sample.json`. В ней можно задавать:
+- `query` — текст запроса;
+- `modes` — список режимов (`keyword`, `semantic`, `hybrid`);
+- `filters` — дополнительные фильтры;
+- `expected_publication_ids` или `expected_title_contains` — ожидаемые релевантные издания для расчёта Hits@K и MRR.
+
+Пример с явной спецификацией и сохранением отчётов в отдельный каталог:
+
+```bash
+uv run python manage.py benchmark_search --spec benchmarks/search_benchmark.sample.json --runs 5 --top-k 5 --output-dir var/search_benchmarks
+```
+
+В JSON/CSV-отчётах сохраняются: latency (mean / median / p95), среднее число результатов, средний top score и, если для кейсов заданы ожидаемые документы, качества поиска по MRR, Hits@1/3/5, Precision@K и Recall@K.
+
+
+## Faster bulk indexing
+
+The `reindex_publications` command now supports a faster bulk pipeline:
+
+```bash
+uv run python manage.py reindex_publications
+uv run python manage.py reindex_publications --recreate-collection
+uv run python manage.py reindex_publications --force
+```
+
+What changed:
+- chunk/vector state is tracked by `vector_index_signature` and `vector_indexed_at` on publications;
+- unchanged publications are skipped automatically on repeated runs;
+- when the Milvus collection is recreated, existing stored chunks are reused without parsing files again;
+- chunk embeddings are generated in batches instead of one publication at a time;
+- vector upserts/deletes are also batched.
+
+Useful settings:
+- `MILVUS_BGE_M3_BATCH_SIZE`
+- `MILVUS_BGE_M3_DEVICE`
+- `MILVUS_BGE_M3_USE_FP16`
+- `MILVUS_UPSERT_BATCH_SIZE`
+- `VECTOR_INDEX_MAX_EMBED_TEXTS`
+- `VECTOR_REINDEX_PUBLICATION_BATCH_SIZE`
+- `VECTOR_INDEX_SCHEMA_VERSION`
+
+If you later change chunking/index-time logic in a way that should invalidate previous vectors, bump `VECTOR_INDEX_SCHEMA_VERSION` in `.env` and run `reindex_publications` again.
