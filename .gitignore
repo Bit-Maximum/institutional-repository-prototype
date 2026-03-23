@@ -11,3 +11,4 @@ media/
 staticfiles/
 var/
 docker-data/
+.idea
