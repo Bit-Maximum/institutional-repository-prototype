@@ -1,39 +1,49 @@
-from django.contrib.auth.models import User
+from __future__ import annotations
+
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
-from apps.core.models import TimeStampedModel
 from apps.publications.models import Publication
 
 
-class Collection(TimeStampedModel):
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
-    description = models.TextField(blank=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="collections")
-    is_public = models.BooleanField(default=True)
-    publications = models.ManyToManyField(Publication, through="CollectionItem", related_name="collections")
+class Collection(models.Model):
+    id = models.BigAutoField(primary_key=True, db_column="collection_id")
+    name = models.TextField()
+    author_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="collections",
+        db_column="author_user_id",
+    )
+    publications = models.ManyToManyField(
+        Publication,
+        through="CollectionPublication",
+        related_name="collections",
+        blank=True,
+    )
 
     class Meta:
-        verbose_name = "Коллекция"
-        verbose_name_plural = "Коллекции"
+        db_table = "publication_collections"
+        verbose_name = "Коллекция изданий"
+        verbose_name_plural = "Коллекции изданий"
         ordering = ["name"]
+        indexes = [models.Index(fields=["author_user"], name="idx_pub_cols_author_id")]
 
     def __str__(self) -> str:
         return self.name
 
     def get_absolute_url(self):
-        return reverse("collections:detail", kwargs={"slug": self.slug})
+        return reverse("collections:detail", kwargs={"pk": self.pk})
 
 
-class CollectionItem(TimeStampedModel):
+class CollectionPublication(models.Model):
+    pk = models.CompositePrimaryKey("collection", "publication")
     collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     publication = models.ForeignKey(Publication, on_delete=models.CASCADE)
-    added_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    position = models.PositiveIntegerField(default=0)
 
     class Meta:
-        verbose_name = "Элемент коллекции"
-        verbose_name_plural = "Элементы коллекции"
-        unique_together = ("collection", "publication")
-        ordering = ["position", "created_at"]
+        db_table = "collection_publications"
+        verbose_name = "Связь коллекции и издания"
+        verbose_name_plural = "Связи коллекций и изданий"
+        indexes = [models.Index(fields=["publication"], name="idx_col_pubs_pub_id")]

@@ -9,6 +9,6 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["latest_publications"] = Publication.objects.filter(is_public=True).order_by("-created_at")[:5]
+        context["latest_publications"] = Publication.objects.filter(is_draft=False).order_by("-uploaded_at")[:5]
         context["latest_announcements"] = AnnouncementPage.objects.live().public().order_by("-first_published_at")[:5]
         return context

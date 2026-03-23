@@ -1,15 +1,15 @@
 from django.contrib import admin
 
-from .models import Collection, CollectionItem
+from .models import Collection, CollectionPublication
 
 
-class CollectionItemInline(admin.TabularInline):
-    model = CollectionItem
+class CollectionPublicationInline(admin.TabularInline):
+    model = CollectionPublication
     extra = 1
 
 
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
-    list_display = ("name", "owner", "is_public")
-    search_fields = ("name", "description")
-    inlines = [CollectionItemInline]
+    list_display = ("name", "author_user")
+    search_fields = ("name", "author_user__email", "author_user__full_name")
+    inlines = [CollectionPublicationInline]

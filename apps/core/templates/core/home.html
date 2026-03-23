@@ -4,13 +4,13 @@
 
 {% block content %}
   <h1>Институциональный репозиторий</h1>
-  <p>С возможностью семантического поиска.</p>
+  <p>Стартовый прототип диссертационного проекта.</p>
 
   <section>
     <h2>Последние издания</h2>
     <ul>
       {% for publication in latest_publications %}
-        <li><a href="{% url 'publications:detail' publication.slug %}">{{ publication.title }}</a></li>
+        <li><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></li>
       {% empty %}
         <li>Пока нет опубликованных изданий.</li>
       {% endfor %}

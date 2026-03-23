@@ -5,15 +5,17 @@
 {% block content %}
   <h1>Каталог изданий</h1>
   <form method="get">
-    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Поиск по заголовку и аннотации">
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Поиск по заголовку, содержанию и метаданным">
     <button type="submit">Найти</button>
   </form>
 
   <ul>
     {% for publication in publications %}
       <li>
-        <a href="{% url 'publications:detail' publication.slug %}">{{ publication.title }}</a>
-        — {{ publication.publication_type.name }}
+        <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
+        {% if publication.publication_type %}
+          — {{ publication.publication_type.name }}
+        {% endif %}
       </li>
     {% empty %}
       <li>Издания не найдены.</li>

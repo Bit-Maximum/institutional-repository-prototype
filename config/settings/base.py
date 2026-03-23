@@ -2,9 +2,30 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+from django.core.exceptions import ImproperlyConfigured
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+
+
+def load_env_file(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if value and ((value[0] == value[-1]) and value[0] in {'"', "'"}):
+            value = value[1:-1]
+        os.environ.setdefault(key, value)
+
+
+load_env_file(BASE_DIR / ".env")
 
 
 def env(name: str, default: str | None = None) -> str | None:
@@ -79,28 +100,37 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-database_url = env("DATABASE_URL")
-if database_url and database_url.startswith("postgresql"):
-    from urllib.parse import urlparse
+database_url = env("DATABASE_URL", "postgresql://repository:repository@localhost:5432/repository")
+parsed = urlparse(database_url)
+scheme = (parsed.scheme or "").lower()
 
-    parsed = urlparse(database_url)
+if scheme in {"postgresql", "postgres"}:
+    db_name = parsed.path.lstrip("/")
+    if not db_name:
+        raise ImproperlyConfigured("DATABASE_URL must include a database name.")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": parsed.path.lstrip("/"),
-            "USER": parsed.username,
-            "PASSWORD": parsed.password,
-            "HOST": parsed.hostname,
+            "NAME": unquote(db_name),
+            "USER": unquote(parsed.username or "repository"),
+            "PASSWORD": unquote(parsed.password or "repository"),
+            "HOST": parsed.hostname or "localhost",
             "PORT": parsed.port or 5432,
+            "CONN_MAX_AGE": 60,
         }
     }
-else:
+elif scheme == "sqlite":
+    sqlite_path = parsed.path or "/db.sqlite3"
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "NAME": str(BASE_DIR / sqlite_path.lstrip("/")),
         }
     }
+else:
+    raise ImproperlyConfigured(
+        "Unsupported DATABASE_URL scheme. Use postgresql://... for PostgreSQL or sqlite:///... for SQLite."
+    )
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -110,7 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "ru-ru"
-TIME_ZONE = "Asia/Vladivostok"
+TIME_ZONE = "Europe/Moscow"
 USE_I18N = True
 USE_TZ = True
 
@@ -125,10 +155,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SITE_ID = 1
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
+AUTH_USER_MODEL = "users.User"
 
 WAGTAIL_SITE_NAME = "Institutional Repository"
+WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", "http://localhost:8000")
 
-MILVUS_URI = env("MILVUS_URI", str(BASE_DIR / "var" / "milvus" / "milvus.db"))
+MILVUS_URI = env("MILVUS_URI", "http://localhost:19530")
 MILVUS_COLLECTION = env("MILVUS_COLLECTION", "publications_sparse")
 MILVUS_SPLADE_MODEL = env("MILVUS_SPLADE_MODEL", "naver/splade-cocondenser-ensembledistil")
 MILVUS_DROP_RATIO_BUILD = float(env("MILVUS_DROP_RATIO_BUILD", "0.2"))

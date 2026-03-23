@@ -7,5 +7,5 @@ app_name = "collections"
 urlpatterns = [
     path("", CollectionListView.as_view(), name="list"),
     path("create/", CollectionCreateView.as_view(), name="create"),
-    path("<slug:slug>/", CollectionDetailView.as_view(), name="detail"),
+    path("<int:pk>/", CollectionDetailView.as_view(), name="detail"),
 ]

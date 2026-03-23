@@ -11,7 +11,7 @@
 
   <ul>
     {% for publication in results %}
-      <li><a href="{% url 'publications:detail' publication.slug %}">{{ publication.title }}</a></li>
+      <li><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></li>
     {% empty %}
       <li>Введите запрос, чтобы получить результаты.</li>
     {% endfor %}

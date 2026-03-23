@@ -6,7 +6,7 @@
   <h1>Коллекции</h1>
   <ul>
     {% for collection in collections %}
-      <li><a href="{% url 'collections:detail' collection.slug %}">{{ collection.name }}</a></li>
+      <li><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></li>
     {% empty %}
       <li>Коллекции пока не созданы.</li>
     {% endfor %}

@@ -1,4 +1,8 @@
+from django.contrib import messages
 from django.views.generic import FormView
+
+from apps.search.models import SearchQuery
+from apps.vector_store.exceptions import VectorStoreDependencyError
 
 from .forms import SearchForm
 from .services import HybridSearchService, KeywordSearchService, SemanticSearchService
@@ -24,10 +28,19 @@ class SearchView(FormView):
         if form.is_valid():
             query = form.cleaned_data["q"]
             mode = form.cleaned_data["mode"]
-            if mode == "keyword":
-                context["results"] = KeywordSearchService().search(query)
-            elif mode == "semantic":
-                context["results"] = SemanticSearchService().search(query)
-            else:
-                context["results"] = HybridSearchService().search(query)
+            if self.request.user.is_authenticated:
+                SearchQuery.objects.create(
+                    query_text=query,
+                    filters=f"mode={mode}",
+                    user=self.request.user,
+                )
+            try:
+                if mode == "keyword":
+                    context["results"] = KeywordSearchService().search(query)
+                elif mode == "semantic":
+                    context["results"] = SemanticSearchService().search(query)
+                else:
+                    context["results"] = HybridSearchService().search(query)
+            except VectorStoreDependencyError as exc:
+                messages.error(self.request, str(exc))
         return context

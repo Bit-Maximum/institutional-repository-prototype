@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from django.core.exceptions import SuspiciousFileOperation
 from docx import Document
 from pypdf import PdfReader
 
@@ -32,27 +33,49 @@ def extract_text_from_docx(path: Path) -> str:
     return "\n".join(paragraph.text for paragraph in document.paragraphs if paragraph.text).strip()
 
 
-def build_search_document(publication: Publication) -> str:
-    keyword_text = ", ".join(publication.keywords or [])
+def extract_text_from_publication_file(publication: Publication) -> str:
+    if not publication.file:
+        return ""
+    try:
+        file_name = publication.file.name
+        if not file_name or not publication.file.storage.exists(file_name):
+            return ""
+        return extract_text_from_file(publication.file.path)
+    except (FileNotFoundError, OSError, SuspiciousFileOperation, ValueError):
+        return ""
+
+
+def build_search_document(publication: Publication, extracted_text: str = "") -> str:
+    keyword_text = ", ".join(keyword.name for keyword in publication.keywords.all())
     authors = ", ".join(author.full_name for author in publication.authors.all())
+    supervisors = ", ".join(supervisor.full_name for supervisor in publication.scientific_supervisors.all())
     parts = [
         publication.title,
         authors,
-        publication.abstract,
+        supervisors,
+        publication.contents,
+        publication.grif_text,
+        publication.grant_text,
         keyword_text,
-        publication.extracted_text,
+        extracted_text,
     ]
     return "\n\n".join(part for part in parts if part).strip()
 
 
 def ingest_publication(publication: Publication, index_in_vector_store: bool = True) -> Publication:
-    if publication.file:
-        publication.extracted_text = extract_text_from_file(publication.file.path)
-    publication.search_document = build_search_document(publication)
-    publication.vector_state = Publication.VectorState.PENDING
-    publication.save(update_fields=["extracted_text", "search_document", "vector_state", "updated_at"])
+    extracted_text = extract_text_from_publication_file(publication)
+    if extracted_text:
+            merged_contents = publication.contents.strip()
+            if merged_contents and extracted_text not in merged_contents:
+                publication.contents = f"{merged_contents}\n\n{extracted_text}".strip()
+            elif not merged_contents:
+                publication.contents = extracted_text
+            publication.save(update_fields=["contents"])
 
-    if index_in_vector_store and publication.search_document:
+    if index_in_vector_store and not publication.is_draft:
         service = VectorStoreService()
-        service.upsert_publication(publication)
+        service.upsert_publication(
+            publication,
+            search_document=build_search_document(publication, extracted_text=extracted_text),
+        )
     return publication

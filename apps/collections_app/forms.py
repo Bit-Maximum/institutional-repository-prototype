@@ -6,4 +6,7 @@ from .models import Collection
 class CollectionForm(forms.ModelForm):
     class Meta:
         model = Collection
-        fields = ["name", "slug", "description", "is_public"]
+        fields = ["name", "publications"]
+        widgets = {
+            "publications": forms.SelectMultiple(attrs={"size": 12}),
+        }

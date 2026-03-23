@@ -11,15 +11,13 @@ class CollectionListView(ListView):
     context_object_name = "collections"
 
     def get_queryset(self):
-        return Collection.objects.filter(is_public=True).select_related("owner")
+        return Collection.objects.select_related("author_user").prefetch_related("publications")
 
 
 class CollectionDetailView(DetailView):
     model = Collection
     template_name = "collections/detail.html"
     context_object_name = "collection"
-    slug_field = "slug"
-    slug_url_kwarg = "slug"
 
 
 class CollectionCreateView(LoginRequiredMixin, CreateView):
@@ -28,5 +26,5 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
     template_name = "collections/create.html"
 
     def form_valid(self, form):
-        form.instance.owner = self.request.user
+        form.instance.author_user = self.request.user
         return super().form_valid(form)
