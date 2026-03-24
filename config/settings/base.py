@@ -32,8 +32,15 @@ def env(name: str, default: str | None = None) -> str | None:
     return os.getenv(name, default)
 
 
+def env_bool(name: str, default: bool = False) -> bool:
+    raw_value = env(name)
+    if raw_value is None:
+        return default
+    return raw_value.lower() in {"1", "true", "yes", "on"}
+
+
 SECRET_KEY = env("SECRET_KEY", "django-insecure-change-me")
-DEBUG = env("DEBUG", "False").lower() in {"1", "true", "yes", "on"}
+DEBUG = env_bool("DEBUG", False)
 ALLOWED_HOSTS = [host.strip() for host in env("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
 
 INSTALLED_APPS = [
@@ -160,8 +167,47 @@ AUTH_USER_MODEL = "users.User"
 WAGTAIL_SITE_NAME = "Institutional Repository"
 WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", "http://localhost:8000")
 
+SEARCH_PROFILE = env("SEARCH_PROFILE", "fast").strip().lower()
+_profile_defaults = {
+    "fast": {
+        "candidate_pool": 80,
+        "head_limit": 20,
+        "rerank_enabled": False,
+        "rerank_top_k": 12,
+    },
+    "quality": {
+        "candidate_pool": 220,
+        "head_limit": 30,
+        "rerank_enabled": True,
+        "rerank_top_k": 24,
+    },
+}
+search_profile_defaults = _profile_defaults.get(SEARCH_PROFILE, _profile_defaults["fast"])
+
 MILVUS_URI = env("MILVUS_URI", "http://localhost:19530")
-MILVUS_COLLECTION = env("MILVUS_COLLECTION", "publications_sparse")
-MILVUS_SPLADE_MODEL = env("MILVUS_SPLADE_MODEL", "naver/splade-cocondenser-ensembledistil")
+MILVUS_COLLECTION = env("MILVUS_COLLECTION", "publications_chunks_hybrid_v1")
+MILVUS_BGE_M3_MODEL = env("MILVUS_BGE_M3_MODEL", "BAAI/bge-m3")
+MILVUS_DENSE_DIM = int(env("MILVUS_DENSE_DIM", "1024"))
 MILVUS_DROP_RATIO_BUILD = float(env("MILVUS_DROP_RATIO_BUILD", "0.2"))
-MILVUS_DROP_RATIO_SEARCH = float(env("MILVUS_DROP_RATIO_SEARCH", "0.1"))
+MILVUS_DROP_RATIO_SEARCH = float(env("MILVUS_DROP_RATIO_SEARCH", "0.15"))
+MILVUS_CHUNK_TEXT_MAX_LENGTH = int(env("MILVUS_CHUNK_TEXT_MAX_LENGTH", "8192"))
+MILVUS_CHUNK_CANDIDATE_POOL = int(env("MILVUS_CHUNK_CANDIDATE_POOL", str(search_profile_defaults["candidate_pool"])))
+MILVUS_RRF_K = int(env("MILVUS_RRF_K", "60"))
+MILVUS_HYBRID_DENSE_WEIGHT = float(env("MILVUS_HYBRID_DENSE_WEIGHT", "0.65"))
+MILVUS_HYBRID_SPARSE_WEIGHT = float(env("MILVUS_HYBRID_SPARSE_WEIGHT", "0.35"))
+
+VECTOR_CHUNK_MAX_WORDS = int(env("VECTOR_CHUNK_MAX_WORDS", "320"))
+VECTOR_CHUNK_OVERLAP_WORDS = int(env("VECTOR_CHUNK_OVERLAP_WORDS", "40"))
+VECTOR_CHUNK_MAX_CHARS = int(env("VECTOR_CHUNK_MAX_CHARS", "2200"))
+
+SEARCH_PAGE_SIZE = int(env("SEARCH_PAGE_SIZE", "10"))
+SEARCH_CANDIDATE_POOL_SIZE = int(env("SEARCH_CANDIDATE_POOL_SIZE", "200"))
+SEARCH_EXCERPT_CHARS = int(env("SEARCH_EXCERPT_CHARS", "260"))
+SEARCH_KEYWORD_MIN_SCORE = int(env("SEARCH_KEYWORD_MIN_SCORE", "20"))
+SEARCH_SEMANTIC_MIN_SCORE = float(env("SEARCH_SEMANTIC_MIN_SCORE", "0.2"))
+SEARCH_HYBRID_MIN_SCORE = float(env("SEARCH_HYBRID_MIN_SCORE", "0.2"))
+SEARCH_RERANK_ENABLED = env_bool("SEARCH_RERANK_ENABLED", bool(search_profile_defaults["rerank_enabled"]))
+SEARCH_RERANK_MODEL = env("SEARCH_RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
+SEARCH_RERANK_TOP_K = int(env("SEARCH_RERANK_TOP_K", str(search_profile_defaults["rerank_top_k"])))
+SEARCH_RERANK_MAX_TEXT_CHARS = int(env("SEARCH_RERANK_MAX_TEXT_CHARS", "1200"))
+HYBRID_SEMANTIC_HEAD_LIMIT = int(env("HYBRID_SEMANTIC_HEAD_LIMIT", str(search_profile_defaults["head_limit"])))

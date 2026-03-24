@@ -10,6 +10,7 @@ from .models import (
     GraphicEdition,
     Keyword,
     Publication,
+    PublicationChunk,
     PublicationLanguage,
     PublicationPeriodicity,
     PublicationPlace,
@@ -118,3 +119,11 @@ class PublicationAdmin(admin.ModelAdmin):
     @admin.display(description="Тип издания")
     def publication_type_display(self, obj):
         return obj.publication_type
+
+
+@admin.register(PublicationChunk)
+class PublicationChunkAdmin(admin.ModelAdmin):
+    list_display = ("publication", "chunk_index", "page_start", "page_end", "word_count")
+    list_filter = ("publication",)
+    search_fields = ("publication__title", "text")
+    readonly_fields = ("created_at",)

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.http import HttpResponseRedirect
@@ -14,7 +15,7 @@ class PublicationListView(ListView):
     model = Publication
     template_name = "publications/list.html"
     context_object_name = "publications"
-    paginate_by = 20
+    paginate_by = settings.SEARCH_PAGE_SIZE
 
     def get_queryset(self):
         queryset = (

@@ -391,6 +391,66 @@ class Publication(models.Model):
         return "\n\n".join(part for part in parts if part).strip()
 
 
+class PublicationChunk(models.Model):
+    id = models.BigAutoField(primary_key=True, db_column="publication_chunk_id")
+    publication = models.ForeignKey(
+        Publication,
+        on_delete=models.CASCADE,
+        related_name="chunks",
+        db_column="publication_id",
+    )
+    chunk_index = models.PositiveIntegerField()
+    text = models.TextField()
+    page_start = models.PositiveIntegerField(null=True, blank=True)
+    page_end = models.PositiveIntegerField(null=True, blank=True)
+    char_count = models.PositiveIntegerField(default=0)
+    word_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    class Meta:
+        db_table = "publication_chunks"
+        verbose_name = "Фрагмент издания"
+        verbose_name_plural = "Фрагменты изданий"
+        ordering = ["publication_id", "chunk_index"]
+        constraints = [
+            models.UniqueConstraint(fields=["publication", "chunk_index"], name="uq_pub_chunks_pub_idx"),
+            models.CheckConstraint(
+                condition=Q(page_start__isnull=True) | Q(page_end__isnull=True) | Q(page_start__lte=models.F("page_end")),
+                name="chk_pub_chunks_pages",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["publication"], name="idx_pub_chunks_pub_id"),
+        ]
+
+    def __str__(self) -> str:
+        label = f"#{self.chunk_index}"
+        if self.page_start:
+            if self.page_end and self.page_end != self.page_start:
+                label += f" стр. {self.page_start}-{self.page_end}"
+            else:
+                label += f" стр. {self.page_start}"
+        return f"{self.publication.title} / {label}"
+
+    @property
+    def vector_document(self) -> str:
+        metadata_parts = [self.publication.title]
+        authors = ", ".join(author.full_name for author in self.publication.authors.all())
+        if authors:
+            metadata_parts.append(f"Авторы: {authors}")
+        if self.publication.publication_type:
+            metadata_parts.append(f"Тип: {self.publication.publication_type.name}")
+        if self.publication.publication_subtype:
+            metadata_parts.append(f"Подтип: {self.publication.publication_subtype.name}")
+        keywords = ", ".join(keyword.name for keyword in self.publication.keywords.all())
+        if keywords:
+            metadata_parts.append(f"Ключевые слова: {keywords}")
+        if self.publication.publication_year:
+            metadata_parts.append(f"Год: {self.publication.publication_year}")
+        header = "\n".join(metadata_parts)
+        return f"{header}\n\nФрагмент документа: {self.text}".strip()
+
+
 class Recommendation(models.Model):
     pk = models.CompositePrimaryKey("user", "publication")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="recommendations")

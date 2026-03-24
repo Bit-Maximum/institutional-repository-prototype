@@ -1,8 +1,28 @@
 from django import forms
 
+from apps.publications.models import (
+    Author,
+    Keyword,
+    PublicationLanguage,
+    PublicationPeriodicity,
+    PublicationPlace,
+    PublicationSubtype,
+    PublicationType,
+    Publisher,
+)
+
 
 class SearchForm(forms.Form):
-    q = forms.CharField(label="Запрос", max_length=500)
+    q = forms.CharField(
+        label="Запрос",
+        max_length=500,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Название, автор, ключевое слово, издатель…",
+            }
+        ),
+    )
     mode = forms.ChoiceField(
         choices=[
             ("hybrid", "Гибридный"),
@@ -10,4 +30,112 @@ class SearchForm(forms.Form):
             ("keyword", "Традиционный"),
         ],
         initial="hybrid",
+        label="Режим поиска",
     )
+    sort = forms.ChoiceField(
+        choices=[
+            ("relevance", "По релевантности"),
+            ("newest", "Сначала новые"),
+            ("oldest", "Сначала старые"),
+            ("year_desc", "По году: новые"),
+            ("year_asc", "По году: старые"),
+            ("title_asc", "По названию: А–Я"),
+            ("title_desc", "По названию: Я–А"),
+        ],
+        initial="relevance",
+        label="Сортировка",
+        required=False,
+    )
+    publication_type = forms.ModelChoiceField(
+        queryset=PublicationType.objects.all(),
+        required=False,
+        empty_label="Любой тип издания",
+        label="Тип издания",
+    )
+    publication_subtype = forms.ModelChoiceField(
+        queryset=PublicationSubtype.objects.select_related("publication_type").all(),
+        required=False,
+        empty_label="Любой подтип издания",
+        label="Подтип издания",
+    )
+    language = forms.ModelChoiceField(
+        queryset=PublicationLanguage.objects.all(),
+        required=False,
+        empty_label="Любой язык",
+        label="Язык",
+    )
+    periodicity = forms.ModelChoiceField(
+        queryset=PublicationPeriodicity.objects.all(),
+        required=False,
+        empty_label="Любая периодичность",
+        label="Периодичность",
+    )
+    author = forms.ModelChoiceField(
+        queryset=Author.objects.select_related("academic_degree").all(),
+        required=False,
+        empty_label="Любой автор",
+        label="Автор",
+    )
+    keyword = forms.ModelChoiceField(
+        queryset=Keyword.objects.all(),
+        required=False,
+        empty_label="Любое ключевое слово",
+        label="Ключевое слово",
+    )
+    publisher = forms.ModelChoiceField(
+        queryset=Publisher.objects.all(),
+        required=False,
+        empty_label="Любой издатель",
+        label="Издатель",
+    )
+    publication_place = forms.ModelChoiceField(
+        queryset=PublicationPlace.objects.all(),
+        required=False,
+        empty_label="Любое место публикации",
+        label="Место публикации",
+    )
+    year_from = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=9999,
+        label="Год издания от",
+    )
+    year_to = forms.IntegerField(
+        required=False,
+        min_value=0,
+        max_value=9999,
+        label="Год издания до",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        publication_type = None
+        raw_publication_type = self.data.get("publication_type") or self.initial.get("publication_type")
+        if raw_publication_type:
+            try:
+                publication_type = PublicationType.objects.filter(pk=raw_publication_type).first()
+            except (TypeError, ValueError):
+                publication_type = None
+
+        subtype_queryset = PublicationSubtype.objects.select_related("publication_type")
+        if publication_type is not None:
+            subtype_queryset = subtype_queryset.filter(publication_type=publication_type)
+        self.fields["publication_subtype"].queryset = subtype_queryset
+
+    def clean(self):
+        cleaned_data = super().clean()
+        publication_type = cleaned_data.get("publication_type")
+        publication_subtype = cleaned_data.get("publication_subtype")
+        year_from = cleaned_data.get("year_from")
+        year_to = cleaned_data.get("year_to")
+
+        if publication_type and publication_subtype and publication_subtype.publication_type_id != publication_type.pk:
+            self.add_error(
+                "publication_subtype",
+                "Выбранный подтип не относится к указанному типу издания.",
+            )
+
+        if year_from is not None and year_to is not None and year_from > year_to:
+            self.add_error("year_to", "Верхняя граница диапазона не может быть меньше нижней.")
+
+        return cleaned_data

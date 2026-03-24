@@ -56,7 +56,7 @@ cp .env.example .env
 uv sync
 ```
 
-Если окружение уже было создано ранее и в нём успела установиться несовместимая ветка `transformers`, просто повторно выполни `uv sync`, чтобы зафиксировать совместимую версию из `pyproject.toml`.
+Если окружение уже было создано ранее и в нём успела установиться несовместимая ветка `transformers`, просто повторно выполни `uv sync`, чтобы зафиксировать совместимую версию из `pyproject.toml`. В проект также добавлен `hf_xet`, чтобы модели Hugging Face на Xet Storage скачивались без дополнительных предупреждений.
 
 ### 3. Применить миграции и инициализировать сервисы
 
@@ -99,7 +99,12 @@ uv run python manage.py runserver
 ```env
 DATABASE_URL=postgresql://repository:repository@localhost:5432/repository
 MILVUS_URI=http://localhost:19530
+SEARCH_PAGE_SIZE=10
+SEARCH_CANDIDATE_POOL_SIZE=200
 ```
+
+`SEARCH_PAGE_SIZE` управляет размером страниц в каталоге и поиске.
+`SEARCH_CANDIDATE_POOL_SIZE` определяет, сколько кандидатов заранее запрашивается для гибридного и семантического поиска, чтобы пагинация по этим режимам работала предсказуемо.
 
 Такой режим удобен для активной разработки: инфраструктура работает в Docker, а Django остаётся запущенным локально.
 
@@ -118,3 +123,47 @@ MILVUS_URI=http://localhost:19530
 Проект автоматически загружает переменные из файла `.env` в корне репозитория.
 По умолчанию используется PostgreSQL по адресу `postgresql://repository:repository@localhost:5432/repository`.
 SQLite теперь используется только при явном указании `DATABASE_URL=sqlite:///db.sqlite3`.
+
+
+## Обновлённый семантический поиск
+
+- Индексация идёт по фрагментам (`publication_chunks`), а не по одному вектору на документ.
+- По умолчанию используется `BAAI/bge-m3`: модель поддерживает dense+sparse retrieval, мультиязычность и длинный контекст.
+- Для повышения точности поверх retrieval включён cross-encoder rerank на `BAAI/bge-reranker-v2-m3`.
+- Для keyword / semantic / hybrid режимов добавлены настраиваемые пороги score, чтобы не показывать заведомо слабые результаты.
+- После обновления настроек рекомендуется использовать новое имя коллекции Milvus (`publications_chunks_hybrid_v1`) или удалить старую sparse-коллекцию.
+- После миграции БД нужно выполнить `uv run python manage.py migrate`, затем `uv sync`, `uv run python manage.py ensure_milvus_collection` и `uv run python manage.py reindex_publications`.
+
+### Новые настройки поиска
+
+```env
+SEARCH_KEYWORD_MIN_SCORE=20
+SEARCH_SEMANTIC_MIN_SCORE=0.2
+SEARCH_HYBRID_MIN_SCORE=0.2
+SEARCH_RERANK_ENABLED=True
+SEARCH_RERANK_MODEL=BAAI/bge-reranker-v2-m3
+SEARCH_RERANK_TOP_K=40
+SEARCH_RERANK_MAX_TEXT_CHARS=2400
+```
+
+Практический смысл этих параметров:
+- `SEARCH_KEYWORD_MIN_SCORE` — минимальный допустимый score в традиционном поиске.
+- `SEARCH_SEMANTIC_MIN_SCORE` — минимальный score после rerank для semantic режима.
+- `SEARCH_HYBRID_MIN_SCORE` — минимальный score после rerank для semantic-head гибридного режима.
+- `SEARCH_RERANK_TOP_K` — сколько лучших кандидатов отправлять на cross-encoder rerank.
+- `SEARCH_RERANK_MAX_TEXT_CHARS` — сколько текста фрагмента брать в reranker.
+
+## Профили поиска
+
+По умолчанию используется быстрый профиль `SEARCH_PROFILE=fast`: rerank отключён, пул кандидатов уменьшен, чтобы semantic/hybrid поиск оставался интерактивным на CPU.
+
+Если нужно сравнить качество с более тяжёлым режимом, можно переключиться на `SEARCH_PROFILE=quality` или вручную включить rerank через `SEARCH_RERANK_ENABLED=True`.
+
+Для прогрева моделей после установки зависимостей можно выполнить:
+
+```bash
+uv run python manage.py warm_search_models
+```
+
+Это позволит скачать и загрузить модели заранее, а не на первом пользовательском запросе.
+

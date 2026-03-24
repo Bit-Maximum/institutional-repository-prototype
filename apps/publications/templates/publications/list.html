@@ -21,4 +21,20 @@
       <li>Издания не найдены.</li>
     {% endfor %}
   </ul>
+
+  {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <nav style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+      {% if page_obj.has_previous %}
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page=1">Первая</a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Назад</a>
+      {% endif %}
+
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд</a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Последняя</a>
+      {% endif %}
+    </nav>
+  {% endif %}
 {% endblock %}
