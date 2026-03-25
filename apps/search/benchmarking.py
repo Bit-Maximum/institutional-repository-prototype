@@ -274,10 +274,11 @@ def run_benchmark(
     warmup: bool = True,
     include_reranker_in_warmup: bool = False,
 ) -> dict[str, Any]:
+    vector_store = VectorStoreService()
+    runtime_info = vector_store.runtime_info()
     if warmup:
-        vector_store = VectorStoreService()
         vector_store.ensure_collection()
-        vector_store.warmup(include_reranker=include_reranker_in_warmup)
+        vector_store.warmup(include_reranker=include_reranker_in_warmup, run_query=True)
 
     timestamp = timezone.now().isoformat()
     case_results: list[dict[str, Any]] = []
@@ -339,6 +340,7 @@ def run_benchmark(
 
     return {
         "generated_at": timestamp,
+        "runtime": runtime_info,
         "runs_per_case": runs_per_case,
         "top_k_eval": top_k_eval,
         "summary": aggregate_mode_summaries(summary_rows),

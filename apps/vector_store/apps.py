@@ -41,8 +41,11 @@ class VectorStoreConfig(AppConfig):
                 service = VectorStoreService()
                 if getattr(settings, "SEARCH_WARMUP_LOAD_COLLECTION", True):
                     service.ensure_collection()
-                service.warmup(include_reranker=getattr(settings, "SEARCH_WARMUP_INCLUDE_RERANK", False))
-                logger.info("Search warmup completed")
+                service.warmup(
+                    include_reranker=getattr(settings, "SEARCH_WARMUP_INCLUDE_RERANK", False),
+                    run_query=getattr(settings, "SEARCH_WARMUP_RUN_QUERY", True),
+                )
+                logger.info("Search warmup completed: %s", service.runtime_info())
             except Exception:  # pragma: no cover - best effort warmup
                 logger.exception("Search warmup failed")
 

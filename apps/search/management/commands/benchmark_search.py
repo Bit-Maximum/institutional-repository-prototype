@@ -69,6 +69,10 @@ class Command(BaseCommand):
         report_paths = write_reports(report, options["output_dir"])
 
         self.stdout.write("")
+        runtime = report.get("runtime") or {}
+        if runtime:
+            self.stdout.write(f"Runtime: embedding_device={runtime.get('embedding_device')}, fp16={runtime.get('embedding_use_fp16')}, rerank_device={runtime.get('rerank_device')}, model={runtime.get('embedding_model')}")
+
         self.stdout.write(self.style.SUCCESS("Сводка по режимам поиска:"))
         for row in report["summary"]:
             base = (

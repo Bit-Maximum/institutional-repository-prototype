@@ -18,5 +18,5 @@ class Command(BaseCommand):
         service = VectorStoreService()
         service.ensure_collection()
         include_reranker = options["with_reranker"] or bool(getattr(settings, "SEARCH_RERANK_ENABLED", False))
-        service.warmup(include_reranker=include_reranker)
-        self.stdout.write(self.style.SUCCESS("Поисковые модели и коллекция Milvus прогреты."))
+        service.warmup(include_reranker=include_reranker, run_query=True)
+        self.stdout.write(self.style.SUCCESS(f"Поисковые модели и коллекция Milvus прогреты. {service.runtime_info()}"))

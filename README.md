@@ -241,3 +241,11 @@ If you later change chunking/index-time logic in a way that should invalidate pr
 ## CUDA по умолчанию
 
 Проект теперь закрепляет `torch` на индекс PyTorch CUDA 12.6 через `uv`, а BGE-M3 по умолчанию использует `MILVUS_BGE_M3_DEVICE=auto`. Это означает: на машинах с доступной CUDA поиск и индексация будут работать через GPU, а на CPU-only окружениях сервис безопасно откатится на `cpu`. Конфигурация `uv` сделана через `[[tool.uv.index]]` и `[tool.uv.sources]`, что соответствует официальной документации uv для PyTorch индексов.
+
+
+Дополнительно можно включить прогрев не только модели и коллекции, но и первого запроса:
+
+- `SEARCH_WARMUP_RUN_QUERY=True`
+- `SEARCH_WARMUP_SAMPLE_QUERY=поиск`
+
+Это уменьшает задержку первого semantic/hybrid запроса после перезапуска сервера.

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import warnings
+from time import perf_counter
 
 import numpy as np
 from collections import OrderedDict
@@ -72,6 +73,29 @@ class VectorStoreService:
         requested = bool(getattr(settings, "MILVUS_BGE_M3_USE_FP16", True))
         return requested and str(device).startswith("cuda")
 
+    def embedding_runtime_info(self) -> dict[str, object]:
+        device = self._resolve_embedding_device()
+        return {
+            "embedding_model": getattr(settings, "MILVUS_BGE_M3_MODEL", "BAAI/bge-m3"),
+            "embedding_device": device,
+            "embedding_use_fp16": self._resolve_use_fp16(device),
+            "embed_batch_size": self.embed_batch_size,
+            "collection": self.collection_name,
+            "uri": self.uri,
+        }
+
+    def reranker_runtime_info(self) -> dict[str, object]:
+        return {
+            "rerank_enabled": bool(getattr(settings, "SEARCH_RERANK_ENABLED", False)),
+            "rerank_model": getattr(settings, "SEARCH_RERANK_MODEL", "BAAI/bge-reranker-v2-m3"),
+            "rerank_device": self._resolve_reranker_device(),
+        }
+
+    def runtime_info(self) -> dict[str, object]:
+        info = self.embedding_runtime_info()
+        info.update(self.reranker_runtime_info())
+        return info
+
     def _normalize_dense_vector(self, vector) -> np.ndarray:
         if isinstance(vector, np.ndarray):
             array = vector
@@ -137,12 +161,22 @@ class VectorStoreService:
         self.__class__._reranker_model_name = model_name
         return reranker
 
-    def warmup(self, include_reranker: bool | None = None) -> None:
+    def warmup(self, include_reranker: bool | None = None, *, run_query: bool | None = None) -> None:
         self._get_embedding()
         if include_reranker is None:
             include_reranker = bool(getattr(settings, "SEARCH_RERANK_ENABLED", False))
         if include_reranker:
             self._get_reranker()
+        if run_query is None:
+            run_query = bool(getattr(settings, "SEARCH_WARMUP_RUN_QUERY", True))
+        if run_query:
+            sample_query = str(getattr(settings, "SEARCH_WARMUP_SAMPLE_QUERY", "поиск")) or "поиск"
+            self.ensure_collection()
+            try:
+                self._encode_queries([sample_query])
+                self._search_dense_with_encoded(self._encode_queries([sample_query]), 1)
+            except Exception:
+                logging.exception("Search warmup query failed")
 
     def ensure_collection(self) -> None:
         cache_key = self._collection_cache_key()
@@ -201,7 +235,8 @@ class VectorStoreService:
             return self._get_embedding().encode_queries(texts)
 
         model_name = getattr(settings, "MILVUS_BGE_M3_MODEL", "BAAI/bge-m3")
-        key = (model_name, texts[0])
+        normalized_query = str(texts[0]).strip().lower()
+        key = (model_name, normalized_query)
         cache = self.__class__._query_cache
         if key in cache:
             cache.move_to_end(key)
