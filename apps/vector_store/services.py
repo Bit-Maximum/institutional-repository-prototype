@@ -42,19 +42,35 @@ class VectorStoreService:
         self.delete_batch_size = max(1, int(getattr(settings, "MILVUS_DELETE_BATCH_SIZE", 64)))
         self.vector_embed_text_limit = max(1, int(getattr(settings, "VECTOR_INDEX_MAX_EMBED_TEXTS", 128)))
 
-    def _resolve_embedding_device(self) -> str:
-        device = str(getattr(settings, "MILVUS_BGE_M3_DEVICE", "cpu")).strip() or "cpu"
-        if not device.startswith("cuda"):
-            return device
+    def _resolve_device(self, configured_device: str | None) -> str:
+        device = str(configured_device or "auto").strip().lower() or "auto"
         try:
             import torch
         except Exception:
-            logging.warning("CUDA device requested for BGE-M3, but torch is unavailable. Falling back to CPU.")
-            return "cpu"
+            if device in {"auto", "cuda", "cuda:0"} or device.startswith("cuda"):
+                logging.warning("CUDA device requested for BGE-M3, but torch is unavailable. Falling back to CPU.")
+            return "cpu" if device == "auto" else device
+
+        if device == "auto":
+            return "cuda:0" if torch.cuda.is_available() else "cpu"
+        if device == "cuda":
+            device = "cuda:0"
+        if not device.startswith("cuda"):
+            return device
         if not torch.cuda.is_available():
             logging.warning("CUDA device requested for BGE-M3, but CUDA is not available in the current torch build. Falling back to CPU.")
             return "cpu"
         return device
+
+    def _resolve_embedding_device(self) -> str:
+        return self._resolve_device(getattr(settings, "MILVUS_BGE_M3_DEVICE", "auto"))
+
+    def _resolve_reranker_device(self) -> str:
+        return self._resolve_device(getattr(settings, "SEARCH_RERANK_DEVICE", getattr(settings, "MILVUS_BGE_M3_DEVICE", "auto")))
+
+    def _resolve_use_fp16(self, device: str) -> bool:
+        requested = bool(getattr(settings, "MILVUS_BGE_M3_USE_FP16", True))
+        return requested and str(device).startswith("cuda")
 
     def _normalize_dense_vector(self, vector) -> np.ndarray:
         if isinstance(vector, np.ndarray):
@@ -79,11 +95,12 @@ class VectorStoreService:
         if self.__class__._embedding_cache is not None and self.__class__._embedding_model_name == model_name:
             return self.__class__._embedding_cache
         try:
+            device = self._resolve_embedding_device()
             embedding = model.hybrid.BGEM3EmbeddingFunction(
                 model_name=model_name,
                 batch_size=self.embed_batch_size,
-                device=self._resolve_embedding_device(),
-                use_fp16=bool(getattr(settings, "MILVUS_BGE_M3_USE_FP16", False)),
+                device=device,
+                use_fp16=self._resolve_use_fp16(device),
                 return_dense=True,
                 return_sparse=True,
                 return_colbert_vecs=False,
@@ -107,7 +124,7 @@ class VectorStoreService:
         if self.__class__._reranker_cache is not None and self.__class__._reranker_model_name == model_name:
             return self.__class__._reranker_cache
         try:
-            reranker = model.reranker.BGERerankFunction(model_name=model_name, device="cpu")
+            reranker = model.reranker.BGERerankFunction(model_name=model_name, device=self._resolve_reranker_device())
         except (ImportError, ModuleNotFoundError) as exc:
             missing_name = getattr(exc, "name", None)
             if missing_name in {None, "torch", "FlagEmbedding", "hf_xet"}:

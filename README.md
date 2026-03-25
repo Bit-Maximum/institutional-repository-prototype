@@ -236,3 +236,8 @@ Useful settings:
 - `VECTOR_INDEX_SCHEMA_VERSION`
 
 If you later change chunking/index-time logic in a way that should invalidate previous vectors, bump `VECTOR_INDEX_SCHEMA_VERSION` in `.env` and run `reindex_publications` again.
+
+
+## CUDA по умолчанию
+
+Проект теперь закрепляет `torch` на индекс PyTorch CUDA 12.6 через `uv`, а BGE-M3 по умолчанию использует `MILVUS_BGE_M3_DEVICE=auto`. Это означает: на машинах с доступной CUDA поиск и индексация будут работать через GPU, а на CPU-only окружениях сервис безопасно откатится на `cpu`. Конфигурация `uv` сделана через `[[tool.uv.index]]` и `[tool.uv.sources]`, что соответствует официальной документации uv для PyTorch индексов.
