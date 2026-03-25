@@ -27,6 +27,10 @@
         {{ form.sort }}
       </div>
       <div>
+        <label for="{{ form.strictness.id_for_label }}">{{ form.strictness.label }}</label>
+        {{ form.strictness }}
+      </div>
+      <div>
         <label for="{{ form.publication_type.id_for_label }}">{{ form.publication_type.label }}</label>
         {{ form.publication_type }}
       </div>
@@ -86,6 +90,9 @@
 
   <p>
     Найдено результатов: <strong>{{ total_results }}</strong>.
+    {% if form.cleaned_data.strictness %}
+      Включён относительный отсев: показываются только результаты не ниже {{ form.cleaned_data.strictness }} от score лучшего совпадения.
+    {% endif %}
     {% if active_mode == "keyword" %}
       Используется традиционный поиск. Текстовый запрос ищется по названию, авторам, ключевым словам, издателям, местам публикации и научным руководителям.
     {% elif active_mode == "semantic" %}
@@ -96,7 +103,7 @@
   </p>
 
   <div style="display:grid; gap:1rem;">
-    {% for publication in results %}
+    {% for publication in primary_results %}
       <article class="card">
         <h3 style="margin-top:0; margin-bottom:.5rem;">
           <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
@@ -158,8 +165,32 @@
         {% endif %}
       </article>
     {% empty %}
-      <p>По выбранным параметрам ничего не найдено.</p>
+      {% if not additional_results %}
+        <p>По выбранным параметрам ничего не найдено.</p>
+      {% endif %}
     {% endfor %}
+
+    {% if additional_results %}
+      <div class="card" style="background:#fafafa; border-style:dashed;">
+        <h3 style="margin-top:0;">Может быть интересно</h3>
+        <p style="margin-bottom:0;">Ниже показаны издания, добавленные только из выборки по фильтрам. Они не прошли основной релевантностный отбор, но соответствуют выбранным ограничениям.</p>
+      </div>
+      {% for publication in additional_results %}
+        <article class="card">
+          <h3 style="margin-top:0; margin-bottom:.5rem;">
+            <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
+          </h3>
+          <p style="margin:.25rem 0;">
+            <strong>Тип:</strong> {{ publication.publication_type|default:"—" }}
+            · <strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}
+            · <strong>Год:</strong> {{ publication.publication_year|default:"—" }}
+            · <strong>Язык:</strong> {{ publication.language|default:"—" }}
+          </p>
+          <p style="margin:.25rem 0;"><strong>Релевантность:</strong> может быть интересно по выбранным фильтрам</p>
+          <p style="margin:.25rem 0;">{{ publication.contents|default:"Описание отсутствует."|truncatechars:260 }}</p>
+        </article>
+      {% endfor %}
+    {% endif %}
   </div>
 
   {% if page_obj %}

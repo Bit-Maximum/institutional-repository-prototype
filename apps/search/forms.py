@@ -46,6 +46,19 @@ class SearchForm(forms.Form):
         label="Сортировка",
         required=False,
     )
+    strictness = forms.ChoiceField(
+        choices=[
+            ("", "По умолчанию из конфига"),
+            ("0", "Не отсекать слабые результаты"),
+            ("0.35", "Мягкий отсев"),
+            ("0.5", "Сбалансированный отсев"),
+            ("0.65", "Строгий отсев"),
+            ("0.8", "Очень строгий отсев"),
+        ],
+        initial="",
+        label="Строгость отсечения по score",
+        required=False,
+    )
     publication_type = forms.ModelChoiceField(
         queryset=PublicationType.objects.all(),
         required=False,

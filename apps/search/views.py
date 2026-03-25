@@ -23,6 +23,7 @@ class SearchView(FormView):
             "q": self.request.GET.get("q", ""),
             "mode": self.request.GET.get("mode", "hybrid"),
             "sort": self.request.GET.get("sort", "relevance"),
+            "strictness": self.request.GET.get("strictness", ""),
             "publication_type": self.request.GET.get("publication_type", ""),
             "publication_subtype": self.request.GET.get("publication_subtype", ""),
             "language": self.request.GET.get("language", ""),
@@ -57,12 +58,14 @@ class SearchView(FormView):
             "year_from": cleaned_data.get("year_from"),
             "year_to": cleaned_data.get("year_to"),
             "include_fulltext_in_keyword": bool(cleaned_data.get("include_fulltext_in_keyword")),
+            "relative_score_floor": cleaned_data.get("strictness") or None,
         }
 
     def get_serialized_filters(self, cleaned_data, mode: str):
         payload = {
             "mode": mode,
             "sort": cleaned_data.get("sort") or "relevance",
+            "strictness": cleaned_data.get("strictness") or None,
             "publication_type": getattr(cleaned_data.get("publication_type"), "pk", None),
             "publication_subtype": getattr(cleaned_data.get("publication_subtype"), "pk", None),
             "language": getattr(cleaned_data.get("language"), "pk", None),
@@ -74,6 +77,7 @@ class SearchView(FormView):
             "year_from": cleaned_data.get("year_from"),
             "year_to": cleaned_data.get("year_to"),
             "include_fulltext_in_keyword": bool(cleaned_data.get("include_fulltext_in_keyword")),
+            "relative_score_floor": cleaned_data.get("strictness") or None,
         }
         return json.dumps({key: value for key, value in payload.items() if value not in (None, "")}, ensure_ascii=False)
 
@@ -91,6 +95,7 @@ class SearchView(FormView):
             "year_from",
             "year_to",
             "include_fulltext_in_keyword",
+            "strictness",
         }
         return any(cleaned_data.get(key) not in (None, "") for key in meaningful_keys) or self.request.GET.get("mode") not in (
             None,
@@ -111,6 +116,8 @@ class SearchView(FormView):
         context["paginator"] = None
         context["is_paginated"] = False
         context["total_results"] = 0
+        context["primary_results"] = []
+        context["additional_results"] = []
         query_params = self.request.GET.copy()
         query_params.pop("page", None)
         context["querystring"] = query_params.urlencode()
@@ -137,6 +144,7 @@ class SearchView(FormView):
                     filters=filters,
                     sort_by=sort_by,
                     include_fulltext=bool(form.cleaned_data.get("include_fulltext_in_keyword")),
+                    relative_floor=form.cleaned_data.get("strictness") or None,
                 )
             elif mode == "semantic":
                 results = SemanticSearchService().search(
@@ -144,6 +152,7 @@ class SearchView(FormView):
                     filters=filters,
                     limit=settings.SEARCH_CANDIDATE_POOL_SIZE,
                     sort_by=sort_by,
+                    relative_floor=form.cleaned_data.get("strictness") or None,
                 )
             else:
                 results = HybridSearchService().search(
@@ -151,13 +160,22 @@ class SearchView(FormView):
                     filters=filters,
                     limit=settings.SEARCH_CANDIDATE_POOL_SIZE,
                     sort_by=sort_by,
+                    relative_floor=form.cleaned_data.get("strictness") or None,
                 )
         except VectorStoreDependencyError as exc:
             messages.error(self.request, str(exc))
-            results = KeywordSearchService().search(query=query, filters=filters, sort_by=sort_by) if mode == "hybrid" else []
+            results = KeywordSearchService().search(
+                query=query,
+                filters=filters,
+                sort_by=sort_by,
+                relative_floor=form.cleaned_data.get("strictness") or None,
+            ) if mode == "hybrid" else []
 
         paginator, page_obj = self.paginate_results(results)
-        context["results"] = page_obj.object_list
+        page_results = list(page_obj.object_list)
+        context["results"] = page_results
+        context["primary_results"] = [item for item in page_results if getattr(item, "search_source", "") != "hybrid-filter"]
+        context["additional_results"] = [item for item in page_results if getattr(item, "search_source", "") == "hybrid-filter"]
         context["page_obj"] = page_obj
         context["paginator"] = paginator
         context["is_paginated"] = page_obj.has_other_pages()

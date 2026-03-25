@@ -232,6 +232,38 @@ class BaseSearchService:
             return list(publications)
         return [publication for publication in publications if float(getattr(publication, "search_score", 0.0) or 0.0) >= threshold]
 
+    def filter_publications_by_relative_floor(
+        self,
+        publications: list[Publication],
+        relative_floor: float | str | None,
+    ) -> list[Publication]:
+        if relative_floor in (None, ""):
+            return list(publications)
+        ratio = float(relative_floor or 0.0)
+        if ratio <= 0:
+            return list(publications)
+        positive_scores = [float(getattr(publication, "search_score", 0.0) or 0.0) for publication in publications if float(getattr(publication, "search_score", 0.0) or 0.0) > 0]
+        if not positive_scores:
+            return []
+        best_score = max(positive_scores)
+        threshold = best_score * ratio
+        filtered = [publication for publication in publications if float(getattr(publication, "search_score", 0.0) or 0.0) >= threshold]
+        for publication in filtered:
+            publication.relative_score_threshold = threshold
+            publication.relative_score_ratio = ratio
+            publication.best_result_score = best_score
+        return filtered
+
+    def resolve_relative_floor(self, mode: str, explicit_value: float | str | None = None) -> float:
+        if explicit_value not in (None, ""):
+            return float(explicit_value)
+        defaults = {
+            "keyword": float(getattr(settings, "SEARCH_KEYWORD_RELATIVE_CUTOFF", 0.0)),
+            "semantic": float(getattr(settings, "SEARCH_SEMANTIC_RELATIVE_CUTOFF", 0.0)),
+            "hybrid": float(getattr(settings, "SEARCH_HYBRID_RELATIVE_CUTOFF", 0.0)),
+        }
+        return float(defaults.get(mode, 0.0))
+
     def _collect_publications(self, queryset: QuerySet[Publication], publication_ids: Iterable[int]) -> dict[int, Publication]:
         ids = list(dict.fromkeys(int(pk) for pk in publication_ids))
         if not ids:
@@ -536,6 +568,7 @@ class KeywordSearchService(BaseSearchService):
         sort_by: str = "relevance",
         *,
         include_fulltext: bool = False,
+        relative_floor: float | str | None = None,
     ) -> list[Publication]:
         queryset = self.apply_filters(self.get_base_queryset(include_chunks=include_fulltext), filters)
         publications = list(queryset)
@@ -578,6 +611,10 @@ class KeywordSearchService(BaseSearchService):
                 key=lambda item: (item.search_score, item.uploaded_at, item.pk),
                 reverse=True,
             )
+            publications = self.filter_publications_by_relative_floor(
+                publications,
+                self.resolve_relative_floor("keyword", relative_floor),
+            )
             if sort_by != "relevance":
                 publications = self.sort_publications(publications, sort_by=sort_by)
             return publications
@@ -589,7 +626,15 @@ class SemanticSearchService(BaseSearchService):
     def __init__(self):
         self.vector_store = VectorStoreService()
 
-    def search(self, query: str = "", filters: dict[str, Any] | None = None, limit: int = 200, sort_by: str = "relevance") -> list[Publication]:
+    def search(
+        self,
+        query: str = "",
+        filters: dict[str, Any] | None = None,
+        limit: int = 200,
+        sort_by: str = "relevance",
+        *,
+        relative_floor: float | str | None = None,
+    ) -> list[Publication]:
         queryset = self.apply_filters(self.get_base_queryset(), filters)
         query = (query or "").strip()
         if not query:
@@ -605,6 +650,10 @@ class SemanticSearchService(BaseSearchService):
             threshold=float(getattr(settings, "SEARCH_SEMANTIC_MIN_SCORE", 0.2)),
             default_source="semantic",
         )
+        publications = self.filter_publications_by_relative_floor(
+            publications,
+            self.resolve_relative_floor("semantic", relative_floor),
+        )
         if sort_by != "relevance":
             publications = self.sort_publications(publications, sort_by=sort_by)
         return publications[:limit]
@@ -615,10 +664,18 @@ class HybridSearchService(BaseSearchService):
         self.keyword = KeywordSearchService()
         self.vector_store = VectorStoreService()
 
-    def search(self, query: str = "", filters: dict[str, Any] | None = None, limit: int = 200, sort_by: str = "relevance") -> list[Publication]:
+    def search(
+        self,
+        query: str = "",
+        filters: dict[str, Any] | None = None,
+        limit: int = 200,
+        sort_by: str = "relevance",
+        *,
+        relative_floor: float | str | None = None,
+    ) -> list[Publication]:
         query = (query or "").strip()
         if not query:
-            return self.keyword.search(query="", filters=filters, sort_by=sort_by)
+            return self.keyword.search(query="", filters=filters, sort_by=sort_by, relative_floor=relative_floor)
 
         queryset = self.apply_filters(self.get_base_queryset(), filters)
         chunk_limit = self._vector_limit(limit, hybrid=True)
@@ -632,7 +689,13 @@ class HybridSearchService(BaseSearchService):
             default_source="hybrid-semantic",
         )
 
-        keyword_results = self.keyword.search(query=query, filters=filters, sort_by="relevance", include_fulltext=True)
+        keyword_results = self.keyword.search(
+            query=query,
+            filters=filters,
+            sort_by="relevance",
+            include_fulltext=True,
+            relative_floor=self.resolve_relative_floor("keyword", relative_floor),
+        )
         semantic_head_limit = min(limit, max(1, int(getattr(settings, "HYBRID_SEMANTIC_HEAD_LIMIT", 20))))
         semantic_candidates = semantic_results[: max(semantic_head_limit * 2, 20)]
         keyword_candidates = keyword_results[: max(semantic_head_limit * 2, 20)]
@@ -682,12 +745,16 @@ class HybridSearchService(BaseSearchService):
             sorted(fused_results, key=lambda item: (item.search_score, getattr(item, "retrieval_score", 0.0), item.uploaded_at, item.pk), reverse=True),
             float(getattr(settings, "SEARCH_HYBRID_MIN_SCORE", 0.2)),
         )
+        fused_results = self.filter_publications_by_relative_floor(
+            fused_results,
+            self.resolve_relative_floor("hybrid", relative_floor),
+        )
         semantic_head = fused_results[:semantic_head_limit]
         used_ids = {publication.pk for publication in semantic_head}
 
         filter_tail: list[Publication] = []
         if len(semantic_head) < limit and self.has_active_filters(filters):
-            filter_only_results = self.keyword.search(query="", filters=filters, sort_by="newest")
+            filter_only_results = self.keyword.search(query="", filters=filters, sort_by="newest", relative_floor=0)
             for publication in filter_only_results:
                 if publication.pk in used_ids:
                     continue
