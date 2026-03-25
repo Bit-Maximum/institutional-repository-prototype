@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import logging
+import warnings
+from collections import OrderedDict
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -9,12 +12,19 @@ from pymilvus import DataType, MilvusClient, model
 from apps.publications.models import Publication, PublicationChunk
 from apps.vector_store.exceptions import VectorStoreDependencyError
 
+logging.getLogger("transformers.tokenization_utils_base").setLevel(logging.ERROR)
+warnings.filterwarnings(
+    "ignore",
+    message=r"You're using a XLMRobertaTokenizerFast tokenizer.*",
+)
+
 
 class VectorStoreService:
     _embedding_cache = None
     _embedding_model_name: str | None = None
     _reranker_cache = None
     _reranker_model_name: str | None = None
+    _query_cache: OrderedDict[tuple[str, str], dict] = OrderedDict()
 
     def __init__(self):
         self.uri = settings.MILVUS_URI
@@ -123,7 +133,22 @@ class VectorStoreService:
         return self._get_embedding().encode_documents(texts)
 
     def _encode_queries(self, texts: list[str]) -> dict[str, list]:
-        return self._get_embedding().encode_queries(texts)
+        if len(texts) != 1:
+            return self._get_embedding().encode_queries(texts)
+
+        model_name = getattr(settings, "MILVUS_BGE_M3_MODEL", "BAAI/bge-m3")
+        key = (model_name, texts[0])
+        cache = self.__class__._query_cache
+        if key in cache:
+            cache.move_to_end(key)
+            return cache[key]
+
+        encoded = self._get_embedding().encode_queries(texts)
+        cache[key] = encoded
+        max_size = max(8, int(getattr(settings, "MILVUS_QUERY_CACHE_SIZE", 64)))
+        while len(cache) > max_size:
+            cache.popitem(last=False)
+        return encoded
 
     def delete_publication_chunks(self, publication_id: int) -> None:
         self.ensure_collection()

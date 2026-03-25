@@ -112,9 +112,10 @@ class GraphicEditionAdmin(admin.ModelAdmin):
 
 @admin.register(Publication)
 class PublicationAdmin(admin.ModelAdmin):
-    list_display = ("title", "publication_type_display", "publication_year", "language", "is_draft")
-    list_filter = ("is_draft", "publication_subtype", "language", "periodicity")
-    search_fields = ("title", "contents", "grif_text", "grant_text")
+    list_display = ("title", "publication_type_display", "publication_year", "language", "text_extraction_status", "is_draft")
+    list_filter = ("is_draft", "publication_subtype", "language", "periodicity", "text_extraction_status")
+    search_fields = ("title", "contents", "grif_text", "grant_text", "text_extraction_notes")
+    readonly_fields = ("file_extension", "text_extraction_status", "text_extraction_notes", "has_extracted_text")
 
     @admin.display(description="Тип издания")
     def publication_type_display(self, obj):
@@ -123,7 +124,7 @@ class PublicationAdmin(admin.ModelAdmin):
 
 @admin.register(PublicationChunk)
 class PublicationChunkAdmin(admin.ModelAdmin):
-    list_display = ("publication", "chunk_index", "page_start", "page_end", "word_count")
-    list_filter = ("publication",)
+    list_display = ("publication", "chunk_index", "source_kind", "page_start", "page_end", "word_count")
+    list_filter = ("publication", "source_kind")
     search_fields = ("publication__title", "text")
     readonly_fields = ("created_at",)

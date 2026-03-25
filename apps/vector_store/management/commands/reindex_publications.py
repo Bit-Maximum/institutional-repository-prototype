@@ -10,13 +10,18 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            for publication in Publication.objects.filter(is_draft=False).prefetch_related(
-                "authors",
-                "keywords",
-                "scientific_supervisors",
-                "publication_subtype",
-                "publication_subtype__publication_type",
-            ):
+            queryset = (
+                Publication.objects.filter(is_draft=False)
+                .select_related("publication_subtype", "publication_subtype__publication_type", "language")
+                .prefetch_related(
+                    "authors",
+                    "keywords",
+                    "scientific_supervisors",
+                    "publishers",
+                    "publication_places",
+                )
+            )
+            for publication in queryset:
                 ingest_publication(publication, index_in_vector_store=True)
         except VectorStoreDependencyError as exc:
             raise CommandError(str(exc)) from exc

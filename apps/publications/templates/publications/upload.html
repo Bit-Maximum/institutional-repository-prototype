@@ -4,9 +4,184 @@
 
 {% block content %}
   <h1>Добавить издание</h1>
-  <form method="post" enctype="multipart/form-data">
+  <p>
+    Можно загрузить файл поддерживаемого формата и получить подсказки для предзаполнения формы.
+    Если формат не поддерживается или документ не содержит машиночитаемого текста, издание всё равно будет сохранено
+    и попадёт в поиск по метаданным.
+  </p>
+
+  <section class="card" style="margin-bottom:1rem; background:#fdfdfd;">
+    <h2 style="margin-top:0;">Подсказки по файлу</h2>
+    <p style="margin-top:0;">Система попытается извлечь текст и предложить черновик названия, года, языка, авторов, ключевых слов и краткого описания.</p>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;">
+      <button type="button" id="prefill-from-file" data-endpoint="{{ prefill_endpoint }}">Предзаполнить из файла</button>
+      <span id="prefill-status" aria-live="polite"></span>
+    </div>
+    <div id="prefill-summary" style="margin-top:.75rem; display:none;"></div>
+  </section>
+
+  <form method="post" enctype="multipart/form-data" id="publication-upload-form">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Сохранить</button>
+    {% if form.non_field_errors %}
+      <ul>
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <div style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items:start;">
+      {% for field in form %}
+        <div {% if field.name == "contents" or field.name == "grant_text" or field.name == "grif_text" %}style="grid-column: 1 / -1;"{% endif %}>
+          <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+          {{ field }}
+          {% if field.help_text %}
+            <small style="display:block; margin-top:.35rem; color:#555;">{{ field.help_text }}</small>
+          {% endif %}
+          {% if field.errors %}
+            <ul>
+              {% for error in field.errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
+      <button type="submit">Сохранить</button>
+      <a href="{% url 'publications:list' %}">Отмена</a>
+    </div>
   </form>
+
+  <script>
+    (function() {
+      const form = document.getElementById('publication-upload-form');
+      const trigger = document.getElementById('prefill-from-file');
+      const statusNode = document.getElementById('prefill-status');
+      const summaryNode = document.getElementById('prefill-summary');
+      const fileInput = document.getElementById('id_file');
+      const endpointValue = trigger.dataset.endpoint;
+
+      function setStatus(message, isError) {
+        statusNode.textContent = message || '';
+        statusNode.style.color = isError ? '#8b0000' : '#2f4f4f';
+      }
+
+      function setFieldValue(fieldName, value) {
+        if (value === null || value === undefined || value === '') {
+          return false;
+        }
+        const field = document.getElementById(`id_${fieldName}`);
+        if (!field) {
+          return false;
+        }
+        if (field.tagName === 'SELECT' && field.multiple) {
+          const alreadySelected = Array.from(field.options).some(option => option.selected);
+          if (alreadySelected) {
+            return false;
+          }
+          const selectedValues = Array.isArray(value) ? value.map(String) : [String(value)];
+          Array.from(field.options).forEach(option => {
+            option.selected = selectedValues.includes(option.value);
+          });
+          return selectedValues.length > 0;
+        }
+        if (field.tagName === 'SELECT') {
+          if (field.value) {
+            return false;
+          }
+          field.value = String(value);
+          field.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        }
+        if (field.type === 'checkbox') {
+          if (field.checked) {
+            return false;
+          }
+          field.checked = Boolean(value);
+          return true;
+        }
+        if (field.value && field.value.trim() !== '') {
+          return false;
+        }
+        field.value = value;
+        return true;
+      }
+
+      function renderSummary(payload, appliedFields) {
+        const keywordHints = (payload.keyword_name_suggestions || []).length
+          ? `<p style="margin:.35rem 0;"><strong>Ключевые слова-кандидаты:</strong> ${payload.keyword_name_suggestions.join(', ')}</p>`
+          : '';
+        const fields = appliedFields.length
+          ? `<p style="margin:.35rem 0;"><strong>Автоматически заполнены поля:</strong> ${appliedFields.join(', ')}</p>`
+          : '<p style="margin:.35rem 0;">Подсказки получены, но уже заполненные поля форма не перезаписывает.</p>';
+        const pageInfo = payload.page_count ? `<p style="margin:.35rem 0;"><strong>Страниц в файле:</strong> ${payload.page_count}</p>` : '';
+        const typeInfo = payload.field_values && payload.field_values.publication_type_label
+          ? `<p style="margin:.35rem 0;"><strong>Предполагаемый тип:</strong> ${payload.field_values.publication_type_label}</p>`
+          : '';
+        summaryNode.style.display = 'block';
+        summaryNode.innerHTML = `
+          <p style="margin:.35rem 0;"><strong>Режим обработки:</strong> ${payload.status_label || '—'}</p>
+          ${payload.notes ? `<p style="margin:.35rem 0;"><strong>Комментарий:</strong> ${payload.notes}</p>` : ''}
+          ${pageInfo}
+          ${typeInfo}
+          ${keywordHints}
+          ${fields}
+        `;
+      }
+
+      trigger.addEventListener('click', async function() {
+        if (!fileInput || !fileInput.files || !fileInput.files.length) {
+          setStatus('Сначала выберите файл в поле «Файл».', true);
+          return;
+        }
+        setStatus('Анализ файла…', false);
+        summaryNode.style.display = 'none';
+        trigger.disabled = true;
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+        try {
+          const response = await fetch(endpointValue, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+          });
+          const payload = await response.json();
+          if (!response.ok) {
+            throw new Error(payload.error || 'Не удалось получить рекомендации.');
+          }
+          const fieldLabels = {
+            title: 'Название',
+            publication_year: 'Год издания',
+            language: 'Язык',
+            publication_subtype: 'Подтип издания',
+            authors: 'Авторы',
+            scientific_supervisors: 'Научные руководители',
+            keywords: 'Ключевые слова',
+            contents: 'Описание',
+          };
+          const appliedFields = [];
+          for (const [fieldName, value] of Object.entries(payload.field_values || {})) {
+            const changed = setFieldValue(fieldName, value);
+            if (changed) {
+              appliedFields.push(fieldLabels[fieldName] || fieldName);
+            }
+          }
+          renderSummary(payload, appliedFields);
+          setStatus('Подсказки получены. Проверьте форму перед сохранением.', false);
+        } catch (error) {
+          setStatus(error.message || 'Не удалось проанализировать файл.', true);
+        } finally {
+          trigger.disabled = false;
+        }
+      });
+    })();
+  </script>
 {% endblock %}

@@ -7,6 +7,21 @@ from django.urls import reverse
 from django.utils import timezone
 
 
+TEXT_EXTRACTION_STATUS_CHOICES = [
+    ("pending", "Ожидает анализа"),
+    ("fulltext", "Извлечён основной текст"),
+    ("metadata_only_unsupported", "Только метаданные: формат не поддерживается"),
+    ("metadata_only_nontext", "Только метаданные: нетекстовая структура"),
+    ("metadata_only_missing", "Только метаданные: файл отсутствует"),
+    ("metadata_only_error", "Только метаданные: ошибка извлечения"),
+]
+
+CHUNK_SOURCE_KIND_CHOICES = [
+    ("fulltext", "Основной текст"),
+    ("metadata", "Только метаданные"),
+]
+
+
 class NamedDictionaryModel(models.Model):
     name = models.TextField(unique=True)
 
@@ -232,8 +247,16 @@ class Publication(models.Model):
     start_page = models.IntegerField(null=True, blank=True)
     end_page = models.IntegerField(null=True, blank=True)
     file = models.FileField(upload_to="publications/", db_column="main_text_link", null=True, blank=True)
+    file_extension = models.CharField(max_length=32, blank=True)
     publication_format_link = models.TextField(blank=True)
     contents = models.TextField(blank=True)
+    text_extraction_status = models.CharField(
+        max_length=32,
+        choices=TEXT_EXTRACTION_STATUS_CHOICES,
+        default="pending",
+    )
+    text_extraction_notes = models.TextField(blank=True)
+    has_extracted_text = models.BooleanField(default=False)
     grant_text = models.TextField(blank=True)
     uploaded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -343,6 +366,7 @@ class Publication(models.Model):
             models.Index(fields=["publication_subtype"], name="idx_pubs_subtype_id"),
             models.Index(fields=["periodicity"], name="idx_pubs_period_id"),
             models.Index(fields=["language"], name="idx_publications_language_id"),
+            models.Index(fields=["text_extraction_status"], name="idx_pubs_extract_status"),
         ]
 
     def __str__(self) -> str:
@@ -375,6 +399,10 @@ class Publication(models.Model):
         return self.language.name if self.language else ""
 
     @property
+    def uses_metadata_only_index(self) -> bool:
+        return not self.has_extracted_text
+
+    @property
     def search_document(self) -> str:
         keyword_text = ", ".join(keyword.name for keyword in self.keywords.all())
         author_text = ", ".join(author.full_name for author in self.authors.all())
@@ -401,6 +429,7 @@ class PublicationChunk(models.Model):
     )
     chunk_index = models.PositiveIntegerField()
     text = models.TextField()
+    source_kind = models.CharField(max_length=16, choices=CHUNK_SOURCE_KIND_CHOICES, default="fulltext")
     page_start = models.PositiveIntegerField(null=True, blank=True)
     page_end = models.PositiveIntegerField(null=True, blank=True)
     char_count = models.PositiveIntegerField(default=0)
@@ -433,6 +462,14 @@ class PublicationChunk(models.Model):
         return f"{self.publication.title} / {label}"
 
     @property
+    def page_label(self) -> str:
+        if self.page_start and self.page_end and self.page_end != self.page_start:
+            return f"стр. {self.page_start}–{self.page_end}"
+        if self.page_start:
+            return f"стр. {self.page_start}"
+        return ""
+
+    @property
     def vector_document(self) -> str:
         metadata_parts = [self.publication.title]
         authors = ", ".join(author.full_name for author in self.publication.authors.all())
@@ -442,6 +479,8 @@ class PublicationChunk(models.Model):
             metadata_parts.append(f"Тип: {self.publication.publication_type.name}")
         if self.publication.publication_subtype:
             metadata_parts.append(f"Подтип: {self.publication.publication_subtype.name}")
+        if self.publication.language:
+            metadata_parts.append(f"Язык: {self.publication.language.name}")
         keywords = ", ".join(keyword.name for keyword in self.publication.keywords.all())
         if keywords:
             metadata_parts.append(f"Ключевые слова: {keywords}")

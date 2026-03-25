@@ -33,6 +33,7 @@ class SearchView(FormView):
             "publication_place": self.request.GET.get("publication_place", ""),
             "year_from": self.request.GET.get("year_from", ""),
             "year_to": self.request.GET.get("year_to", ""),
+            "include_fulltext_in_keyword": self.request.GET.get("include_fulltext_in_keyword", ""),
         }
 
     def get_form_kwargs(self):
@@ -55,6 +56,7 @@ class SearchView(FormView):
             "publication_place": cleaned_data.get("publication_place"),
             "year_from": cleaned_data.get("year_from"),
             "year_to": cleaned_data.get("year_to"),
+            "include_fulltext_in_keyword": bool(cleaned_data.get("include_fulltext_in_keyword")),
         }
 
     def get_serialized_filters(self, cleaned_data, mode: str):
@@ -71,6 +73,7 @@ class SearchView(FormView):
             "publication_place": getattr(cleaned_data.get("publication_place"), "pk", None),
             "year_from": cleaned_data.get("year_from"),
             "year_to": cleaned_data.get("year_to"),
+            "include_fulltext_in_keyword": bool(cleaned_data.get("include_fulltext_in_keyword")),
         }
         return json.dumps({key: value for key, value in payload.items() if value not in (None, "")}, ensure_ascii=False)
 
@@ -87,6 +90,7 @@ class SearchView(FormView):
             "publication_place",
             "year_from",
             "year_to",
+            "include_fulltext_in_keyword",
         }
         return any(cleaned_data.get(key) not in (None, "") for key in meaningful_keys) or self.request.GET.get("mode") not in (
             None,
@@ -128,7 +132,12 @@ class SearchView(FormView):
 
         try:
             if mode == "keyword":
-                results = KeywordSearchService().search(query=query, filters=filters, sort_by=sort_by)
+                results = KeywordSearchService().search(
+                    query=query,
+                    filters=filters,
+                    sort_by=sort_by,
+                    include_fulltext=bool(form.cleaned_data.get("include_fulltext_in_keyword")),
+                )
             elif mode == "semantic":
                 results = SemanticSearchService().search(
                     query=query,

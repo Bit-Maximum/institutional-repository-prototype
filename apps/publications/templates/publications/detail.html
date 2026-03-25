@@ -8,9 +8,28 @@
   <p><strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}</p>
   <p><strong>Год:</strong> {{ publication.publication_year|default:"—" }}</p>
   <p><strong>Язык:</strong> {{ publication.language|default:"—" }}</p>
-  <p><strong>Статус:</strong> {{ publication.get_status_display }}</p>
+  <p><strong>Статус публикации:</strong> {{ publication.get_status_display }}</p>
+  <p>
+    <strong>Режим индексирования:</strong>
+    {{ publication.get_text_extraction_status_display }}
+    {% if publication.text_extraction_notes %}
+      <br><small>{{ publication.text_extraction_notes }}</small>
+    {% endif %}
+  </p>
+  <p><strong>Основной текст извлечён:</strong> {% if publication.has_extracted_text %}да{% else %}нет{% endif %}</p>
+  <p>
+    <strong>Авторы:</strong>
+    {% for author in publication.authors.all %}
+      {{ author.full_name }}{% if not forloop.last %}, {% endif %}
+    {% empty %}
+      —
+    {% endfor %}
+  </p>
   <p>{{ publication.contents|default:"Описание отсутствует." }}</p>
   {% if publication.file %}
     <p><a href="{{ publication.file.url }}">Скачать файл</a></p>
+  {% endif %}
+  {% if publication.chunks.all %}
+    <p><strong>Фрагментов в индексе:</strong> {{ publication.chunks.count }}</p>
   {% endif %}
 {% endblock %}

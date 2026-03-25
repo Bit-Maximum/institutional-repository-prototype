@@ -106,6 +106,11 @@ class SearchForm(forms.Form):
         max_value=9999,
         label="Год издания до",
     )
+    include_fulltext_in_keyword = forms.BooleanField(
+        required=False,
+        initial=False,
+        label="Для традиционного поиска учитывать совпадения в основном тексте",
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

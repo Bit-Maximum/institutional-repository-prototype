@@ -10,6 +10,13 @@
         <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
         {{ form.q }}
         <small>Поле запроса необязательно. Можно искать только по фильтрам или открыть весь каталог результатов.</small>
+        <div style="margin-top:.5rem;">
+          <label for="{{ form.include_fulltext_in_keyword.id_for_label }}" style="display:flex; gap:.5rem; align-items:center;">
+            {{ form.include_fulltext_in_keyword }}
+            <span>{{ form.include_fulltext_in_keyword.label }}</span>
+          </label>
+          <small>Опция влияет только на традиционный поиск. В гибридном режиме полнотекстовое совпадение учитывается автоматически только для уточнения ранжирования.</small>
+        </div>
       </div>
       <div>
         <label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>
@@ -82,9 +89,9 @@
     {% if active_mode == "keyword" %}
       Используется традиционный поиск. Текстовый запрос ищется по названию, авторам, ключевым словам, издателям, местам публикации и научным руководителям.
     {% elif active_mode == "semantic" %}
-      Используется семантический поиск. При сортировке по релевантности первыми идут наиболее близкие по смыслу материалы.
+      Используется семантический поиск. При сортировке по релевантности первыми идут наиболее близкие по смыслу материалы, но нерелевантные фрагменты без лексической опоры на запрос дополнительно штрафуются.
     {% else %}
-      Используется гибридный поиск. При сортировке по релевантности сначала выводятся семантически близкие материалы, затем каталог дополняется остальными результатами по фильтрам без дублей.
+      Используется гибридный поиск. Результаты ранжируются объединённым score: семантическая близость + лексическая опора на запрос. Затем выдача при необходимости дополняется выборкой по фильтрам без дублей.
     {% endif %}
   </p>
 
@@ -115,6 +122,8 @@
               семантическое совпадение
             {% elif publication.search_source == "hybrid-semantic" %}
               семантическое совпадение (гибридный приоритет)
+            {% elif publication.search_source == "hybrid-combined" %}
+              комбинированное гибридное совпадение
             {% elif publication.search_source == "hybrid-keyword" %}
               добавлено из традиционного поиска
             {% elif publication.search_source == "hybrid-filter" %}
@@ -123,10 +132,22 @@
               традиционное совпадение
             {% endif %}
             {% if publication.search_score %}
-              · score: {{ publication.search_score|floatformat:3 }}
+              · итоговый score: {{ publication.search_score|floatformat:3 }}
             {% endif %}
-            {% if publication.retrieval_score %}
-              · исходный score: {{ publication.retrieval_score|floatformat:3 }}
+            {% if publication.retrieval_score and publication.search_stage == "reranked" %}
+              · сырой retrieval score: {{ publication.retrieval_score|floatformat:3 }}
+            {% elif publication.retrieval_score and publication.search_stage != "filtered" and publication.retrieval_score != publication.search_score %}
+              · сырой retrieval score: {{ publication.retrieval_score|floatformat:3 }}
+            {% endif %}
+          </p>
+        {% endif %}
+        {% if publication.search_match_basis %}
+          <p style="margin:.25rem 0;">
+            <strong>Основа совпадения:</strong>
+            {% if publication.search_match_basis == "metadata" %}
+              метаданные{% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
+            {% else %}
+              основной текст{% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
             {% endif %}
           </p>
         {% endif %}
