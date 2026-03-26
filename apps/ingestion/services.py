@@ -5,6 +5,7 @@ import json
 import os
 import re
 import tempfile
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -35,6 +36,7 @@ class ExtractedSegment:
     text: str
     page_start: int | None = None
     page_end: int | None = None
+    section_title: str = ""
 
 
 @dataclass(slots=True)
@@ -45,8 +47,10 @@ class ChunkPayload:
     source_kind: str = "fulltext"
     page_start: int | None = None
     page_end: int | None = None
+    section_title: str = ""
     char_count: int = 0
     word_count: int = 0
+    index_quality: float = 1.0
 
 
 @dataclass(slots=True)
@@ -84,6 +88,9 @@ _DOT_LEADER_RE = re.compile(r"\.{5,}")
 _TOC_HEADING_RE = re.compile(r"^(?:содержание|оглавление|table of contents)\b", re.IGNORECASE)
 _TOC_LINE_RE = re.compile(r"(?m)^\s*[^\n]{3,180}?\.{5,}\s*\d{1,4}\s*$")
 _PAGE_NUMBER_LINE_RE = re.compile(r"(?m)^\s*[\divxlcdmIVXLCDM\.\-–— ]{1,12}\s*$")
+_SECTION_NUMBER_RE = re.compile(r"^(?:\d+(?:[\.\)]\d+)*[\.\)]?|[IVXLCDM]+[\.\)])\s+", re.IGNORECASE)
+_HEADING_STYLE_RE = re.compile(r"heading|заголов", re.IGNORECASE)
+_GENERIC_SECTION_TITLE_RE = re.compile(r"^(?:введение|заключение|выводы|содержание|оглавление|приложение|abstract|introduction|conclusion|references?)$", re.IGNORECASE)
 
 
 def detect_script_kind(text: str) -> str:
@@ -150,6 +157,7 @@ def chunk_index_quality(text: str) -> float:
     alpha_ratio = alpha_count / max(len(normalized), 1)
     digit_ratio = digit_count / max(len(normalized), 1)
     dot_ratio = sum(1 for char in (text or "") if char == ".") / max(len(text or ""), 1)
+    info_density = chunk_information_density(normalized)
     quality = 1.0
     if alpha_ratio < 0.45:
         quality *= 0.65
@@ -157,11 +165,85 @@ def chunk_index_quality(text: str) -> float:
         quality *= 0.8
     if dot_ratio > 0.10:
         quality *= 0.45
+    if info_density < float(getattr(settings, "VECTOR_CHUNK_MIN_INFORMATION_DENSITY", 0.24)):
+        quality *= 0.62
+    elif info_density > 0.58:
+        quality *= 1.08
     if is_table_of_contents_text(text):
         quality *= 0.05
     if is_reference_heavy_text(text):
         quality *= 0.12
     return max(0.0, min(1.0, quality))
+
+
+def _clip01(value: float) -> float:
+    return max(0.0, min(1.0, float(value)))
+
+
+def derive_publication_characteristics(
+    publication: Publication,
+    analysis: FileExtractionAnalysis,
+    extracted_text: str = "",
+) -> list[dict[str, Any]]:
+    source_text = extracted_text or analysis.extracted_text or analysis.raw_text or publication.contents or ""
+    normalized = normalize_text(source_text)
+    lowered = normalized.lower()
+    characteristics: list[dict[str, Any]] = []
+
+    def add(slug: str, label: str, score: float, detail: str) -> None:
+        clipped = _clip01(score)
+        if clipped < 0.34:
+            return
+        characteristics.append({"slug": slug, "label": label, "score": round(clipped, 3), "detail": detail})
+
+    token_count = max(len(_TOKEN_RE.findall(lowered)), 1)
+    digit_ratio = sum(ch.isdigit() for ch in normalized) / max(len(normalized), 1)
+    bullet_lines = len(BULLET_LINE_RE.findall(source_text or ""))
+    table_lines = len(TABLE_LINE_RE.findall(source_text or ""))
+    stats_hits = len(STATISTICAL_SIGNAL_RE.findall(lowered))
+    instruction_hits = len(INSTRUCTION_SIGNAL_RE.findall(lowered))
+    legal_hits = len(LEGAL_SIGNAL_RE.findall(lowered))
+    educational_hits = len(EDUCATIONAL_SIGNAL_RE.findall(lowered))
+    formula_hits = len(FORMULA_SIGNAL_RE.findall(source_text or ""))
+
+    if analysis.status == "metadata_only_nontext":
+        add(
+            "nontext_structure",
+            "Нетекстовая или сканированная структура",
+            0.98,
+            "В документе не обнаружен достаточный объём машиночитаемого основного текста.",
+        )
+    elif analysis.status == "metadata_only_unsupported":
+        add(
+            "metadata_only",
+            "Поиск в основном по метаданным",
+            0.92,
+            "Формат файла не поддерживает полноценное извлечение текста, поэтому основой анализа служат метаданные.",
+        )
+
+    stats_score = max(digit_ratio * 5.0, min(stats_hits / 4.0, 1.0), min(table_lines / 3.0, 1.0))
+    add("statistics", "Высокая доля статистических или табличных данных", stats_score, "В тексте много числовых значений, таблиц или статистических маркеров.")
+
+    instruction_score = max(min(instruction_hits / 4.0, 1.0), min(bullet_lines / 4.0, 1.0))
+    add("instructions", "Пошаговые инструкции или регламент", instruction_score, "В тексте много инструктивных формулировок, шагов, требований и маркированных пунктов.")
+
+    legal_score = min(legal_hits / 4.0, 1.0)
+    add("administrative", "Организационно-правовой или административный материал", legal_score, "Документ содержит лексику правил, сроков, выплат, заявок или договорных условий.")
+
+    educational_score = min(educational_hits / 4.0, 1.0)
+    add("educational", "Учебно-методический материал", educational_score, "В тексте присутствуют признаки методических рекомендаций, курса, заданий или учебной дисциплины.")
+
+    formula_score = max(min(formula_hits / 4.0, 1.0), 0.0)
+    add("formula_dense", "Формулы и специальные обозначения", formula_score, "В документе заметна доля формул, специальных символов или математических обозначений.")
+
+    if is_reference_heavy_text(normalized):
+        add("reference_apparatus", "Развитый научно-справочный аппарат", 0.78, "Документ содержит выраженный список литературы или плотные библиографические ссылки.")
+
+    if analysis.page_count and analysis.page_count >= 80:
+        add("long_read", "Крупный по объёму документ", min(analysis.page_count / 200.0, 1.0), f"Объём документа составляет около {analysis.page_count} страниц.")
+
+    characteristics.sort(key=lambda item: (-item["score"], item["label"]))
+    return characteristics[:5]
 
 
 SUPPORTED_TEXT_EXTENSIONS = {".pdf", ".docx"}
@@ -177,6 +259,15 @@ ENGLISH_STOPWORDS = {
     "the", "and", "for", "with", "from", "that", "this", "into", "about", "document", "publication",
     "system", "work", "study", "article", "guide", "manual", "report", "using", "used", "are", "was",
 }
+
+
+STATISTICAL_SIGNAL_RE = re.compile(r"(?:табл\.?|table\b|рис\.?|figure\b|dataset|выборк|статистик|median|mean|sd\b|p-value|доверительн)", re.IGNORECASE)
+INSTRUCTION_SIGNAL_RE = re.compile(r"(?:необходимо|следует|нужно|порядок|шаг(?:и)?|инструкц|получени[ея]|заявк|предостав(?:ить|ьте)|submit|must\b|should\b|instructions?)", re.IGNORECASE)
+LEGAL_SIGNAL_RE = re.compile(r"(?:положение|регламент|приказ|договор|заявление|фонд|стипенд|выплат|реквизит|обязан|срок(?:и)?|конкурс)", re.IGNORECASE)
+EDUCATIONAL_SIGNAL_RE = re.compile(r"(?:методическ|учебн|лабораторн|практическ|самостоятельн|курс|дисциплин|семинар|задани[ея]|рекомендац)", re.IGNORECASE)
+FORMULA_SIGNAL_RE = re.compile(r"(?:формул|equation|lemma|theorem|proof|\b[a-zа-яё]\s*=\s*[^\s]+|[=±×÷∑∫λμσβγα])", re.IGNORECASE)
+TABLE_LINE_RE = re.compile(r"(?m)^\s*[^\n]{0,120}\|[^\n]{0,120}$")
+BULLET_LINE_RE = re.compile(r"(?m)^\s*(?:[-–—•●◦*]|\d+[\.)])\s+")
 
 
 def normalize_text(value: str | None) -> str:
@@ -203,12 +294,133 @@ def _table_texts(document: Document) -> list[str]:
     return texts
 
 
-def _extract_docx_lines(path: Path) -> tuple[list[str], str]:
+def chunk_information_density(text: str) -> float:
+    normalized = normalize_text(text)
+    if not normalized:
+        return 0.0
+
+    tokens = [token.lower() for token in _TOKEN_RE.findall(normalized)]
+    if not tokens:
+        return 0.0
+
+    stopwords = RUSSIAN_STOPWORDS | ENGLISH_STOPWORDS
+    informative = [token for token in tokens if token not in stopwords and not token.isdigit()]
+    if not informative:
+        return 0.0
+
+    informative_ratio = len(informative) / len(tokens)
+    unique_ratio = len(set(informative)) / len(informative)
+    avg_token_len = sum(len(token) for token in informative) / len(informative)
+    alpha_ratio = sum(char.isalpha() for char in normalized) / max(len(normalized), 1)
+    density = (0.42 * informative_ratio) + (0.33 * unique_ratio) + (0.15 * min(avg_token_len / 8.0, 1.0)) + (0.10 * alpha_ratio)
+    return max(0.0, min(1.0, density))
+
+
+def is_heading_candidate(text: str, *, style_name: str = "") -> bool:
+    normalized = normalize_text(text)
+    if not normalized:
+        return False
+    if is_table_of_contents_text(normalized) or is_reference_heavy_text(normalized):
+        return False
+
+    style_name = normalize_text(style_name)
+    if style_name and _HEADING_STYLE_RE.search(style_name):
+        return True
+
+    words = normalized.split()
+    if len(words) == 0 or len(words) > int(getattr(settings, "VECTOR_HEADING_MAX_WORDS", 14)):
+        return False
+
+    if normalized.endswith((".", ";", ":")):
+        return False
+
+    digit_ratio = sum(char.isdigit() for char in normalized) / max(len(normalized), 1)
+    punct_ratio = sum(1 for char in normalized if not char.isalnum() and not char.isspace()) / max(len(normalized), 1)
+    upper_ratio = sum(1 for char in normalized if char.isalpha() and char.isupper()) / max(sum(1 for char in normalized if char.isalpha()), 1)
+
+    if _SECTION_NUMBER_RE.match(normalized):
+        return True
+    if _GENERIC_SECTION_TITLE_RE.match(normalized):
+        return True
+    if upper_ratio > 0.72 and len(words) <= 10:
+        return True
+    if digit_ratio < 0.12 and punct_ratio < 0.10 and len(words) <= 8:
+        titleish = sum(1 for word in words if word[:1].isupper()) >= max(1, len(words) - 1)
+        if titleish:
+            return True
+    return False
+
+
+def _lines_to_segments(lines: list[tuple[str, str]], *, page_number: int | None = None) -> list[ExtractedSegment]:
+    segments: list[ExtractedSegment] = []
+    current_heading = ""
+    paragraph_lines: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph_lines
+        paragraph_text = normalize_text(" ".join(paragraph_lines))
+        if paragraph_text:
+            segments.append(
+                ExtractedSegment(
+                    text=paragraph_text,
+                    page_start=page_number,
+                    page_end=page_number,
+                    section_title=current_heading,
+                )
+            )
+        paragraph_lines = []
+
+    for raw_text, style_name in lines:
+        normalized = normalize_text(raw_text)
+        if not normalized:
+            flush_paragraph()
+            continue
+        if is_heading_candidate(normalized, style_name=style_name):
+            flush_paragraph()
+            current_heading = normalized
+            continue
+        paragraph_lines.append(normalized)
+
+    flush_paragraph()
+    return segments
+
+
+def _extract_pdf_segments(reader: PdfReader) -> tuple[list[ExtractedSegment], list[str]]:
+    segments: list[ExtractedSegment] = []
+    raw_pages: list[str] = []
+    for page_number, page in enumerate(reader.pages, start=1):
+        raw_page_text = (page.extract_text() or "").strip()
+        if raw_page_text:
+            raw_pages.append(raw_page_text)
+        page_lines = [(line, "") for line in raw_page_text.splitlines()]
+        page_segments = _lines_to_segments(page_lines, page_number=page_number)
+        if page_segments:
+            segments.extend(page_segments)
+        else:
+            normalized_page_text = normalize_text(raw_page_text)
+            if normalized_page_text:
+                segments.append(ExtractedSegment(text=normalized_page_text, page_start=page_number, page_end=page_number))
+    return segments, raw_pages
+
+
+def _extract_docx_segments(path: Path) -> tuple[list[ExtractedSegment], str]:
     document = Document(str(path))
-    lines = [paragraph.text.strip() for paragraph in document.paragraphs if paragraph.text and paragraph.text.strip()]
-    table_lines = _table_texts(document)
-    lines.extend(table_lines)
-    return lines, "\n".join(lines)
+    lines: list[tuple[str, str]] = []
+    raw_lines: list[str] = []
+    for paragraph in document.paragraphs:
+        paragraph_text = paragraph.text or ""
+        raw_lines.append(paragraph_text)
+        lines.append((paragraph_text, getattr(getattr(paragraph, "style", None), "name", "")))
+    for table_text in _table_texts(document):
+        raw_lines.append(table_text)
+        lines.append((table_text, ""))
+    segments = _lines_to_segments(lines, page_number=None)
+    raw_text = "\n".join(line for line in raw_lines if line)
+    if not segments and raw_text.strip():
+        normalized = normalize_text(raw_text)
+        if normalized:
+            segments = [ExtractedSegment(text=normalized)]
+    return segments, raw_text
 
 
 def _analyze_text_quality(text: str, *, page_count: int | None = None) -> tuple[bool, str]:
@@ -258,24 +470,15 @@ def analyze_publication_file(file_path: str | Path, *, original_name: str | None
         if suffix == ".pdf":
             reader = PdfReader(str(path))
             analysis.page_count = len(reader.pages)
-            raw_pages: list[str] = []
-            segments: list[ExtractedSegment] = []
-            for page_number, page in enumerate(reader.pages, start=1):
-                raw_page_text = (page.extract_text() or "").strip()
-                normalized_page_text = normalize_text(raw_page_text)
-                if raw_page_text:
-                    raw_pages.append(raw_page_text)
-                if normalized_page_text:
-                    segments.append(ExtractedSegment(text=normalized_page_text, page_start=page_number, page_end=page_number))
+            segments, raw_pages = _extract_pdf_segments(reader)
             analysis.raw_text = "\n\n".join(raw_pages).strip()
             analysis.extracted_text = "\n".join(segment.text for segment in segments if segment.text).strip()
             analysis.segments = segments
         elif suffix == ".docx":
-            lines, raw_text = _extract_docx_lines(path)
-            normalized_lines = [normalize_text(line) for line in lines if normalize_text(line)]
+            segments, raw_text = _extract_docx_segments(path)
             analysis.raw_text = raw_text.strip()
-            analysis.extracted_text = "\n\n".join(normalized_lines).strip()
-            analysis.segments = [ExtractedSegment(text=analysis.extracted_text)] if analysis.extracted_text else []
+            analysis.extracted_text = "\n\n".join(segment.text for segment in segments if segment.text).strip()
+            analysis.segments = segments
     except Exception as exc:  # pragma: no cover - defensive fallback for malformed files
         analysis.status = "metadata_only_error"
         analysis.notes = (
@@ -410,6 +613,7 @@ def chunk_segments(segments: list[ExtractedSegment], max_words: int, overlap_wor
     for segment in segments:
         windows = _split_text_into_windows(segment.text, max_words=max_words, overlap_words=overlap_words, max_chars=max_chars)
         for window in windows:
+            quality = chunk_index_quality(window)
             chunk_payloads.append(
                 ChunkPayload(
                     chunk_index=chunk_index,
@@ -418,12 +622,62 @@ def chunk_segments(segments: list[ExtractedSegment], max_words: int, overlap_wor
                     source_kind="fulltext",
                     page_start=segment.page_start,
                     page_end=segment.page_end,
+                    section_title=segment.section_title,
                     char_count=len(window),
                     word_count=len(_WORD_RE.findall(window)),
+                    index_quality=quality,
                 )
             )
             chunk_index += 1
     return chunk_payloads
+
+
+def _select_anchor_excerpt(text: str, *, max_chars: int) -> str:
+    windows = _split_text_into_windows(text, max_words=80, overlap_words=0, max_chars=max_chars)
+    if not windows:
+        return ""
+    ranked = sorted(
+        windows,
+        key=lambda item: (chunk_index_quality(item), chunk_information_density(item), -len(item)),
+        reverse=True,
+    )
+    return ranked[0][:max_chars].strip()
+
+
+def _build_metadata_anchor_chunk(publication: Publication, analysis: FileExtractionAnalysis, extracted_text: str) -> ChunkPayload | None:
+    if not bool(getattr(settings, "VECTOR_INDEX_INCLUDE_METADATA_ANCHOR", True)):
+        return None
+
+    max_chars = int(getattr(settings, "VECTOR_ANCHOR_MAX_CHARS", 520))
+    keyword_text = ", ".join(keyword.name for keyword in publication.keywords.all())
+    authors = ", ".join(author.full_name for author in publication.authors.all())
+    excerpt_source = publication.contents or extracted_text or analysis.raw_text or analysis.extracted_text
+    excerpt = _select_anchor_excerpt(excerpt_source, max_chars=max_chars)
+    parts = [publication.title]
+    if publication.publication_subtype:
+        parts.append(f"Подтип: {publication.publication_subtype.name}")
+    if publication.language:
+        parts.append(f"Язык: {publication.language.name}")
+    if authors:
+        parts.append(f"Авторы: {authors}")
+    if keyword_text:
+        parts.append(f"Ключевые слова: {keyword_text}")
+    if excerpt:
+        parts.append(f"Краткое содержание: {excerpt}")
+    anchor_text = normalize_text("\n".join(part for part in parts if part))
+    if not anchor_text:
+        return None
+    quality = max(0.72, chunk_index_quality(anchor_text))
+    return ChunkPayload(
+        chunk_index=-1,
+        text=anchor_text[:max_chars],
+        chunk_text=anchor_text[:max_chars],
+        source_kind="metadata",
+        section_title="Описание документа",
+        char_count=len(anchor_text[:max_chars]),
+        word_count=len(_WORD_RE.findall(anchor_text[:max_chars])),
+        index_quality=quality,
+    )
 
 
 def build_search_document(publication: Publication, extracted_text: str = "") -> str:
@@ -451,10 +705,20 @@ def build_search_document(publication: Publication, extracted_text: str = "") ->
     return "\n\n".join(part for part in parts if part).strip()
 
 
-def build_chunk_vector_document(publication: Publication, chunk_text: str, source_kind: str = "fulltext") -> str:
+def build_chunk_vector_document(
+    publication: Publication,
+    chunk_text: str,
+    source_kind: str = "fulltext",
+    section_title: str = "",
+) -> str:
     header = _build_chunk_context_header(publication)
     prefix = "Фрагмент документа" if source_kind == "fulltext" else "Метаданные документа"
-    return normalize_text(f"{header}\n\n{prefix}: {chunk_text}" if header else chunk_text)
+    body_parts: list[str] = []
+    if section_title:
+        body_parts.append(f"Раздел: {section_title}")
+    body_parts.append(f"{prefix}: {chunk_text}")
+    body = "\n".join(part for part in body_parts if part)
+    return normalize_text(f"{header}\n\n{body}" if header else body)
 
 def compute_publication_index_signature(publication: Publication) -> str:
     file_info: dict[str, str | int | None] = {
@@ -490,6 +754,10 @@ def compute_publication_index_signature(publication: Publication) -> str:
         "min_text_chars": int(getattr(settings, "INGESTION_MIN_TEXT_CHARS", 120)),
         "min_text_words": int(getattr(settings, "INGESTION_MIN_TEXT_WORDS", 25)),
         "min_chunk_quality": float(getattr(settings, "VECTOR_CHUNK_MIN_INDEX_QUALITY", 0.28)),
+        "min_information_density": float(getattr(settings, "VECTOR_CHUNK_MIN_INFORMATION_DENSITY", 0.24)),
+        "include_metadata_anchor": bool(getattr(settings, "VECTOR_INDEX_INCLUDE_METADATA_ANCHOR", True)),
+        "anchor_max_chars": int(getattr(settings, "VECTOR_ANCHOR_MAX_CHARS", 520)),
+        "heading_max_words": int(getattr(settings, "VECTOR_HEADING_MAX_WORDS", 14)),
         "title": publication.title,
         "contents": publication.contents,
         "grif_text": publication.grif_text,
@@ -544,8 +812,12 @@ def build_publication_chunks(
 
     raw_chunks = chunk_segments(segments, max_words=max_words, overlap_words=overlap_words, max_chars=max_chars)
     min_quality = float(getattr(settings, "VECTOR_CHUNK_MIN_INDEX_QUALITY", 0.28))
-    filtered_chunks = [chunk for chunk in raw_chunks if chunk_index_quality(chunk.text) >= min_quality]
+    filtered_chunks = [chunk for chunk in raw_chunks if chunk.index_quality >= min_quality]
     raw_chunks = filtered_chunks or raw_chunks
+
+    anchor_chunk = _build_metadata_anchor_chunk(publication, analysis, fulltext)
+    if anchor_chunk is not None:
+        raw_chunks = [anchor_chunk, *raw_chunks]
 
     if not raw_chunks:
         combined = build_search_document(publication, extracted_text=fulltext)
@@ -558,15 +830,22 @@ def build_publication_chunks(
                 text=chunk_text,
                 chunk_text=chunk_text,
                 source_kind="metadata",
+                section_title="Описание документа",
                 char_count=len(chunk_text),
                 word_count=len(_WORD_RE.findall(chunk_text)),
+                index_quality=chunk_index_quality(chunk_text),
             )
             for index, chunk_text in enumerate(combined_chunks)
             if chunk_text
         ]
     payloads: list[ChunkPayload] = []
     for raw_chunk in raw_chunks:
-        contextual_text = build_chunk_vector_document(publication, raw_chunk.text, raw_chunk.source_kind)
+        contextual_text = build_chunk_vector_document(
+            publication,
+            raw_chunk.text,
+            raw_chunk.source_kind,
+            section_title=raw_chunk.section_title,
+        )
         payloads.append(
             ChunkPayload(
                 chunk_index=raw_chunk.chunk_index,
@@ -575,8 +854,10 @@ def build_publication_chunks(
                 source_kind=raw_chunk.source_kind,
                 page_start=raw_chunk.page_start,
                 page_end=raw_chunk.page_end,
+                section_title=raw_chunk.section_title,
                 char_count=raw_chunk.char_count,
                 word_count=raw_chunk.word_count,
+                index_quality=raw_chunk.index_quality,
             )
         )
     return payloads
@@ -584,6 +865,12 @@ def build_publication_chunks(
 
 def sync_publication_chunks(publication: Publication, chunk_payloads: list[ChunkPayload]) -> list[PublicationChunk]:
     publication.chunks.all().delete()
+    normalized_payloads: list[ChunkPayload] = []
+    for normalized_index, payload in enumerate(chunk_payloads):
+        if not payload.text:
+            continue
+        payload.chunk_index = normalized_index
+        normalized_payloads.append(payload)
     chunk_objects = [
         PublicationChunk(
             publication=publication,
@@ -592,11 +879,12 @@ def sync_publication_chunks(publication: Publication, chunk_payloads: list[Chunk
             source_kind=payload.source_kind,
             page_start=payload.page_start,
             page_end=payload.page_end,
+            section_title=payload.section_title,
             char_count=payload.char_count,
             word_count=payload.word_count,
+            index_quality=payload.index_quality,
         )
-        for payload in chunk_payloads
-        if payload.text
+        for payload in normalized_payloads
     ]
     if not chunk_objects:
         return []
@@ -613,11 +901,12 @@ def get_existing_publication_chunks(publication: Publication) -> list[Publicatio
 
 def rebuild_publication_chunks(publication: Publication) -> tuple[FileExtractionAnalysis, list[PublicationChunk]]:
     analysis = analyze_publication_for_ingestion(publication)
-    update_fields = ["file_extension", "text_extraction_status", "text_extraction_notes", "has_extracted_text"]
+    update_fields = ["file_extension", "text_extraction_status", "text_extraction_notes", "has_extracted_text", "derived_characteristics"]
     publication.file_extension = analysis.file_extension
     publication.text_extraction_status = analysis.status
     publication.text_extraction_notes = analysis.notes
     publication.has_extracted_text = analysis.has_extractable_text
+    publication.derived_characteristics = derive_publication_characteristics(publication, analysis, analysis.extracted_text)
     publication.save(update_fields=update_fields)
 
     chunk_payloads = build_publication_chunks(publication, analysis=analysis, extracted_text=analysis.extracted_text)
@@ -836,6 +1125,12 @@ def generate_metadata_prefill(path: str | Path, filename: str = "") -> dict[str,
         if value not in (None, "", [])
     ]
 
+    characteristics = derive_publication_characteristics(
+        publication=Publication(title=title or _humanize_filename(filename), contents=_suggest_contents_preview(search_text)),
+        analysis=analysis,
+        extracted_text=analysis.extracted_text,
+    )
+
     return {
         "status": analysis.status,
         "status_label": STATUS_LABELS.get(analysis.status, analysis.status),
@@ -846,6 +1141,7 @@ def generate_metadata_prefill(path: str | Path, filename: str = "") -> dict[str,
         "page_count": analysis.page_count,
         "title_candidate": title,
         "keyword_name_suggestions": keyword_names,
+        "characteristics": characteristics,
         "selected_field_names": selected_field_names,
         "field_values": {
             "title": title,

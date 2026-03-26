@@ -37,12 +37,19 @@ class Command(BaseCommand):
             action="store_true",
             help="Пересчитать извлечение и чанки, но не обновлять Milvus.",
         )
+        parser.add_argument(
+            "--batch-chunks",
+            type=int,
+            default=int(getattr(settings, "VECTOR_REINDEX_CHUNK_BATCH_SIZE", 1024)),
+            help="Сколько чанков накапливать перед пакетной векторизацией и записью в Milvus.",
+        )
 
     def handle(self, *args, **options):
         force = bool(options["force"])
         recreate_collection = bool(options["recreate_collection"])
         batch_publications = max(1, int(options["batch_publications"]))
         skip_vector = bool(options["skip_vector"])
+        batch_chunks = max(1, int(options["batch_chunks"]))
 
         service = None if skip_vector else VectorStoreService()
         started_at = time.perf_counter()
@@ -66,6 +73,15 @@ class Command(BaseCommand):
             )
 
             if service is not None:
+                runtime_config = service.get_runtime_config()
+                self.stdout.write(
+                    "[reindex] Runtime: "
+                    f"device={runtime_config['embedding_device']}, fp16={runtime_config['use_fp16']}, "
+                    f"embed_batch_size={runtime_config['embed_batch_size']}, "
+                    f"embed_text_limit={runtime_config['vector_embed_text_limit']}, "
+                    f"upsert_batch_size={runtime_config['upsert_batch_size']}, "
+                    f"publication_batch={batch_publications}, chunk_batch={batch_chunks}."
+                )
                 if recreate_collection:
                     self.stdout.write("[reindex] Recreating Milvus collection...")
                     service.recreate_collection()
@@ -75,9 +91,10 @@ class Command(BaseCommand):
 
             pending_vector_chunks: dict[int, list] = {}
             pending_publications: dict[int, Publication] = {}
+            pending_chunk_count = 0
 
             def flush_vector_batch(delete_existing: bool) -> None:
-                nonlocal vector_seconds
+                nonlocal vector_seconds, pending_chunk_count
                 if skip_vector or not pending_vector_chunks:
                     return
                 vector_started = time.perf_counter()
@@ -96,6 +113,7 @@ class Command(BaseCommand):
                 stats["vector_upserted_chunks"] += int(upserted)
                 pending_vector_chunks.clear()
                 pending_publications.clear()
+                pending_chunk_count = 0
 
             for publication in queryset.iterator(chunk_size=max(8, batch_publications)):
                 signature = compute_publication_index_signature(publication)
@@ -110,11 +128,12 @@ class Command(BaseCommand):
                     if recreate_collection and not skip_vector:
                         pending_vector_chunks[publication.pk] = existing_chunks
                         pending_publications[publication.pk] = publication
+                        pending_chunk_count += len(existing_chunks)
                         stats["reused_chunks"] += len(existing_chunks)
                         stats["reused_publications"] += 1
                     else:
                         stats["skipped_publications"] += 1
-                    if len(pending_vector_chunks) >= batch_publications:
+                    if len(pending_vector_chunks) >= batch_publications or pending_chunk_count >= batch_chunks:
                         flush_vector_batch(delete_existing=not recreate_collection)
                     continue
 
@@ -132,7 +151,8 @@ class Command(BaseCommand):
 
                 pending_vector_chunks[publication.pk] = chunk_objects
                 pending_publications[publication.pk] = publication
-                if len(pending_vector_chunks) >= batch_publications:
+                pending_chunk_count += len(chunk_objects)
+                if len(pending_vector_chunks) >= batch_publications or pending_chunk_count >= batch_chunks:
                     flush_vector_batch(delete_existing=not recreate_collection)
 
             flush_vector_batch(delete_existing=not recreate_collection)

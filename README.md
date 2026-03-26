@@ -249,3 +249,12 @@ If you later change chunking/index-time logic in a way that should invalidate pr
 - `SEARCH_WARMUP_SAMPLE_QUERY=поиск`
 
 Это уменьшает задержку первого semantic/hybrid запроса после перезапуска сервера.
+
+
+## Healthcheck endpoints
+
+- `GET /health/live/` — liveness probe
+- `GET /health/ready/` — readiness probe with database, vector store and startup warmup status
+- `GET /health/` — alias of readiness probe
+
+When startup warmup is enabled, the application logs a final readiness message after the search stack finishes loading and the service becomes ready to accept requests.

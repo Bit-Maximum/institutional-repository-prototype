@@ -250,6 +250,7 @@ class Publication(models.Model):
     file_extension = models.CharField(max_length=32, blank=True)
     publication_format_link = models.TextField(blank=True)
     contents = models.TextField(blank=True)
+    derived_characteristics = models.JSONField(default=list, blank=True)
     text_extraction_status = models.CharField(
         max_length=32,
         choices=TEXT_EXTRACTION_STATUS_CHOICES,
@@ -383,6 +384,10 @@ class Publication(models.Model):
         return self.contents
 
     @property
+    def characteristic_labels(self) -> list[str]:
+        return [item.get("label", "") for item in (self.derived_characteristics or []) if item.get("label")]
+
+    @property
     def publication_type(self):
         return self.publication_subtype.publication_type if self.publication_subtype else None
 
@@ -435,8 +440,10 @@ class PublicationChunk(models.Model):
     source_kind = models.CharField(max_length=16, choices=CHUNK_SOURCE_KIND_CHOICES, default="fulltext")
     page_start = models.PositiveIntegerField(null=True, blank=True)
     page_end = models.PositiveIntegerField(null=True, blank=True)
+    section_title = models.TextField(blank=True)
     char_count = models.PositiveIntegerField(default=0)
     word_count = models.PositiveIntegerField(default=0)
+    index_quality = models.FloatField(default=1.0)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     class Meta:
@@ -484,6 +491,8 @@ class PublicationChunk(models.Model):
             metadata_parts.append(f"Подтип: {self.publication.publication_subtype.name}")
         if self.publication.language:
             metadata_parts.append(f"Язык: {self.publication.language.name}")
+        if self.section_title:
+            metadata_parts.append(f"Раздел: {self.section_title}")
         keywords = ", ".join(keyword.name for keyword in self.publication.keywords.all())
         if keywords:
             metadata_parts.append(f"Ключевые слова: {keywords}")

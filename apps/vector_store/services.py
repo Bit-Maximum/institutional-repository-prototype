@@ -38,10 +38,12 @@ class VectorStoreService:
         self.client = MilvusClient(uri=self.uri)
         self.dense_dim = int(getattr(settings, "MILVUS_DENSE_DIM", 1024))
         self.chunk_text_max_length = int(getattr(settings, "MILVUS_CHUNK_TEXT_MAX_LENGTH", 8192))
-        self.embed_batch_size = max(1, int(getattr(settings, "MILVUS_BGE_M3_BATCH_SIZE", 16)))
-        self.upsert_batch_size = max(1, int(getattr(settings, "MILVUS_UPSERT_BATCH_SIZE", 128)))
+        self.embedding_device = self._resolve_embedding_device()
+        self.reranker_device = self._resolve_reranker_device()
+        self.embed_batch_size = self._resolve_embed_batch_size()
+        self.upsert_batch_size = self._resolve_upsert_batch_size()
         self.delete_batch_size = max(1, int(getattr(settings, "MILVUS_DELETE_BATCH_SIZE", 64)))
-        self.vector_embed_text_limit = max(1, int(getattr(settings, "VECTOR_INDEX_MAX_EMBED_TEXTS", 128)))
+        self.vector_embed_text_limit = self._resolve_vector_embed_text_limit()
 
     def _resolve_device(self, configured_device: str | None) -> str:
         device = str(configured_device or "auto").strip().lower() or "auto"
@@ -73,8 +75,31 @@ class VectorStoreService:
         requested = bool(getattr(settings, "MILVUS_BGE_M3_USE_FP16", True))
         return requested and str(device).startswith("cuda")
 
+    def _resolve_embed_batch_size(self) -> int:
+        value = int(getattr(settings, "MILVUS_BGE_M3_BATCH_SIZE", 64))
+        return max(1, value)
+
+    def _resolve_upsert_batch_size(self) -> int:
+        value = int(getattr(settings, "MILVUS_UPSERT_BATCH_SIZE", 512))
+        return max(1, value)
+
+    def _resolve_vector_embed_text_limit(self) -> int:
+        configured = int(getattr(settings, "VECTOR_INDEX_MAX_EMBED_TEXTS", 512))
+        return max(1, configured)
+
+    def get_runtime_config(self) -> dict[str, object]:
+        return {
+            "embedding_device": self.embedding_device,
+            "use_fp16": self._resolve_use_fp16(self.embedding_device),
+            "embed_batch_size": self.embed_batch_size,
+            "vector_embed_text_limit": self.vector_embed_text_limit,
+            "upsert_batch_size": self.upsert_batch_size,
+            "delete_batch_size": self.delete_batch_size,
+            "collection_name": self.collection_name,
+        }
+
     def embedding_runtime_info(self) -> dict[str, object]:
-        device = self._resolve_embedding_device()
+        device = self.embedding_device
         return {
             "embedding_model": getattr(settings, "MILVUS_BGE_M3_MODEL", "BAAI/bge-m3"),
             "embedding_device": device,
@@ -119,7 +144,7 @@ class VectorStoreService:
         if self.__class__._embedding_cache is not None and self.__class__._embedding_model_name == model_name:
             return self.__class__._embedding_cache
         try:
-            device = self._resolve_embedding_device()
+            device = self.embedding_device
             embedding = model.hybrid.BGEM3EmbeddingFunction(
                 model_name=model_name,
                 batch_size=self.embed_batch_size,
@@ -295,10 +320,12 @@ class VectorStoreService:
                 metadata_parts.append(f"Год: {publication.publication_year}")
             header = "\n".join(part for part in metadata_parts if part)
             header_cache[publication_id] = header
-        prefix = "Фрагмент документа" if chunk.source_kind == "fulltext" else "Метаданные документа"
-        if header:
-            return f"{header}\n\n{prefix}: {chunk.text}".strip()
-        return chunk.text.strip()
+        parts = [header] if header else []
+        if getattr(chunk, "section_title", ""):
+            parts.append(f"Раздел: {chunk.section_title}")
+        prefix = "Фрагмент документа" if chunk.source_kind == "fulltext" else "Семантический профиль документа"
+        parts.append(f"{prefix}: {chunk.text}")
+        return "\n\n".join(part for part in parts if part).strip()
 
     def upsert_chunks(self, chunks: list[PublicationChunk]) -> int:
         self.ensure_collection()

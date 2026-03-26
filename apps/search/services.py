@@ -277,7 +277,7 @@ class BaseSearchService:
         return {
             chunk.pk: chunk
             for chunk in PublicationChunk.objects.filter(pk__in=ids).only(
-                "id", "source_kind", "page_start", "page_end", "publication_id"
+                "id", "source_kind", "page_start", "page_end", "publication_id", "section_title", "index_quality"
             )
         }
 
@@ -477,9 +477,10 @@ class BaseSearchService:
                     "best_chunk_label": "",
                 },
             )
+            quality_hint = float(getattr(chunk, "index_quality", 1.0) or 1.0) if chunk is not None else 1.0
             adjusted_score = float(hit["score"]) * self._chunk_quality_multiplier(
                 query, publication, hit.get("chunk_text") or "", source_kind, source=source
-            )
+            ) * max(0.35, min(1.15, quality_hint))
             entry["matched_chunks"] += 1
             entry["chunk_scores"].append(adjusted_score)
             if adjusted_score > entry["best_score"]:
@@ -488,7 +489,12 @@ class BaseSearchService:
                 entry["best_chunk_text"] = hit.get("chunk_text") or ""
                 entry["best_rank"] = rank
                 entry["best_source_kind"] = source_kind
-                entry["best_chunk_label"] = getattr(chunk, "page_label", "") if chunk is not None else ""
+                page_label = getattr(chunk, "page_label", "") if chunk is not None else ""
+                section_title = getattr(chunk, "section_title", "") if chunk is not None else ""
+                if section_title and page_label:
+                    entry["best_chunk_label"] = f"{section_title} · {page_label}"
+                else:
+                    entry["best_chunk_label"] = section_title or page_label
 
         results: list[Publication] = []
         metadata_penalty = float(getattr(settings, "SEARCH_METADATA_ONLY_SCORE_FACTOR", 0.88))

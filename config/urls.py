@@ -6,10 +6,13 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail import urls as wagtail_urls
 
-from apps.core.views import HomeView
+from apps.core.views import HealthLiveView, HealthReadyView, HomeView
 
 urlpatterns = [
     path("", HomeView.as_view(), name="home"),
+    path("health/", HealthReadyView.as_view(), name="health-ready"),
+    path("health/live/", HealthLiveView.as_view(), name="health-live"),
+    path("health/ready/", HealthReadyView.as_view(), name="health-ready-detail"),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.users.urls")),
     path("publications/", include("apps.publications.urls")),

@@ -121,6 +121,9 @@
         const typeInfo = payload.field_values && payload.field_values.publication_type_label
           ? `<p style="margin:.35rem 0;"><strong>Предполагаемый тип:</strong> ${payload.field_values.publication_type_label}</p>`
           : '';
+        const characteristics = Array.isArray(payload.characteristics) && payload.characteristics.length
+          ? `<div style="margin-top:.5rem;"><strong>Выявленные особенности содержания:</strong><ul style="margin:.35rem 0 0 1.1rem;">${payload.characteristics.map(item => `<li><strong>${item.label}</strong>${item.detail ? ` — ${item.detail}` : ''}</li>`).join('')}</ul></div>`
+          : '';
         summaryNode.style.display = 'block';
         summaryNode.innerHTML = `
           <p style="margin:.35rem 0;"><strong>Режим обработки:</strong> ${payload.status_label || '—'}</p>
@@ -129,6 +132,7 @@
           ${typeInfo}
           ${keywordHints}
           ${fields}
+          ${characteristics}
         `;
       }
 
