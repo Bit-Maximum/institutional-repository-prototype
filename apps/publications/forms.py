@@ -30,7 +30,6 @@ class PublicationForm(forms.ModelForm):
             "graphic_editions",
             "file",
             "publication_format_link",
-            "is_draft",
         ]
         widgets = {
             "contents": forms.Textarea(attrs={"rows": 5}),
@@ -75,3 +74,5 @@ class PublicationForm(forms.ModelForm):
             "Поле обязательно. Его можно заполнить вручную или получить предварительную подсказку из загруженного файла."
         )
         self.fields["publication_year"].required = False
+
+        self.fields["file"].required = False

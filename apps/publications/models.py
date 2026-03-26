@@ -267,8 +267,27 @@ class Publication(models.Model):
         related_name="uploaded_publications",
         db_column="uploaded_by_user_id",
     )
+    last_saved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="saved_publications",
+        db_column="last_saved_by_user_id",
+    )
+    published_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="published_publications",
+        db_column="published_by_user_id",
+    )
     publication_year = models.IntegerField(null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    draft_revision = models.PositiveIntegerField(default=0)
     volume_number = models.PositiveIntegerField(null=True, blank=True)
     issue_number = models.PositiveIntegerField(null=True, blank=True)
     publication_subtype = models.ForeignKey(
@@ -366,11 +385,14 @@ class Publication(models.Model):
         ]
         indexes = [
             models.Index(fields=["uploaded_by"], name="idx_pubs_uploaded_by_id"),
+            models.Index(fields=["last_saved_by"], name="idx_pubs_saved_by_id"),
+            models.Index(fields=["published_by"], name="idx_pubs_published_by_id"),
             models.Index(fields=["publication_subtype"], name="idx_pubs_subtype_id"),
             models.Index(fields=["periodicity"], name="idx_pubs_period_id"),
             models.Index(fields=["language"], name="idx_publications_language_id"),
             models.Index(fields=["text_extraction_status"], name="idx_pubs_extract_status"),
             models.Index(fields=["vector_index_signature"], name="idx_pubs_vector_sig"),
+            models.Index(fields=["is_draft", "updated_at"], name="idx_pubs_draft_updated"),
         ]
 
     def __str__(self) -> str:
@@ -401,6 +423,30 @@ class Publication(models.Model):
 
     def get_status_display(self) -> str:
         return "Черновик" if self.is_draft else "Опубликовано"
+
+    @property
+    def workflow_status_label(self) -> str:
+        if self.is_draft:
+            return f"Черновик · редакция #{self.draft_revision or 1}"
+        if self.published_at:
+            return f"Опубликовано {self.published_at:%d.%m.%Y %H:%M}"
+        return "Опубликовано"
+
+    def bump_draft_revision(self) -> None:
+        self.draft_revision = int(self.draft_revision or 0) + 1
+
+    def mark_as_draft(self, *, actor=None) -> None:
+        self.is_draft = True
+        self.bump_draft_revision()
+        if actor is not None:
+            self.last_saved_by = actor
+
+    def mark_as_published(self, *, actor=None) -> None:
+        self.is_draft = False
+        self.published_at = timezone.now()
+        if actor is not None:
+            self.published_by = actor
+            self.last_saved_by = actor
 
     @property
     def language_name(self) -> str:

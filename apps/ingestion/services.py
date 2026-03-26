@@ -919,12 +919,17 @@ def rebuild_publication_chunks(publication: Publication) -> tuple[FileExtraction
 def ingest_publication(publication: Publication, index_in_vector_store: bool = True) -> Publication:
     _, chunk_objects = rebuild_publication_chunks(publication)
     signature = compute_publication_index_signature(publication)
+    service = VectorStoreService()
 
     if index_in_vector_store and not publication.is_draft:
-        service = VectorStoreService()
         service.replace_publication_chunks(publication=publication, chunks=chunk_objects)
         publication.vector_indexed_at = timezone.now()
         publication.vector_index_signature = signature
+        publication.save(update_fields=["vector_indexed_at", "vector_index_signature"])
+    else:
+        service.delete_publication_chunks(publication.pk)
+        publication.vector_indexed_at = None
+        publication.vector_index_signature = ""
         publication.save(update_fields=["vector_indexed_at", "vector_index_signature"])
     return publication
 

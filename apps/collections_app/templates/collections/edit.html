@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать коллекцию{% endblock %}
+
+{% block content %}
+  <h1>Редактировать коллекцию</h1>
+  <p><a href="{% url 'collections:detail' object.pk %}">← Вернуться к коллекции</a></p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить изменения</button>
+  </form>
+  <p style="color:#666;">Состав коллекции редактируется на странице самой коллекции через поиск по изданиям и кнопки добавления/удаления.</p>
+{% endblock %}

@@ -1,14 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}Добавить издание{% endblock %}
+{% block title %}{% if workflow_mode == "edit" %}Редактирование издания{% else %}Добавить издание{% endif %}{% endblock %}
 
 {% block content %}
-  <h1>Добавить издание</h1>
+  <h1>{% if workflow_mode == "edit" %}Редактирование издания{% else %}Добавить издание{% endif %}</h1>
   <p>
-    Можно загрузить файл поддерживаемого формата и получить подсказки для предзаполнения формы.
-    Если формат не поддерживается или документ не содержит машиночитаемого текста, издание всё равно будет сохранено
-    и попадёт в поиск по метаданным.
+    Работа с изданием теперь разделена на этапы: можно сохранить запись как черновик, чтобы к ней вернулись другие администраторы,
+    и опубликовать только после проверки полноты данных.
   </p>
+
+  {% if publication and publication.pk %}
+    <section class="card" style="margin-bottom:1rem; background:#fdfdfd;">
+      <h2 style="margin-top:0;">Состояние текущей записи</h2>
+      <p style="margin:.35rem 0;"><strong>Статус:</strong> {{ publication.workflow_status_label }}</p>
+      <p style="margin:.35rem 0;"><strong>Ответственный за загрузку:</strong> {{ publication.uploaded_by }}</p>
+      {% if publication.last_saved_by %}
+        <p style="margin:.35rem 0;"><strong>Последнее сохранение:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>
+      {% endif %}
+      {% if publication.published_at %}
+        <p style="margin:.35rem 0;"><strong>Последняя публикация:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>
+      {% endif %}
+      {% if not publication.is_draft %}
+        <p style="margin:.35rem 0; color:#6b4f00;">После сохранения изменений как черновика издание временно исчезнет из общего каталога до повторной публикации.</p>
+      {% endif %}
+    </section>
+  {% endif %}
 
   <section class="card" style="margin-bottom:1rem; background:#fdfdfd;">
     <h2 style="margin-top:0;">Подсказки по файлу</h2>
@@ -49,9 +65,14 @@
       {% endfor %}
     </div>
 
-    <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem;">
-      <button type="submit">Сохранить</button>
-      <a href="{% url 'publications:list' %}">Отмена</a>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem; align-items:center;">
+      <button type="submit" name="workflow_action" value="save_draft">Сохранить как черновик</button>
+      <button type="submit" name="workflow_action" value="publish">Опубликовать</button>
+      {% if publication and publication.pk %}
+        <a href="{% url 'publications:detail' publication.pk %}">К карточке издания</a>
+      {% else %}
+        <a href="{% url 'publications:list' %}">Отмена</a>
+      {% endif %}
     </div>
   </form>
 

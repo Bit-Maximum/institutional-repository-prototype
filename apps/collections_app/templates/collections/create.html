@@ -4,9 +4,10 @@
 
 {% block content %}
   <h1>Создать коллекцию</h1>
+  <p>После создания коллекции можно будет найти опубликованные издания и добавить их в подборку.</p>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Сохранить</button>
+    <button type="submit">Создать коллекцию</button>
   </form>
 {% endblock %}

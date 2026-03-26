@@ -3,12 +3,81 @@
 {% block title %}Коллекции{% endblock %}
 
 {% block content %}
-  <h1>Коллекции</h1>
-  <ul>
+  <h1>Пользовательские коллекции</h1>
+  <p>Здесь пользователи могут собирать тематические подборки изданий из репозитория, делиться ими и оценивать их полезность.</p>
+
+  <form method="get" style="display:grid;grid-template-columns:2fr 1fr auto;gap:.75rem;align-items:end;margin-bottom:1rem;">
+    <div>
+      <label for="id_q">Поиск по коллекциям</label>
+      <input id="id_q" type="text" name="q" value="{{ search_query }}" placeholder="Название, описание или автор коллекции">
+    </div>
+    <div>
+      <label for="id_sort">Сортировка</label>
+      <select id="id_sort" name="sort">
+        <option value="popular" {% if sort_value == 'popular' %}selected{% endif %}>Сначала популярные</option>
+        <option value="updated" {% if sort_value == 'updated' %}selected{% endif %}>Недавно обновлённые</option>
+        <option value="newest" {% if sort_value == 'newest' %}selected{% endif %}>Сначала новые</option>
+      </select>
+    </div>
+    <button type="submit">Показать</button>
+  </form>
+
+  {% if request.user.is_authenticated %}
+    <p>
+      <a href="{% url 'collections:create' %}">Создать свою коллекцию</a>
+      · <a href="{% url 'collections:my-list' %}">Мои коллекции</a>
+    </p>
+  {% endif %}
+
+  {% if my_collections %}
+    <section style="margin-bottom:1.25rem;">
+      <h2>Мои последние коллекции</h2>
+      <ul>
+        {% for collection in my_collections %}
+          <li>
+            <a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a>
+            — {{ collection.publication_count|default:0 }} издан.
+            · 👍 {{ collection.like_count|default:0 }}
+            · 👎 {{ collection.dislike_count|default:0 }}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <div style="display:grid;gap:1rem;">
     {% for collection in collections %}
-      <li><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></li>
+      <article style="border:1px solid #ddd;border-radius:12px;padding:1rem;background:#fff;">
+        <h2 style="margin-top:0;"><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
+        <p style="margin:.35rem 0;"><strong>Автор:</strong> {{ collection.author_user }}</p>
+        {% if collection.description %}
+          <p style="margin:.35rem 0;">{{ collection.description|truncatechars:240 }}</p>
+        {% endif %}
+        <p style="margin:.35rem 0;color:#555;">
+          Изданий: {{ collection.publication_count|default:0 }}
+          · 👍 {{ collection.like_count|default:0 }}
+          · 👎 {{ collection.dislike_count|default:0 }}
+          · Итоговая полезность: {{ collection.rating_score }}
+        </p>
+        <p style="margin:.35rem 0;color:#666;">
+          Создана: {{ collection.created_at|date:"d.m.Y H:i" }}
+          · Обновлена: {{ collection.updated_at|date:"d.m.Y H:i" }}
+        </p>
+      </article>
     {% empty %}
-      <li>Коллекции пока не созданы.</li>
+      <p>Коллекции пока не созданы.</p>
     {% endfor %}
-  </ul>
+  </div>
+
+  {% if is_paginated %}
+    <nav style="margin-top:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&sort={{ sort_value }}">← Назад</a>
+      {% endif %}
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&sort={{ sort_value }}">Вперёд →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
 {% endblock %}

@@ -16,6 +16,11 @@
         {% if publication.publication_type %}
           — {{ publication.publication_type.name }}
         {% endif %}
+        {% if request.user.is_authenticated %}
+          {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
+            · <a href="{% url 'publications:edit' publication.pk %}">Редактировать</a>
+          {% endif %}
+        {% endif %}
       </li>
     {% empty %}
       <li>Издания не найдены.</li>

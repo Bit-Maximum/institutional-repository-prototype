@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Черновики изданий{% endblock %}
+
+{% block content %}
+  <h1>Черновики изданий</h1>
+  <p>Черновики видны всем администраторам. Любой администратор может продолжить заполнение карточки и затем опубликовать издание.</p>
+
+  <form method="get" style="margin-bottom:1rem;">
+    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Поиск по черновикам">
+    <button type="submit">Найти</button>
+  </form>
+
+  <ul>
+    {% for publication in drafts %}
+      <li style="margin-bottom:.75rem;">
+        <a href="{% url 'publications:edit' publication.pk %}"><strong>{{ publication.title }}</strong></a>
+        <div>
+          Редакция №{{ publication.draft_revision|default:1 }} · обновлено {{ publication.updated_at|date:"d.m.Y H:i" }}
+          {% if publication.last_saved_by %} · {{ publication.last_saved_by }}{% endif %}
+        </div>
+        <div>
+          {% if publication.publication_type %}{{ publication.publication_type.name }}{% endif %}
+          {% if publication.language %} · {{ publication.language.name }}{% endif %}
+          {% if publication.has_extracted_text %} · основной текст извлечён{% else %} · metadata-only{% endif %}
+        </div>
+      </li>
+    {% empty %}
+      <li>Черновики не найдены.</li>
+    {% endfor %}
+  </ul>
+
+  {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <nav style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+      {% if page_obj.has_previous %}
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page=1">Первая</a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Назад</a>
+      {% endif %}
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд</a>
+        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Последняя</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

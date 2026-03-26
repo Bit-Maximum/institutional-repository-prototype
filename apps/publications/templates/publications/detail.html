@@ -4,11 +4,14 @@
 
 {% block content %}
   <h1>{{ publication.title }}</h1>
+  <p><strong>Статус:</strong> {{ publication.workflow_status_label }}</p>
   <p><strong>Тип:</strong> {{ publication.publication_type|default:"—" }}</p>
   <p><strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}</p>
   <p><strong>Год:</strong> {{ publication.publication_year|default:"—" }}</p>
   <p><strong>Язык:</strong> {{ publication.language|default:"—" }}</p>
-  <p><strong>Статус публикации:</strong> {{ publication.get_status_display }}</p>
+  <p><strong>Загрузил:</strong> {{ publication.uploaded_by }}</p>
+  {% if publication.last_saved_by %}<p><strong>Последнее редактирование:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>{% endif %}
+  {% if publication.published_at %}<p><strong>Опубликовано:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>{% endif %}
   <p>
     <strong>Режим индексирования:</strong>
     {{ publication.get_text_extraction_status_display }}
@@ -26,6 +29,20 @@
     {% endfor %}
   </p>
   <p>{{ publication.contents|default:"Описание отсутствует." }}</p>
+
+  {% if can_manage_publication %}
+    <section class="card" style="margin:1rem 0; background:#fdfdfd;">
+      <h2 style="margin-top:0;">Управление изданием</h2>
+      <p style="margin:.35rem 0;">Редактирование выполняется на основной части сайта. После сохранения как черновика издание временно исчезнет из открытого каталога до повторной публикации.</p>
+      <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+        <a href="{% url 'publications:edit' publication.pk %}">Редактировать на сайте</a>
+        {% if publication.is_draft %}
+          <a href="{% url 'publications:drafts' %}">Ко всем черновикам</a>
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
+
   {% if publication.derived_characteristics %}
     <section class="card" style="margin:1rem 0;">
       <h2 style="margin-top:0;">Автоматически выявленные особенности</h2>
