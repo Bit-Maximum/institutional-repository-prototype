@@ -9,6 +9,8 @@
       header, main, footer { max-width: 1100px; margin: 0 auto; padding: 1rem; }
       header { display: flex; justify-content: space-between; align-items: center; }
       nav a { margin-right: 1rem; }
+      nav form { display: inline; margin: 0; }
+      nav button.link-button { background: none; border: 0; padding: 0; margin-right: 1rem; color: #06c; text-decoration: underline; cursor: pointer; font: inherit; }
       .card { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
       main { display: grid; gap: 1rem; }
       form { display: grid; gap: .75rem; }
@@ -30,11 +32,16 @@
         {% endif %}
         <a href="/pages/">CMS</a>
         {% if request.user.is_authenticated %}
+          <a href="{% url 'profile' %}">Профиль</a>
+          <a href="{% url 'oauth-settings' %}">Связанные аккаунты</a>
           {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
             <a href="{% url 'publications:drafts' %}">Черновики</a>
             <a href="{% url 'publications:upload' %}">Загрузить</a>
           {% endif %}
-          <a href="{% url 'logout' %}">Выход</a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="link-button">Выход</button>
+          </form>
         {% else %}
           <a href="{% url 'login' %}">Вход</a>
           <a href="{% url 'register' %}">Регистрация</a>

@@ -19,6 +19,7 @@ dependencies = [
   "scipy>=1.14,<2.0",
   "whitenoise>=6.9,<7.0",
   "torch>=2.11,<2.12",
+  "django-allauth[socialaccount]>=65.7,<66",
 ]
 
 [tool.uv.sources]

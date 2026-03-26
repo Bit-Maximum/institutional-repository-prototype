@@ -19,7 +19,7 @@ class CollectionReactionInline(admin.TabularInline):
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ("name", "author_user", "created_at", "updated_at")
-    search_fields = ("name", "description", "author_user__username")
+    search_fields = ("name", "description", "author_user__full_name", "author_user__email")
     autocomplete_fields = ("author_user",)
     inlines = (CollectionPublicationInline, CollectionReactionInline)
 
@@ -28,5 +28,5 @@ class CollectionAdmin(admin.ModelAdmin):
 class CollectionReactionAdmin(admin.ModelAdmin):
     list_display = ("collection", "user", "value", "updated_at")
     list_filter = ("value",)
-    search_fields = ("collection__name", "user__username")
+    search_fields = ("collection__name", "user__full_name", "user__email")
     autocomplete_fields = ("collection", "user")

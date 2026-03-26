@@ -35,7 +35,7 @@ class Collection(models.Model):
         db_column="author_user_id",
     )
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     publications = models.ManyToManyField(
         Publication,
         through="CollectionPublication",
@@ -88,7 +88,7 @@ class CollectionReaction(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="collection_reactions")
     value = models.SmallIntegerField(choices=COLLECTION_REACTION_CHOICES)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
 
     class Meta:
         db_table = "collection_reactions"

@@ -15,6 +15,7 @@ urlpatterns = [
     path("health/ready/", HealthReadyView.as_view(), name="health-ready-detail"),
     path("admin/", admin.site.urls),
     path("accounts/", include("apps.users.urls")),
+    path("accounts/", include("allauth.urls")),
     path("publications/", include("apps.publications.urls")),
     path("collections/", include("apps.collections_app.urls")),
     path("search/", include("apps.search.urls")),

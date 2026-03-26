@@ -49,7 +49,7 @@ class CollectionListView(ListView):
         queryset = Collection.objects.with_stats().select_related("author_user")
         q = self.request.GET.get("q", "").strip()
         if q:
-            queryset = queryset.filter(Q(name__icontains=q) | Q(description__icontains=q) | Q(author_user__username__icontains=q)).distinct()
+            queryset = queryset.filter(Q(name__icontains=q) | Q(description__icontains=q) | Q(author_user__full_name__icontains=q) | Q(author_user__email__icontains=q)).distinct()
         sort = (self.request.GET.get("sort") or "popular").strip()
         if sort == "newest":
             queryset = queryset.order_by("-created_at", "name")

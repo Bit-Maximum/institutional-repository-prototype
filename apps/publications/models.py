@@ -285,7 +285,7 @@ class Publication(models.Model):
     )
     publication_year = models.IntegerField(null=True, blank=True)
     uploaded_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     published_at = models.DateTimeField(null=True, blank=True)
     draft_revision = models.PositiveIntegerField(default=0)
     volume_number = models.PositiveIntegerField(null=True, blank=True)

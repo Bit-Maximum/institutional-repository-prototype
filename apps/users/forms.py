@@ -39,3 +39,14 @@ class RegisterForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ("full_name",)
+        labels = {"full_name": "Отображаемое имя"}
+        help_texts = {
+            "full_name": "Используется в профиле, коллекциях, черновиках и других пользовательских сценариях.",
+        }

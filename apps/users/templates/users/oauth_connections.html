@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+
+{% block title %}Связанные OAuth-аккаунты{% endblock %}
+
+{% block content %}
+  <h1>Связанные OAuth-аккаунты</h1>
+  <p><a href="{% url 'profile' %}">Вернуться к профилю</a> · <a href="{% url 'profile-edit' %}">Редактировать профиль</a></p>
+  <p>Здесь можно привязать Google-аккаунт к текущему профилю или отвязать уже подключённую учётную запись.</p>
+
+  {% if google_oauth_enabled %}
+    <form method="post" action="{% provider_login_url 'google' process='connect' %}">
+      {% csrf_token %}
+      <button type="submit">Привязать Google-аккаунт</button>
+    </form>
+  {% else %}
+    <p><small>Google OAuth не настроен. Для привязки нужно задать GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET.</small></p>
+  {% endif %}
+
+  <hr>
+
+  {% if social_accounts %}
+    <ul>
+      {% for account in social_accounts %}
+        <li>
+          <strong>{{ account.get_provider.name }}</strong> — {{ account.extra_data.email|default:account.uid }}
+          {% if account.extra_data.name %}<br><small>{{ account.extra_data.name }}</small>{% endif %}
+          <br><small>Подключено: {{ account.date_joined|date:"d.m.Y H:i" }}</small>
+          <form method="post" action="{% url 'oauth-disconnect' account.pk %}" style="margin-top:.5rem;">
+            {% csrf_token %}
+            <button type="submit" {% if not request.user.has_usable_password and social_accounts|length <= 1 %}disabled{% endif %}>Отвязать</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+    {% if not request.user.has_usable_password and social_accounts|length <= 1 %}
+      <p><small>Последнюю связанную OAuth-учётную запись нельзя отвязать, пока у пользователя нет локального пароля.</small></p>
+    {% endif %}
+  {% else %}
+    <p>Связанных OAuth-аккаунтов пока нет.</p>
+  {% endif %}
+{% endblock %}

@@ -258,3 +258,24 @@ If you later change chunking/index-time logic in a way that should invalidate pr
 - `GET /health/` — alias of readiness probe
 
 When startup warmup is enabled, the application logs a final readiness message after the search stack finishes loading and the service becomes ready to accept requests.
+
+## Google OAuth2
+
+Для включения входа через Google укажи в `.env`:
+
+```env
+GOOGLE_OAUTH_CLIENT_ID=<client-id>
+GOOGLE_OAUTH_CLIENT_SECRET=<client-secret>
+```
+
+Для локальной разработки настрой в Google Cloud OAuth redirect URI:
+
+```
+http://127.0.0.1:8000/accounts/google/login/callback/
+```
+
+После `uv sync` и `uv run python manage.py migrate` в системе будут доступны:
+- локальная регистрация и вход по email/паролю;
+- вход или регистрация через Google;
+- привязка и отвязка Google-аккаунта на странице `/accounts/oauth/`.
+

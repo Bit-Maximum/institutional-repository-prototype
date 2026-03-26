@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}
 
 {% block title %}Вход{% endblock %}
 
@@ -9,4 +10,14 @@
     {{ form.as_p }}
     <button type="submit">Войти</button>
   </form>
+
+  {% if google_oauth_enabled %}
+    <hr>
+    <form method="post" action="{% provider_login_url 'google' process='login' %}">
+      {% csrf_token %}
+      <button type="submit">Войти через Google</button>
+    </form>
+  {% else %}
+    <p><small>Google OAuth пока не настроен. Добавь GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET в .env.</small></p>
+  {% endif %}
 {% endblock %}

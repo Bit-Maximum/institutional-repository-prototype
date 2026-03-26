@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование профиля{% endblock %}
+
+{% block content %}
+  <h1>Редактирование профиля</h1>
+  <p><a href="{% url 'profile' %}">← Вернуться к профилю</a></p>
+
+  <h2>Основные данные</h2>
+  <p><strong>Email:</strong> {{ request.user.email }}<br><small>Email в рамках прототипа не редактируется, так как в реальной системе им обычно управляет внешний корпоративный провайдер.</small></p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="profile">
+    {{ profile_form.as_p }}
+    <button type="submit">Сохранить профиль</button>
+  </form>
+
+  <hr>
+
+  <h2>{% if has_local_password %}Сменить локальный пароль{% else %}Задать локальный пароль{% endif %}</h2>
+  <p><small>Локальный пароль полезен как резервный способ входа в дополнение к OAuth. Для пользователей, созданных только через Google, его можно задать здесь впервые.</small></p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="password">
+    {{ password_form.as_p }}
+    <button type="submit">Сохранить пароль</button>
+  </form>
+
+  <hr>
+
+  <h2>Связанные способы входа</h2>
+  <p><a href="{% url 'oauth-settings' %}">Управление связанными OAuth-аккаунтами</a></p>
+{% endblock %}
