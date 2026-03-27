@@ -594,6 +594,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-unfold"
+version = "0.87.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4a/8e/74d2772b46236f062772c23c527cc2b4c33296a8b8306a4856b7e93830f6/django_unfold-0.87.0.tar.gz", hash = "sha256:011048047eea2e789e087660203ca221243885e0c93dbcb47539ff80dde9b76c", size = 1117584, upload-time = "2026-03-25T15:36:10.063Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/89/8d/76967f4593eec3422378eccf1ae24279a194afb5b1ab2daaece9f00c5e44/django_unfold-0.87.0-py3-none-any.whl", hash = "sha256:7ac7eac54d2a6f9eab98e3a90bf0696996ef1638a13b053226e5a007f895aadb", size = 1239731, upload-time = "2026-03-25T15:36:08.698Z" },
+]
+
+[[package]]
 name = "djangorestframework"
 version = "3.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -963,6 +975,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "django" },
     { name = "django-allauth", extra = ["socialaccount"] },
+    { name = "django-unfold" },
     { name = "flagembedding" },
     { name = "hf-xet" },
     { name = "huggingface-hub" },
@@ -990,6 +1003,7 @@ dev = [
 requires-dist = [
     { name = "django", specifier = ">=5.2,<5.3" },
     { name = "django-allauth", extras = ["socialaccount"], specifier = ">=65.7,<66" },
+    { name = "django-unfold", specifier = ">=0.87,<0.88" },
     { name = "flagembedding", specifier = ">=1.3,<2.0" },
     { name = "hf-xet", specifier = ">=1.1,<2.0" },
     { name = "huggingface-hub", specifier = ">=0.32,<1.0" },

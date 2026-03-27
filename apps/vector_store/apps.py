@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class VectorStoreConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "apps.vector_store"
-    verbose_name = "Vector Store"
+    verbose_name = "Векторное хранилище"
 
     _warmup_started = False
 

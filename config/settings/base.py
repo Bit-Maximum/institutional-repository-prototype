@@ -5,6 +5,9 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from django.core.exceptions import ImproperlyConfigured
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -44,6 +47,7 @@ DEBUG = env_bool("DEBUG", False)
 ALLOWED_HOSTS = [host.strip() for host in env("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -158,6 +162,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / env("STATIC_ROOT", "staticfiles")
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
@@ -217,6 +222,97 @@ SOCIALACCOUNT_PROVIDERS = {
 
 WAGTAIL_SITE_NAME = "Institutional Repository"
 WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", "http://localhost:8000")
+
+UNFOLD = {
+    "SITE_TITLE": _("Панель администратора репозитория"),
+    "SITE_HEADER": _("Институциональный репозиторий"),
+    "SITE_SUBHEADER": _("Администрирование прототипа ВКР"),
+    "SITE_SYMBOL": "library_books",
+    "SITE_URL": "/",
+    "DASHBOARD_CALLBACK": "apps.core.dashboard.dashboard_callback",
+    "STYLES": [lambda request: static("admin/css/unfold_custom.css")],
+    "SITE_DROPDOWN": [
+        {
+            "icon": "language",
+            "title": _("Открыть публичный сайт"),
+            "link": "/",
+        },
+        {
+            "icon": "edit_document",
+            "title": _("CMS-админка"),
+            "link": "/cms-admin/",
+            "permission": lambda request: request.user.is_staff,
+        },
+    ],
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "SHOW_BACK_BUTTON": True,
+    "BORDER_RADIUS": "10px",
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": _("Навигация"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Администрирование"),
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                    {
+                        "title": _("Статистика"),
+                        "icon": "monitoring",
+                        "link": reverse_lazy("admin:repository_statistics"),
+                    },
+                    {
+                        "title": _("Публикации"),
+                        "icon": "menu_book",
+                        "link": reverse_lazy("admin:publications_publication_changelist"),
+                    },
+                    {
+                        "title": _("Пользователи"),
+                        "icon": "group",
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                    {
+                        "title": _("Коллекции"),
+                        "icon": "collections_bookmark",
+                        "link": reverse_lazy("admin:collections_app_collection_changelist"),
+                    },
+                    {
+                        "title": _("История поиска"),
+                        "icon": "history",
+                        "link": reverse_lazy("admin:search_searchquery_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": _("Быстрые переходы"),
+                "separator": True,
+                "items": [
+                    {
+                        "title": _("Открыть сайт"),
+                        "icon": "public",
+                        "link": "/",
+                    },
+                    {
+                        "title": _("CMS-админка"),
+                        "icon": "web",
+                        "link": "/cms-admin/",
+                        "permission": lambda request: request.user.is_staff,
+                    },
+                    {
+                        "title": _("Поиск на сайте"),
+                        "icon": "search",
+                        "link": "/search/",
+                    },
+                ],
+            },
+        ],
+    },
+}
 
 SEARCH_PROFILE = env("SEARCH_PROFILE", "fast").strip().lower()
 _profile_defaults = {

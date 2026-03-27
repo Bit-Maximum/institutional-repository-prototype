@@ -1,0 +1,68 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+
+{% block title %}
+    {% if subtitle %}
+        {{ subtitle }} |
+    {% endif %}
+    {{ title|default:_("Администрирование") }} | {{ site_title|default:_("Панель администратора") }}
+{% endblock %}
+
+{% block content %}
+<div class="ir-page ir-page--admin-home">
+    <header class="ir-page-header">
+        <div>
+            <div class="ir-page-header__eyebrow">Администрирование</div>
+            <h1 class="ir-page-header__title">Разделы системы</h1>
+        </div>
+        <div class="ir-page-header__actions">
+            <a class="ir-btn ir-btn--primary" href="{% url 'admin:repository_statistics' %}">Статистика</a>
+            <a class="ir-btn" href="/cms-admin/">CMS-админка</a>
+        </div>
+    </header>
+
+    <section class="ir-kpi-grid">
+        {% for card in admin_home_summary_cards %}
+            <article class="ir-surface ir-kpi-card">
+                <div class="ir-kpi-card__label">{{ card.title }}</div>
+                <div class="ir-kpi-card__value">{{ card.value }}</div>
+                <div class="ir-kpi-card__meta">{{ card.meta }}</div>
+            </article>
+        {% endfor %}
+    </section>
+
+    {% for section in admin_home_sections %}
+        <section class="ir-surface ir-admin-section">
+            <div class="ir-section-head">
+                <h2 class="ir-section-head__title">{{ section.title }}</h2>
+                <span class="ir-count-pill">{{ section.item_count }}</span>
+            </div>
+
+            <div class="ir-admin-grid">
+                {% for item in section.items %}
+                    <article class="ir-entity-tile">
+                        <div class="ir-entity-tile__head">
+                            <h3 class="ir-entity-tile__title">{{ item.title }}</h3>
+                            {% if item.has_count %}
+                                <span class="ir-entity-tile__count">{{ item.count }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if item.description %}
+                            <div class="ir-entity-tile__text">{{ item.description }}</div>
+                        {% endif %}
+
+                        <div class="ir-entity-tile__actions">
+                            <a class="ir-btn ir-btn--sm" href="{{ item.list_url }}">Список</a>
+                            {% if item.add_url %}
+                                <a class="ir-btn ir-btn--sm ir-btn--primary" href="{{ item.add_url }}">Создать</a>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+</div>
+{% endblock %}

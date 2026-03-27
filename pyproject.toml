@@ -20,6 +20,7 @@ dependencies = [
   "whitenoise>=6.9,<7.0",
   "torch>=2.11,<2.12",
   "django-allauth[socialaccount]>=65.7,<66",
+  "django-unfold>=0.87,<0.88",
 ]
 
 [tool.uv.sources]

@@ -1,0 +1,222 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+
+{% block title %}
+    {% if subtitle %}
+        {{ subtitle }} |
+    {% endif %}
+    {{ title }} | {{ site_title|default:_("Панель администратора") }}
+{% endblock %}
+
+{% block content %}
+<div class="ir-page ir-page--stats">
+    <header class="ir-page-header">
+        <div>
+            <div class="ir-page-header__eyebrow">Статистика</div>
+            <h1 class="ir-page-header__title">Состояние репозитория</h1>
+        </div>
+        <div class="ir-page-header__actions">
+            <a class="ir-btn ir-btn--primary" href="{% url 'admin:index' %}">Администрирование</a>
+            <a class="ir-btn" href="/search/">Поиск на сайте</a>
+        </div>
+    </header>
+
+    {% if dashboard_error %}
+        <div class="ir-alert">Не удалось полностью собрать статистику: {{ dashboard_error }}</div>
+    {% endif %}
+
+    {% if dashboard_highlights %}
+        <section class="ir-signal-grid">
+            {% for item in dashboard_highlights %}
+                <article class="ir-surface ir-signal-card ir-signal-card--{{ item.variant }}">
+                    <div class="ir-signal-card__label">{{ item.label }}</div>
+                    <div class="ir-signal-card__value">{{ item.value }}</div>
+                    <div class="ir-signal-card__text">{{ item.text }}</div>
+                </article>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <section class="ir-surface ir-stats-block">
+        <div class="ir-section-head">
+            <h2 class="ir-section-head__title">Ключевые показатели</h2>
+        </div>
+        <div class="ir-kpi-grid">
+            {% for card in dashboard_stats %}
+                <article class="ir-kpi-card ir-kpi-card--compact">
+                    <div class="ir-kpi-card__label">{{ card.title }}</div>
+                    <div class="ir-kpi-card__value">{{ card.value }}</div>
+                    <div class="ir-kpi-card__meta">{{ card.meta }}</div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="ir-surface ir-stats-block">
+        <div class="ir-section-head">
+            <h2 class="ir-section-head__title">Быстрые переходы</h2>
+        </div>
+        <div class="ir-chip-row">
+            {% for item in dashboard_quick_links %}
+                <a class="ir-chip-link" href="{{ item.href }}">
+                    <span>{{ item.title }}</span>
+                    <strong>{{ item.metric }}</strong>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="ir-chart-grid">
+        <article class="ir-surface ir-chart-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Поисковые запросы за 7 дней</h2>
+                <span class="ir-panel-head__meta">Пик: {{ dashboard_search_series_max|default:0 }}</span>
+            </div>
+            <div class="ir-chart">
+                <div class="ir-chart__bars">
+                    {% for point in dashboard_search_series %}
+                        <div class="ir-chart__item">
+                            <div class="ir-chart__value">{{ point.value }}</div>
+                            <div class="ir-chart__bar-wrap">
+                                <div class="ir-chart__bar" style="height: {{ point.height_pct }}%;" title="{{ point.label }} — {{ point.value }}"></div>
+                            </div>
+                            <div class="ir-chart__label">{{ point.weekday }}<br>{{ point.label }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+
+        <article class="ir-surface ir-chart-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Новые загрузки за 7 дней</h2>
+                <span class="ir-panel-head__meta">Пик: {{ dashboard_upload_series_max|default:0 }}</span>
+            </div>
+            <div class="ir-chart">
+                <div class="ir-chart__bars">
+                    {% for point in dashboard_upload_series %}
+                        <div class="ir-chart__item">
+                            <div class="ir-chart__value">{{ point.value }}</div>
+                            <div class="ir-chart__bar-wrap">
+                                <div class="ir-chart__bar ir-chart__bar--emerald" style="height: {{ point.height_pct }}%;" title="{{ point.label }} — {{ point.value }}"></div>
+                            </div>
+                            <div class="ir-chart__label">{{ point.weekday }}<br>{{ point.label }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="ir-table-grid">
+        <article class="ir-surface ir-table-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Индексация</h2>
+                <span class="ir-panel-head__meta">{{ dashboard_index_summary.coverage_pct }}%</span>
+            </div>
+            <div class="ir-progress-card">
+                <div class="ir-progress">
+                    <div class="ir-progress__bar">
+                        <div class="ir-progress__value" style="width: {{ dashboard_index_summary.coverage_pct }}%;"></div>
+                    </div>
+                </div>
+                <div class="ir-index-grid">
+                    <div class="ir-index-stat">
+                        <span>Проиндексировано</span>
+                        <strong>{{ dashboard_index_summary.indexed_publications }} / {{ dashboard_index_summary.total_publications }}</strong>
+                    </div>
+                    <div class="ir-index-stat">
+                        <span>Среднее число фрагментов</span>
+                        <strong>{{ dashboard_index_summary.avg_chunks }}</strong>
+                    </div>
+                    <div class="ir-index-stat">
+                        <span>Опубликовано</span>
+                        <strong>{{ dashboard_index_summary.published_publications }}</strong>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="ir-surface ir-table-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Популярные запросы</h2>
+            </div>
+            <table class="ir-data-table">
+                <thead>
+                    <tr>
+                        {% for header in dashboard_top_queries_table.headers %}<th>{{ header }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_top_queries_table.rows %}
+                        <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                    {% empty %}
+                        <tr><td colspan="{{ dashboard_top_queries_table.headers|length }}">Нет данных</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+
+        <article class="ir-surface ir-table-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Типы изданий</h2>
+            </div>
+            <table class="ir-data-table">
+                <thead>
+                    <tr>
+                        {% for header in dashboard_publication_types_table.headers %}<th>{{ header }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_publication_types_table.rows %}
+                        <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                    {% empty %}
+                        <tr><td colspan="{{ dashboard_publication_types_table.headers|length }}">Нет данных</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+
+        <article class="ir-surface ir-table-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Последние загрузки</h2>
+            </div>
+            <table class="ir-data-table">
+                <thead>
+                    <tr>
+                        {% for header in dashboard_recent_publications_table.headers %}<th>{{ header }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_recent_publications_table.rows %}
+                        <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                    {% empty %}
+                        <tr><td colspan="{{ dashboard_recent_publications_table.headers|length }}">Нет данных</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+
+        <article class="ir-surface ir-table-panel">
+            <div class="ir-panel-head">
+                <h2 class="ir-panel-head__title">Активные издания</h2>
+            </div>
+            <table class="ir-data-table">
+                <thead>
+                    <tr>
+                        {% for header in dashboard_active_publications_table.headers %}<th>{{ header }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dashboard_active_publications_table.rows %}
+                        <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+                    {% empty %}
+                        <tr><td colspan="{{ dashboard_active_publications_table.headers|length }}">Нет данных</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+    </section>
+</div>
+{% endblock %}
