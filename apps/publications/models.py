@@ -608,6 +608,95 @@ class CopyrightPublisher(models.Model):
         indexes = [models.Index(fields=["publisher"], name="idx_cpr_pubs_publisher_id")]
 
 
+class PublicationUserEngagement(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    publication = models.ForeignKey(
+        Publication,
+        on_delete=models.CASCADE,
+        related_name="user_engagements",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="publication_engagements",
+    )
+    view_count = models.PositiveIntegerField(default=0)
+    download_count = models.PositiveIntegerField(default=0)
+    first_viewed_at = models.DateTimeField(null=True, blank=True)
+    last_viewed_at = models.DateTimeField(null=True, blank=True)
+    first_downloaded_at = models.DateTimeField(null=True, blank=True)
+    last_downloaded_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
+    class Meta:
+        db_table = "publication_user_engagements"
+        verbose_name = "Взаимодействие пользователя с изданием"
+        verbose_name_plural = "Взаимодействия пользователей с изданиями"
+        constraints = [
+            models.UniqueConstraint(fields=["publication", "user"], name="uq_pub_user_engagement"),
+        ]
+        indexes = [
+            models.Index(fields=["user", "last_viewed_at"], name="idx_pub_eng_user_view"),
+            models.Index(fields=["user", "last_downloaded_at"], name="idx_pub_eng_user_dl"),
+            models.Index(fields=["publication"], name="idx_pub_eng_pub"),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user} ↔ {self.publication}"
+
+    @property
+    def has_been_viewed(self) -> bool:
+        return self.view_count > 0 or self.last_viewed_at is not None
+
+    @property
+    def has_been_downloaded(self) -> bool:
+        return self.download_count > 0 or self.last_downloaded_at is not None
+
+    @classmethod
+    def record_view(cls, *, user, publication, debounce_minutes: int = 30):
+        if not getattr(user, "is_authenticated", False):
+            return None
+        now = timezone.now()
+        engagement, _ = cls.objects.get_or_create(user=user, publication=publication)
+        if engagement.last_viewed_at and debounce_minutes > 0:
+            delta = now - engagement.last_viewed_at
+            if delta.total_seconds() < debounce_minutes * 60:
+                return engagement
+        engagement.view_count = int(engagement.view_count or 0) + 1
+        engagement.last_viewed_at = now
+        if engagement.first_viewed_at is None:
+            engagement.first_viewed_at = now
+        engagement.save(update_fields=["view_count", "last_viewed_at", "first_viewed_at", "updated_at"])
+        return engagement
+
+    @classmethod
+    def record_download(cls, *, user, publication):
+        if not getattr(user, "is_authenticated", False):
+            return None
+        now = timezone.now()
+        engagement, _ = cls.objects.get_or_create(user=user, publication=publication)
+        engagement.download_count = int(engagement.download_count or 0) + 1
+        engagement.last_downloaded_at = now
+        if engagement.first_downloaded_at is None:
+            engagement.first_downloaded_at = now
+        if engagement.first_viewed_at is None:
+            engagement.first_viewed_at = now
+        engagement.last_viewed_at = now
+        if not engagement.view_count:
+            engagement.view_count = 1
+        engagement.save(update_fields=[
+            "download_count",
+            "last_downloaded_at",
+            "view_count",
+            "first_viewed_at",
+            "last_viewed_at",
+            "first_downloaded_at",
+            "updated_at",
+        ])
+        return engagement
+
+
 class AuthorPublication(models.Model):
     pk = models.CompositePrimaryKey("author", "publication")
     author = models.ForeignKey(Author, on_delete=models.CASCADE)

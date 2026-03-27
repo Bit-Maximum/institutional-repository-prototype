@@ -4,13 +4,19 @@ import json
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
-from django.views.generic import FormView
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.views import View
+from django.views.generic import FormView, TemplateView
 
 from apps.search.models import SearchQuery
 from apps.vector_store.exceptions import VectorStoreDependencyError
 
 from .forms import SearchForm
+from .recommendations import RecommendationService
 from .services import HybridSearchService, KeywordSearchService, SemanticSearchService
 
 
@@ -130,12 +136,8 @@ class SearchView(FormView):
         sort_by = form.cleaned_data.get("sort") or "relevance"
         filters = self.get_filter_payload(form.cleaned_data)
 
-        if self.request.user.is_authenticated and self.has_active_criteria(form.cleaned_data):
-            SearchQuery.objects.create(
-                query_text=query,
-                filters=self.get_serialized_filters(form.cleaned_data, mode),
-                user=self.request.user,
-            )
+        created_history_entry = None
+        serialized_filters = self.get_serialized_filters(form.cleaned_data, mode)
 
         try:
             if mode == "keyword":
@@ -171,6 +173,14 @@ class SearchView(FormView):
                 relative_floor=form.cleaned_data.get("strictness") or None,
             ) if mode == "hybrid" else []
 
+        if self.request.user.is_authenticated and self.has_active_criteria(form.cleaned_data):
+            created_history_entry = SearchQuery.objects.create(
+                query_text=query,
+                filters=serialized_filters,
+                user=self.request.user,
+            )
+            RecommendationService().prime_from_search_entry(created_history_entry, results)
+
         paginator, page_obj = self.paginate_results(results)
         page_results = list(page_obj.object_list)
         context["results"] = page_results
@@ -183,4 +193,82 @@ class SearchView(FormView):
         context["active_mode"] = mode
         context["active_sort"] = sort_by
         context["has_active_filters"] = self.has_active_criteria(form.cleaned_data)
+        return context
+
+
+class SearchHistoryView(LoginRequiredMixin, TemplateView):
+    template_name = "search/history.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = SearchQuery.objects.filter(user=self.request.user).order_by("-created_at", "-id")
+        paginator = Paginator(queryset, settings.SEARCH_PAGE_SIZE)
+        page_obj = paginator.get_page(self.request.GET.get("page") or 1)
+        context["page_obj"] = page_obj
+        context["paginator"] = paginator
+        context["history_entries"] = page_obj.object_list
+        context["history_count"] = paginator.count
+        return context
+
+
+class SearchHistoryDeleteView(LoginRequiredMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request, pk: int, *args, **kwargs):
+        entry = get_object_or_404(SearchQuery, pk=pk, user=request.user)
+        entry.delete()
+        messages.success(request, "Запись из истории поиска удалена.")
+        return redirect("search:history")
+
+
+class SearchHistoryClearView(LoginRequiredMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        deleted_count, _ = SearchQuery.objects.filter(user=request.user).delete()
+        if deleted_count:
+            messages.success(request, "История поиска очищена.")
+        else:
+            messages.info(request, "История поиска уже была пустой.")
+        return redirect("search:history")
+
+
+class RecommendationListView(TemplateView):
+    template_name = "search/recommendations.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        if not user.is_authenticated:
+            context.update({
+                "requires_authentication": True,
+                "recommendations": [],
+                "source_queries": [],
+                "has_history": False,
+            })
+            return context
+
+        requested_page = self.request.GET.get("page") or 1
+        try:
+            requested_page_int = max(1, int(requested_page))
+        except (TypeError, ValueError):
+            requested_page_int = 1
+        recommendation_context = RecommendationService().build_for_user(
+            user,
+            page=requested_page_int,
+            page_size=settings.SEARCH_PAGE_SIZE,
+        )
+        paginator = Paginator(recommendation_context.results, settings.SEARCH_PAGE_SIZE)
+        page_obj = paginator.get_page(requested_page_int)
+        context.update(
+            {
+                "requires_authentication": False,
+                "recommendations": list(page_obj.object_list),
+                "source_queries": recommendation_context.source_queries,
+                "has_history": recommendation_context.has_history,
+                "page_obj": page_obj,
+                "paginator": paginator,
+                "total_results": paginator.count,
+            }
+        )
         return context

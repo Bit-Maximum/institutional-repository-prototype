@@ -30,6 +30,8 @@
   </p>
   <p>{{ publication.contents|default:"Описание отсутствует." }}</p>
 
+  {% if user_has_downloaded_publication %}<p><strong>Статус взаимодействия:</strong> вы уже скачивали это издание.</p>{% elif user_has_viewed_publication %}<p><strong>Статус взаимодействия:</strong> вы уже открывали карточку этого издания.</p>{% endif %}
+
   {% if can_manage_publication %}
     <section class="card" style="margin:1rem 0; background:#fdfdfd;">
       <h2 style="margin-top:0;">Управление изданием</h2>
@@ -57,7 +59,7 @@
     </section>
   {% endif %}
   {% if publication.file %}
-    <p><a href="{{ publication.file.url }}">Скачать файл</a></p>
+    <p><a href="{% url 'publications:download' publication.pk %}">Скачать файл</a></p>
   {% endif %}
   {% if publication.chunks.all %}
     <p><strong>Фрагментов в индексе:</strong> {{ publication.chunks.count }}</p>

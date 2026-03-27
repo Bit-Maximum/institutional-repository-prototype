@@ -14,7 +14,7 @@ from django.views import View
 from django.views.generic import CreateView, TemplateView
 
 from apps.collections_app.models import Collection
-from apps.publications.models import Publication
+from apps.publications.models import Publication, PublicationUserEngagement
 from apps.search.models import SearchQuery
 
 from .forms import RegisterForm, UserProfileForm
@@ -60,6 +60,8 @@ class UserProfileView(LoginRequiredMixin, OAuthContextMixin, TemplateView):
         publication_total = Publication.objects.filter(uploaded_by=user).count()
         publication_drafts = Publication.objects.filter(uploaded_by=user, is_draft=True).count()
         publication_published = Publication.objects.filter(uploaded_by=user, is_draft=False).count()
+        total_viewed = PublicationUserEngagement.objects.filter(user=user, view_count__gt=0).values("publication_id").distinct().count()
+        total_downloaded = PublicationUserEngagement.objects.filter(user=user, download_count__gt=0).values("publication_id").distinct().count()
         context.update(
             {
                 "social_accounts": accounts,
@@ -71,6 +73,8 @@ class UserProfileView(LoginRequiredMixin, OAuthContextMixin, TemplateView):
                 "uploaded_publication_count": publication_total,
                 "draft_publication_count": publication_drafts,
                 "published_publication_count": publication_published,
+                "viewed_publication_count": total_viewed,
+                "downloaded_publication_count": total_downloaded,
             }
         )
         return context

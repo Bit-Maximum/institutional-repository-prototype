@@ -4,6 +4,7 @@ from .views import (
     DraftPublicationListView,
     PublicationCreateView,
     PublicationDetailView,
+    PublicationDownloadView,
     PublicationListView,
     PublicationMetadataPrefillView,
     PublicationUpdateView,
@@ -17,5 +18,6 @@ urlpatterns = [
     path("upload/", PublicationCreateView.as_view(), name="upload"),
     path("upload/prefill/", PublicationMetadataPrefillView.as_view(), name="upload-prefill"),
     path("<int:pk>/edit/", PublicationUpdateView.as_view(), name="edit"),
+    path("<int:pk>/download/", PublicationDownloadView.as_view(), name="download"),
     path("<int:pk>/", PublicationDetailView.as_view(), name="detail"),
 ]

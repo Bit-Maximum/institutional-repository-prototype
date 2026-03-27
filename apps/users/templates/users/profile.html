@@ -10,6 +10,8 @@
   <p>
     <a href="{% url 'profile-edit' %}">Редактировать профиль</a>
     · <a href="{% url 'oauth-settings' %}">Связанные аккаунты</a>
+    · <a href="{% url 'search:recommendations' %}">Персональные рекомендации</a>
+    · <a href="{% url 'search:history' %}">История поиска</a>
   </p>
 
   <h2>Способы входа</h2>
@@ -24,6 +26,8 @@
     <li>Изданий в коллекциях: {{ collection_publication_count }}</li>
     <li>Сохранённых поисковых запросов: {{ search_query_count }}</li>
     <li>Загружено изданий: {{ uploaded_publication_count }}</li>
+    <li>Просмотрено изданий: {{ viewed_publication_count }}</li>
+    <li>Скачано изданий: {{ downloaded_publication_count }}</li>
     <li>Из них опубликовано: {{ published_publication_count }}</li>
     <li>Из них в черновиках: {{ draft_publication_count }}</li>
   </ul>

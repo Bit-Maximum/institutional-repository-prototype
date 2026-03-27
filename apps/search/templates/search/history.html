@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}История поиска{% endblock %}
+
+{% block content %}
+  <h1>История поиска</h1>
+  <p>Здесь хранятся ваши недавние запросы. Эта история используется для персональных рекомендаций. Вы можете удалить отдельные записи или очистить историю полностью.</p>
+
+  <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-bottom:1rem;">
+    <a href="{% url 'search:recommendations' %}">Перейти к рекомендациям</a>
+    {% if history_count %}
+      <form method="post" action="{% url 'search:history-clear' %}" onsubmit="return confirm('Очистить всю историю поиска?');">
+        {% csrf_token %}
+        <button type="submit">Очистить историю</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if history_entries %}
+    <div style="display:grid; gap:1rem;">
+      {% for item in history_entries %}
+        <article class="card">
+          <h3 style="margin-top:0;">{% if item.query_text %}{{ item.query_text }}{% else %}Поиск только по фильтрам{% endif %}</h3>
+          <p style="margin:.25rem 0;"><small>{{ item.created_at|date:"d.m.Y H:i" }}</small></p>
+          {% if item.filters %}<p style="margin:.25rem 0;"><strong>Параметры:</strong> {{ item.filters|truncatechars:220 }}</p>{% endif %}
+          <div style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;">
+            <a href="{% url 'search:results' %}?q={{ item.query_text|urlencode }}">Повторить поиск</a>
+            <form method="post" action="{% url 'search:history-delete' item.pk %}" onsubmit="return confirm('Удалить эту запись из истории?');">
+              {% csrf_token %}
+              <button type="submit">Удалить</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>История поиска пока пуста. Выполните несколько запросов, и на их основе появятся персональные рекомендации.</p>
+  {% endif %}
+
+  {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <nav style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:1rem;">
+      {% if page_obj.has_previous %}
+        <a href="?page=1">Первая</a>
+        <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+      {% endif %}
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">Вперёд</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endblock %}

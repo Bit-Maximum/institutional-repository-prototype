@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import FileResponse, Http404, HttpResponseRedirect, JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
@@ -12,7 +12,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from apps.ingestion.services import generate_metadata_prefill_from_upload, ingest_publication
 
 from .forms import PublicationForm
-from .models import Publication
+from .models import Publication, PublicationUserEngagement
 
 
 class PublicationEditorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -51,6 +51,13 @@ class PublicationVisibilityMixin:
         if user.is_authenticated and (getattr(user, "is_staff", False) or getattr(user, "is_admin", False) or getattr(user, "is_superuser", False)):
             return queryset
         return queryset.filter(is_draft=False)
+
+
+def record_publication_view(request, publication: Publication) -> None:
+    if not request.user.is_authenticated:
+        return
+    debounce = int(getattr(settings, "USER_ACTIVITY_VIEW_DEBOUNCE_MINUTES", 30))
+    PublicationUserEngagement.record_view(user=request.user, publication=publication, debounce_minutes=debounce)
 
 
 class PublicationListView(ListView):
@@ -104,13 +111,47 @@ class PublicationDetailView(PublicationVisibilityMixin, DetailView):
     def get_queryset(self):
         return self.get_publication_queryset()
 
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        record_publication_view(request, self.object)
+        return response
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         context["can_manage_publication"] = bool(
             user.is_authenticated and (getattr(user, "is_staff", False) or getattr(user, "is_admin", False) or getattr(user, "is_superuser", False))
         )
+        if user.is_authenticated:
+            engagement = PublicationUserEngagement.objects.filter(user=user, publication=self.object).first()
+            context["user_has_viewed_publication"] = bool(engagement and engagement.has_been_viewed)
+            context["user_has_downloaded_publication"] = bool(engagement and engagement.has_been_downloaded)
         return context
+
+
+class PublicationDownloadView(PublicationVisibilityMixin, View):
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        return self.get_publication_queryset()
+
+    def get(self, request, pk: int, *args, **kwargs):
+        publication = self.get_queryset().filter(pk=pk).first()
+        if publication is None:
+            raise Http404
+        if not publication.file:
+            messages.error(request, "У выбранного издания отсутствует прикреплённый файл.")
+            return redirect(publication.get_absolute_url())
+        try:
+            publication.file.open("rb")
+        except FileNotFoundError:
+            messages.error(request, "Файл издания не найден в хранилище.")
+            return redirect(publication.get_absolute_url())
+        if request.user.is_authenticated:
+            PublicationUserEngagement.record_download(user=request.user, publication=publication)
+        filename = publication.file.name.split("/")[-1] or f"publication-{publication.pk}"
+        response = FileResponse(publication.file, as_attachment=True, filename=filename)
+        return response
 
 
 class PublicationWorkflowMixin(PublicationEditorRequiredMixin):
