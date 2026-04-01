@@ -1,0 +1,26 @@
+{% load i18n %}
+<article class="publication-tile{% if layout == 'horizontal' %} publication-tile--horizontal{% endif %} card stack-sm">
+  <a class="publication-tile__media-link" href="{% url 'publications:detail' publication.pk %}">
+    {% include 'publications/_preview.html' with publication=publication variant='tile' %}
+  </a>
+  <div class="publication-tile__body stack-sm">
+    <div class="publication-tile__meta">
+      {% if publication.publication_type %}<span>{{ publication.publication_type.name }}</span>{% endif %}
+      {% if publication.publication_year %}<span>{{ publication.publication_year }}</span>{% endif %}
+      {% if publication.language %}<span>{{ publication.language.name }}</span>{% endif %}
+    </div>
+    <h3 class="publication-tile__title"><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
+    {% with authors=publication.authors.all %}
+      {% if authors %}
+        <p class="muted publication-tile__authors">
+          {% for author in authors|slice:":3" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+    <p class="publication-tile__excerpt">{% if publication.contents %}{{ publication.contents|truncatechars:150 }}{% else %}{% trans "Описание будет доступно после заполнения карточки издания." %}{% endif %}</p>
+    <div class="inline-actions publication-tile__actions">
+      <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
+      {% if publication.file %}<a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать" %}</a>{% endif %}
+    </div>
+  </div>
+</article>

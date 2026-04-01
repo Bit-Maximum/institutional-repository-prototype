@@ -8,9 +8,11 @@ from django.http import FileResponse, Http404, HttpResponseRedirect, JsonRespons
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.shortcuts import redirect
 from django.utils.translation import gettext as _
 
 from apps.ingestion.services import generate_metadata_prefill_from_upload, ingest_publication
+from apps.publications.previews import ensure_publication_preview, ensure_publication_previews
 
 from .forms import PublicationForm
 from .models import Publication, PublicationUserEngagement
@@ -78,6 +80,11 @@ class PublicationListView(ListView):
             queryset = queryset.filter(Q(title__icontains=q) | Q(contents__icontains=q) | Q(grif_text__icontains=q))
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ensure_publication_previews(list(context.get("publications", [])))
+        return context
+
 
 class DraftPublicationListView(PublicationEditorRequiredMixin, ListView):
     model = Publication
@@ -114,6 +121,7 @@ class PublicationDetailView(PublicationVisibilityMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
+        ensure_publication_preview(self.object)
         record_publication_view(request, self.object)
         return response
 

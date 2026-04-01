@@ -279,3 +279,23 @@ http://127.0.0.1:8000/accounts/google/login/callback/
 - вход или регистрация через Google;
 - привязка и отвязка Google-аккаунта на странице `/accounts/oauth/`.
 
+
+
+## Publication previews
+
+The prototype can generate visual previews for publications:
+- PDF files: render the first page into a preview image
+- uploaded image files: reuse the uploaded file as the preview source
+- other formats: generate a branded placeholder cover from metadata
+
+To backfill previews for already uploaded publications after migrations, run:
+
+```bash
+uv run python manage.py generate_publication_previews
+```
+
+To force regeneration for all public publications:
+
+```bash
+uv run python manage.py generate_publication_previews --force
+```

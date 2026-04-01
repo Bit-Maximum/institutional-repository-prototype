@@ -50,12 +50,7 @@
 :root[data-ui-style="academic"] .panel::before,
 :root[data-ui-style="academic"] .card::before,
 :root[data-ui-style="academic"] article.card::before {
-  content: "";
-  display: block;
-  height: 4px;
-  margin: -1rem -1rem 1rem;
-  border-radius: 999px 999px 0 0;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent), white 28%), transparent 75%);
+  content: none;
 }
 
 :root[data-ui-style="academic"] .nav-pill,

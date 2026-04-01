@@ -19,26 +19,12 @@
 
   {% if request.user.is_authenticated %}
     <section class="inline-actions">
-      <form method="post" action="{% url 'collections:react' collection.pk %}">
-        {% csrf_token %}
-        <input type="hidden" name="reaction" value="like">
-        <button type="submit" {% if user_reaction == 1 %}disabled{% endif %}>👍 {% trans "Полезная коллекция" %}</button>
-      </form>
-      <form method="post" action="{% url 'collections:react' collection.pk %}">
-        {% csrf_token %}
-        <input type="hidden" name="reaction" value="dislike">
-        <button type="submit" {% if user_reaction == -1 %}disabled{% endif %}>👎 {% trans "Не полезная" %}</button>
-      </form>
+      <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="like"><button type="submit" {% if user_reaction == 1 %}disabled{% endif %}>👍 {% trans "Полезная коллекция" %}</button></form>
+      <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="dislike"><button type="submit" {% if user_reaction == -1 %}disabled{% endif %}>👎 {% trans "Не полезная" %}</button></form>
       {% if user_reaction %}
-        <form method="post" action="{% url 'collections:react' collection.pk %}">
-          {% csrf_token %}
-          <input type="hidden" name="reaction" value="clear">
-          <button type="submit">{% trans "Снять оценку" %}</button>
-        </form>
+        <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="clear"><button type="submit">{% trans "Снять оценку" %}</button></form>
       {% endif %}
-      {% if can_manage_collection %}
-        <a class="chip-link" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать коллекцию" %}</a>
-      {% endif %}
+      {% if can_manage_collection %}<a class="chip-link" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать коллекцию" %}</a>{% endif %}
     </section>
   {% endif %}
 
@@ -47,31 +33,29 @@
       <h2>{% trans "Добавить издание из репозитория" %}</h2>
       <form method="get" class="stack-sm">
         {{ search_form.as_p }}
-        <div class="inline-actions">
-          <button type="submit">{% trans "Найти издание" %}</button>
-        </div>
+        <div class="inline-actions"><button type="submit">{% trans "Найти издание" %}</button></div>
       </form>
       {% if search_query %}
         <h3>{% blocktrans with query=search_query %}Результаты поиска по запросу «{{ query }}»{% endblocktrans %}</h3>
-        <ul class="stack-sm">
+        <div class="card-list publication-row-list">
           {% for publication in candidate_publications %}
-            <li>
-              <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
-              {% if publication.publication_year %} ({{ publication.publication_year }}){% endif %}
-              {% with authors=publication.authors.all %}
-                {% if authors %}<br><small>{% trans "Авторы" %}: {% for author in authors %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>{% endif %}
-              {% endwith %}
-              <form method="post" action="{% url 'collections:add-publication' collection.pk %}" class="inline-actions" style="margin-top:.35rem;">
-                {% csrf_token %}
-                <input type="hidden" name="publication_id" value="{{ publication.pk }}">
-                <input type="hidden" name="q" value="{{ search_query }}">
-                <button type="submit">{% trans "Добавить в коллекцию" %}</button>
-              </form>
-            </li>
+            <article class="card publication-row stack-sm">
+              <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">{% include 'publications/_preview.html' with publication=publication variant='row' %}</a>
+              <div class="publication-row__body stack-sm">
+                <h3><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
+                {% with authors=publication.authors.all %}{% if authors %}<p class="muted">{% trans "Авторы" %}: {% for author in authors|slice:":4" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}{% endwith %}
+                <form method="post" action="{% url 'collections:add-publication' collection.pk %}" class="inline-actions">
+                  {% csrf_token %}
+                  <input type="hidden" name="publication_id" value="{{ publication.pk }}">
+                  <input type="hidden" name="q" value="{{ search_query }}">
+                  <button type="submit">{% trans "Добавить в коллекцию" %}</button>
+                </form>
+              </div>
+            </article>
           {% empty %}
-            <li>{% trans "Подходящие опубликованные издания не найдены." %}</li>
+            <div class="empty-state">{% trans "Подходящие опубликованные издания не найдены." %}</div>
           {% endfor %}
-        </ul>
+        </div>
       {% endif %}
     </section>
   {% endif %}
@@ -81,25 +65,29 @@
     {% if hidden_count %}
       <p class="warning-note">{% blocktrans with count=hidden_count %}Часть связанных изданий сейчас скрыта от обычных пользователей, потому что переведена в черновики: {{ count }}.{% endblocktrans %}</p>
     {% endif %}
-    <ul class="stack-sm">
+    <div class="card-list publication-row-list">
       {% for publication in publications %}
-        <li>
-          <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
-          {% if publication.publication_year %} ({{ publication.publication_year }}){% endif %}
-          {% with authors=publication.authors.all %}
-            {% if authors %}<br><small>{% trans "Авторы" %}: {% for author in authors %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>{% endif %}
-          {% endwith %}
-          {% if can_manage_collection %}
-            <form method="post" action="{% url 'collections:remove-publication' collection.pk %}" class="inline-actions" style="margin-top:.35rem;">
-              {% csrf_token %}
-              <input type="hidden" name="publication_id" value="{{ publication.pk }}">
-              <button type="submit">{% trans "Убрать из коллекции" %}</button>
-            </form>
-          {% endif %}
-        </li>
+        <article class="card publication-row stack-sm">
+          <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">{% include 'publications/_preview.html' with publication=publication variant='row' %}</a>
+          <div class="publication-row__body stack-sm">
+            <div class="publication-tile__meta">
+              {% if publication.publication_type %}<span>{{ publication.publication_type }}</span>{% endif %}
+              {% if publication.publication_year %}<span>{{ publication.publication_year }}</span>{% endif %}
+            </div>
+            <h3><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
+            {% with authors=publication.authors.all %}{% if authors %}<p class="muted">{% trans "Авторы" %}: {% for author in authors|slice:":4" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}{% endwith %}
+            {% if can_manage_collection %}
+              <form method="post" action="{% url 'collections:remove-publication' collection.pk %}" class="inline-actions">
+                {% csrf_token %}
+                <input type="hidden" name="publication_id" value="{{ publication.pk }}">
+                <button type="submit">{% trans "Убрать из коллекции" %}</button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
       {% empty %}
-        <li>{% trans "В коллекции пока нет изданий." %}</li>
+        <div class="empty-state">{% trans "В коллекции пока нет изданий." %}</div>
       {% endfor %}
-    </ul>
+    </div>
   </section>
 {% endblock %}

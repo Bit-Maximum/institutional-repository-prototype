@@ -1,0 +1,11 @@
+{% load i18n %}
+<div class="publication-preview{% if variant %} publication-preview--{{ variant }}{% endif %}">
+  {% if publication.preview_url %}
+    <img src="{{ publication.preview_url }}" alt="{% blocktrans with title=publication.title %}Превью издания «{{ title }}»{% endblocktrans %}" loading="lazy">
+  {% else %}
+    <div class="publication-preview__fallback">
+      <span class="publication-preview__badge">{{ publication.file_extension|default:"FILE"|upper }}</span>
+      <strong>{{ publication.title|truncatechars:70 }}</strong>
+    </div>
+  {% endif %}
+</div>

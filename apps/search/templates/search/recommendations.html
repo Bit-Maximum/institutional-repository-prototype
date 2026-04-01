@@ -23,9 +23,9 @@
       <a class="chip-link" href="{% url 'search:history' %}">{% trans "Управление историей поиска" %}</a>
     </div>
   {% else %}
-    <section class="card stack-sm">
+    <section class="card stack-sm card--soft">
       <h2>{% trans "Что повлияло на рекомендации" %}</h2>
-      <ul class="stack-sm">
+      <ul class="list-reset stack-sm">
         {% for item in source_queries %}
           <li>
             <strong>{% if item.recommendation_query_label %}{{ item.recommendation_query_label }}{% elif item.query_text %}{{ item.query_text }}{% else %}{% trans 'Поиск только по фильтрам' %}{% endif %}</strong>
@@ -42,29 +42,29 @@
     </section>
 
     {% if recommendations %}
-      <div class="card-list">
+      <div class="card-list publication-row-list">
         {% for publication in recommendations %}
-          <article class="card stack-sm">
-            <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
-            <p>
-              <strong>{% trans "Почему рекомендовано" %}:</strong>
-              {% for item in publication.recommendation_queries %}
-                {{ item }}{% if not forloop.last %}, {% endif %}
-              {% endfor %}
-            </p>
-            <p>
-              <strong>{% trans "Итоговый recommendation score" %}:</strong> {{ publication.recommendation_score|floatformat:3 }}
-              {% if publication.user_has_downloaded %} · <strong>{% trans "уже скачивали" %}</strong>{% elif publication.user_has_viewed %} · {% trans "уже просматривали" %}{% endif %}
-            </p>
-            <p class="muted">
-              <strong>{% trans "Тип" %}:</strong> {{ publication.publication_type|default:"—" }} ·
-              <strong>{% trans "Подтип" %}:</strong> {{ publication.publication_subtype|default:"—" }} ·
-              <strong>{% trans "Год" %}:</strong> {{ publication.publication_year|default:"—" }}
-            </p>
-            <p>{% if publication.contents %}{{ publication.contents|truncatechars:260 }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
-            <div class="inline-actions">
-              <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
-              {% if publication.file %}<a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать файл" %}</a>{% endif %}
+          <article class="card publication-row stack-sm">
+            <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">
+              {% include 'publications/_preview.html' with publication=publication variant='row' %}
+            </a>
+            <div class="publication-row__body stack-sm">
+              <div class="publication-tile__meta">
+                {% if publication.publication_type %}<span>{{ publication.publication_type }}</span>{% endif %}
+                {% if publication.publication_subtype %}<span>{{ publication.publication_subtype }}</span>{% endif %}
+                {% if publication.publication_year %}<span>{{ publication.publication_year }}</span>{% endif %}
+              </div>
+              <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+              <p><strong>{% trans "Почему рекомендовано" %}:</strong> {% for item in publication.recommendation_queries %}{{ item }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+              <p class="muted">
+                <strong>{% trans "Итоговый recommendation score" %}:</strong> {{ publication.recommendation_score|floatformat:3 }}
+                {% if publication.user_has_downloaded %} · <strong>{% trans "уже скачивали" %}</strong>{% elif publication.user_has_viewed %} · {% trans "уже просматривали" %}{% endif %}
+              </p>
+              <p>{% if publication.contents %}{{ publication.contents|truncatechars:260 }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
+              <div class="inline-actions">
+                <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
+                {% if publication.file %}<a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать файл" %}</a>{% endif %}
+              </div>
             </div>
           </article>
         {% endfor %}

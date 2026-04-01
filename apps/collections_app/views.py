@@ -10,6 +10,7 @@ from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.utils.translation import gettext as _
 
 from apps.publications.models import Publication
+from apps.publications.previews import ensure_publication_previews
 
 from .forms import CollectionForm, CollectionPublicationSearchForm
 from .models import Collection, CollectionPublication, CollectionReaction
@@ -139,15 +140,19 @@ class CollectionDetailView(DetailView):
                     .distinct()[:20]
                 )
 
+        visible_publications_list = list(visible_publications)
+        candidate_publications_list = list(candidate_publications)
+        ensure_publication_previews(visible_publications_list)
+        ensure_publication_previews(candidate_publications_list)
         context.update(
             {
-                "publications": visible_publications,
+                "publications": visible_publications_list,
                 "hidden_count": hidden_count,
                 "can_manage_collection": can_manage,
                 "user_reaction": reaction,
                 "search_form": search_form,
                 "search_query": search_query,
-                "candidate_publications": candidate_publications,
+                "candidate_publications": candidate_publications_list,
             }
         )
         return context

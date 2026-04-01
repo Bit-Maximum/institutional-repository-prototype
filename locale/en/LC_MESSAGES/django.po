@@ -1,793 +1,132 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: institutional-repository-prototype\n"
-"POT-Creation-Date: 2026-04-01 00:00+0000\n"
-"PO-Revision-Date: 2026-04-01 00:00+0000\n"
-"Language: en\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-04-01 07:27+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: Babel 2.18.0\n"
 
-msgid "Русский"
-msgstr "Russian"
+msgid "Институциональный репозиторий нового поколения"
+msgstr "Next-generation institutional repository"
 
-msgid "Английский"
-msgstr "English"
+msgid "Найдите публикации по смыслу, теме, автору или фильтрам"
+msgstr "Find publications by meaning, topic, author, or filters"
 
-msgid "Основная навигация"
-msgstr "Main navigation"
-
-msgid "Издания"
-msgstr "Publications"
-
-msgid "Поиск"
+msgid "Искать"
 msgstr "Search"
 
-msgid "Коллекции"
-msgstr "Collections"
+msgid "Мои рекомендации"
+msgstr "My recommendations"
 
-msgid "Мои коллекции"
-msgstr "My collections"
+msgid "Новые поступления"
+msgstr "New arrivals"
 
-msgid "Рекомендации"
-msgstr "Recommendations"
+msgid "Свежие публикации с визуальными превью"
+msgstr "Latest publications with visual previews"
 
-msgid "История поиска"
-msgstr "Search history"
+msgid "Возможности прототипа"
+msgstr "Prototype capabilities"
 
-msgid "Страницы CMS"
-msgstr "CMS pages"
+msgid "Что делает взаимодействие с репозиторием удобным"
+msgstr "What makes the repository comfortable to use"
 
-msgid "Отображение интерфейса"
-msgstr "Interface display"
+msgid "Издания, которые стоит открыть прямо сейчас"
+msgstr "Publications worth opening right now"
 
-msgid "Тема"
-msgstr "Theme"
+msgid "Весь каталог"
+msgstr "Full catalog"
 
-msgid "Язык"
-msgstr "Language"
+msgid "Каталог пока пуст. Добавьте первое издание через админку или форму загрузки."
+msgstr "The catalog is still empty. Add the first publication through the admin panel or the upload form."
 
-msgid "Учётная запись"
-msgstr "Account"
+msgid "Сценарии работы"
+msgstr "Usage scenarios"
 
-msgid "Профиль"
-msgstr "Profile"
+msgid "Быстрый вход в ключевые разделы"
+msgstr "Quick access to key sections"
 
-msgid "Связанные аккаунты"
-msgstr "Connected accounts"
+msgid "Поиск и фильтрация"
+msgstr "Search and filtering"
 
-msgid "Черновики"
-msgstr "Drafts"
+msgid "Комбинируйте свободный текст, гибридный режим и метаданные для точной выдачи."
+msgstr "Combine free text, hybrid mode, and metadata for more precise results."
 
-msgid "Загрузить"
-msgstr "Upload"
-
-msgid "Выход"
-msgstr "Sign out"
-
-msgid "Вход"
-msgstr "Sign in"
-
-msgid "Регистрация"
-msgstr "Sign up"
-
-msgid "Прототип ВКР · активный стиль: %(style)s"
-msgstr "Master's thesis prototype · active style: %(style)s"
-
-msgid "Главная"
-msgstr "Home"
-
-msgid "Последние издания"
-msgstr "Latest publications"
-
-msgid "Пока нет опубликованных изданий."
-msgstr "There are no published items yet."
-
-msgid "Последние объявления"
-msgstr "Latest announcements"
-
-msgid "Пока нет опубликованных объявлений."
-msgstr "There are no published announcements yet."
-
-msgid "Профиль пользователя"
-msgstr "User profile"
-
-msgid "Редактировать профиль"
-msgstr "Edit profile"
-
-msgid "Персональные рекомендации"
-msgstr "Personal recommendations"
-
-msgid "Предпочтения интерфейса"
-msgstr "Interface preferences"
-
-msgid "Глобальный стиль сайта"
-msgstr "Global site style"
-
-msgid "Тема интерфейса"
-msgstr "Interface theme"
-
-msgid "Язык интерфейса"
-msgstr "Interface language"
-
-msgid "Способы входа"
-msgstr "Sign-in methods"
-
-msgid "Локальный пароль"
-msgstr "Local password"
-
-msgid "подключён"
-msgstr "connected"
-
-msgid "не задан"
-msgstr "not set"
-
-msgid "не подключён"
-msgstr "not connected"
-
-msgid "Активность в системе"
-msgstr "Activity in the system"
-
-msgid "Создано коллекций"
-msgstr "Collections created"
-
-msgid "Изданий в коллекциях"
-msgstr "Items in collections"
-
-msgid "Сохранённых поисковых запросов"
-msgstr "Saved search queries"
-
-msgid "Загружено изданий"
-msgstr "Uploaded publications"
-
-msgid "Просмотрено изданий"
-msgstr "Viewed publications"
-
-msgid "Скачано изданий"
-msgstr "Downloaded publications"
-
-msgid "Из них опубликовано"
-msgstr "Published"
-
-msgid "Из них в черновиках"
-msgstr "Drafts"
-
-msgid "Дополнительных связанных аккаунтов пока нет."
-msgstr "There are no additional connected accounts yet."
-
-msgid "Редактирование профиля"
-msgstr "Edit profile"
-
-msgid "Вернуться к профилю"
-msgstr "Back to profile"
-
-msgid "Основные данные"
-msgstr "Basic information"
-
-msgid "Email в рамках прототипа не редактируется, так как в реальной системе им обычно управляет внешний корпоративный провайдер."
-msgstr "Email is not editable in the prototype because, in a real system, it is usually managed by an external corporate identity provider."
-
-msgid "Сохранить профиль"
-msgstr "Save profile"
-
-msgid "Сменить локальный пароль"
-msgstr "Change local password"
-
-msgid "Задать локальный пароль"
-msgstr "Set local password"
-
-msgid "Локальный пароль полезен как резервный способ входа в дополнение к OAuth. Для пользователей, созданных только через Google, его можно задать здесь впервые."
-msgstr "A local password is useful as a backup sign-in method in addition to OAuth. Users created only through Google can set it here for the first time."
-
-msgid "Сохранить пароль"
-msgstr "Save password"
-
-msgid "Связанные способы входа"
-msgstr "Connected sign-in methods"
-
-msgid "Управление связанными OAuth-аккаунтами"
-msgstr "Manage connected OAuth accounts"
-
-msgid "Войти"
-msgstr "Sign in"
-
-msgid "Войти через Google"
-msgstr "Sign in with Google"
-
-msgid "Google OAuth пока не настроен. Добавь GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET в .env."
-msgstr "Google OAuth is not configured yet. Add GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to .env."
-
-msgid "Создать аккаунт"
-msgstr "Create account"
-
-msgid "Либо можно сразу создать пользователя через Google:"
-msgstr "Or create a user right away with Google:"
-
-msgid "Продолжить через Google"
-msgstr "Continue with Google"
-
-msgid "Связанные OAuth-аккаунты"
-msgstr "Connected OAuth accounts"
-
-msgid "Здесь можно привязать Google-аккаунт к текущему профилю или отвязать уже подключённую учётную запись."
-msgstr "Here you can link a Google account to the current profile or disconnect an already linked account."
-
-msgid "Привязать Google-аккаунт"
-msgstr "Connect Google account"
-
-msgid "Google OAuth не настроен. Для привязки нужно задать GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET."
-msgstr "Google OAuth is not configured. Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to connect an account."
-
-msgid "Подключено"
-msgstr "Connected"
-
-msgid "Отвязать"
-msgstr "Disconnect"
-
-msgid "Последнюю связанную OAuth-учётную запись нельзя отвязать, пока у пользователя нет локального пароля."
-msgstr "You cannot disconnect the last linked OAuth account while the user has no local password."
-
-msgid "Связанных OAuth-аккаунтов пока нет."
-msgstr "There are no connected OAuth accounts yet."
-
-msgid "Пароль"
-msgstr "Password"
-
-msgid "Подтверждение пароля"
-msgstr "Password confirmation"
-
-msgid "ФИО"
-msgstr "Full name"
-
-msgid "Электронная почта"
-msgstr "Email"
-
-msgid "Пользователь с таким email уже существует."
-msgstr "A user with this email already exists."
-
-msgid "Пароли не совпадают."
-msgstr "Passwords do not match."
-
-msgid "Отображаемое имя"
-msgstr "Display name"
-
-msgid "Используется в профиле, коллекциях, черновиках и других пользовательских сценариях."
-msgstr "Used in the profile, collections, drafts, and other user-facing scenarios."
-
-msgid "Запрос"
-msgstr "Query"
-
-msgid "Название, автор, ключевое слово, издатель…"
-msgstr "Title, author, keyword, publisher…"
-
-msgid "Гибридный"
-msgstr "Hybrid"
-
-msgid "Семантический"
-msgstr "Semantic"
-
-msgid "Традиционный"
-msgstr "Keyword"
-
-msgid "Режим поиска"
-msgstr "Search mode"
-
-msgid "По релевантности"
-msgstr "By relevance"
-
-msgid "Сначала новые"
-msgstr "Newest first"
-
-msgid "Сначала старые"
-msgstr "Oldest first"
-
-msgid "По году: новые"
-msgstr "By year: newer"
-
-msgid "По году: старые"
-msgstr "By year: older"
-
-msgid "По названию: А–Я"
-msgstr "By title: A–Z"
-
-msgid "По названию: Я–А"
-msgstr "By title: Z–A"
-
-msgid "Сортировка"
-msgstr "Sorting"
-
-msgid "По умолчанию из конфига"
-msgstr "Use default from config"
-
-msgid "Не отсекать слабые результаты"
-msgstr "Do not cut off weak results"
-
-msgid "Мягкий отсев"
-msgstr "Soft cutoff"
-
-msgid "Сбалансированный отсев"
-msgstr "Balanced cutoff"
-
-msgid "Строгий отсев"
-msgstr "Strict cutoff"
-
-msgid "Очень строгий отсев"
-msgstr "Very strict cutoff"
-
-msgid "Строгость отсечения по score"
-msgstr "Score cutoff strictness"
-
-msgid "Любой тип издания"
-msgstr "Any publication type"
-
-msgid "Тип издания"
-msgstr "Publication type"
-
-msgid "Любой подтип издания"
-msgstr "Any publication subtype"
-
-msgid "Подтип издания"
-msgstr "Publication subtype"
-
-msgid "Любой язык"
-msgstr "Any language"
-
-msgid "Любая периодичность"
-msgstr "Any periodicity"
-
-msgid "Периодичность"
-msgstr "Periodicity"
-
-msgid "Любой автор"
-msgstr "Any author"
-
-msgid "Автор"
-msgstr "Author"
-
-msgid "Любое ключевое слово"
-msgstr "Any keyword"
-
-msgid "Ключевое слово"
-msgstr "Keyword"
-
-msgid "Любой издатель"
-msgstr "Any publisher"
-
-msgid "Издатель"
-msgstr "Publisher"
-
-msgid "Любое место публикации"
-msgstr "Any publication place"
-
-msgid "Место публикации"
-msgstr "Publication place"
-
-msgid "Год издания от"
-msgstr "Publication year from"
-
-msgid "Год издания до"
-msgstr "Publication year to"
-
-msgid "Для традиционного поиска учитывать совпадения в основном тексте"
-msgstr "Include matches in the main text for keyword search"
-
-msgid "Выбранный подтип не относится к указанному типу издания."
-msgstr "The selected subtype does not belong to the specified publication type."
-
-msgid "Верхняя граница диапазона не может быть меньше нижней."
-msgstr "The upper bound of the range cannot be lower than the lower bound."
-
-msgid "Название"
-msgstr "Title"
-
-msgid "Описание"
-msgstr "Description"
-
-msgid "Например, Материалы по цифровым библиотекам"
-msgstr "For example, Materials on digital libraries"
-
-msgid "Кратко опишите, для чего создана коллекция и кому она может быть полезна."
-msgstr "Briefly describe why the collection was created and who may find it useful."
-
-msgid "Найти издание для добавления"
-msgstr "Find a publication to add"
-
-msgid "Введите название, автора или ключевые слова"
-msgstr "Enter the title, author, or keywords"
-
-msgid "Следовать настройкам устройства"
-msgstr "Follow device settings"
-
-msgid "Светлая"
-msgstr "Light"
-
-msgid "Тёмная"
-msgstr "Dark"
-
-msgid "Институциональный репозиторий"
-msgstr "Institutional repository"
-
-msgid "Название публичного сайта"
-msgstr "Public site title"
-
-msgid "Семантический поиск, коллекции и интеллектуальные рекомендации"
-msgstr "Semantic search, collections, and intelligent recommendations"
-
-msgid "Подзаголовок публичного сайта"
-msgstr "Public site subtitle"
-
-msgid "Активный глобальный стиль"
-msgstr "Active global style"
-
-msgid "Определяет базовый визуальный стиль всего публичного сайта. Новые стили можно добавлять через реестр apps.ui.registry."
-msgstr "Defines the base visual style of the entire public site. New styles can be added via the apps.ui.registry registry."
-
-msgid "Тема по умолчанию"
-msgstr "Default theme"
-
-msgid "Язык публичного интерфейса по умолчанию"
-msgstr "Default public interface language"
-
-msgid "Разрешить пользователям переключать светлую/тёмную тему"
-msgstr "Allow users to switch light/dark theme"
-
-msgid "Разрешить пользователям переключать язык интерфейса"
-msgstr "Allow users to switch interface language"
-
-msgid "Конфигурация публичного интерфейса"
-msgstr "Public interface configuration"
-
-msgid "Неизвестный стиль интерфейса. Доступные идентификаторы: %(available)s"
-msgstr "Unknown interface style. Available identifiers: %(available)s"
-
-msgid "Язык должен входить в список LANGUAGES проекта."
-msgstr "The language must be present in the project's LANGUAGES setting."
-
-msgid "Академический"
-msgstr "Academic"
-
-msgid "Сдержанный интерфейс с выраженной типографикой, чёткой иерархией блоков и спокойными акцентами."
-msgstr "A restrained interface with expressive typography, clear block hierarchy, and calm accents."
-
-msgid "Подходит для классических университетских и библиотечных репозиториев."
-msgstr "Fits classic university and library repositories."
-
-msgid "Более современный стиль с полупрозрачными поверхностями, мягким свечением и визуальной глубиной."
-msgstr "A more modern style with translucent surfaces, soft glow, and visual depth."
-
-msgid "Подходит для демонстрации гибкости UI и современного визуального языка."
-msgstr "Fits demonstrations of UI flexibility and a modern visual language."
-
-msgid "Переключение темы сейчас отключено администратором."
-msgstr "Theme switching is currently disabled by the administrator."
-
-msgid "Настройка темы интерфейса обновлена."
-msgstr "Interface theme preference has been updated."
-
-msgid "Переключение языка сейчас отключено администратором."
-msgstr "Language switching is currently disabled by the administrator."
-
-msgid "Язык интерфейса обновлён."
-msgstr "Interface language has been updated."
-
-msgid "Перейти к содержимому"
-msgstr "Skip to content"
-
-msgid "Настройки аккаунта и интерфейса"
-msgstr "Account and interface settings"
-
-msgid "Локальный пароль и OAuth"
-msgstr "Local password and OAuth"
-
-msgid "Все коллекции"
-msgstr "All collections"
-
-msgid "Открытые пользовательские подборки"
-msgstr "Public user-curated lists"
-
-msgid "Личные подборки и управление"
-msgstr "Personal collections and management"
-
-msgid "Создать коллекцию"
-msgstr "Create a collection"
-
-msgid "Новая тематическая подборка"
-msgstr "Create a new themed collection"
-
-msgid "Для вас"
-msgstr "For you"
-
-msgid "Персональная подборка по истории поиска"
-msgstr "Personal list based on search history"
-
-msgid "Недавние запросы и сигналы рекомендаций"
-msgstr "Recent queries and recommendation signals"
-
-msgid "Аккаунт, язык и тема"
-msgstr "Account, language, and theme"
-
-msgid "О проекте"
-msgstr "About the project"
-
-msgid "Новости, объявления и статические страницы"
-msgstr "News, announcements, and static pages"
-
-msgid "Администрирование"
-msgstr "Administration"
-
-msgid "Совместная редакторская работа"
-msgstr "Collaborative editorial workflow"
-
-msgid "Загрузить издание"
-msgstr "Upload a publication"
-
-msgid "Создание новой карточки"
-msgstr "Create a new publication record"
-
-msgid "Справочники, пользователи и статистика"
-msgstr "Dictionaries, users, and statistics"
-
-msgid "Управление страницами и новостями"
-msgstr "Manage pages and news"
-
-msgid "Перейти к поиску"
-msgstr "Go to search"
-
-msgid "Открыть каталог"
-msgstr "Open catalog"
-
-msgid "Каталог"
-msgstr "Catalog"
-
-msgid "Каталог изданий"
-msgstr "Publication catalog"
-
-msgid "Просматривайте опубликованные материалы и переходите к полным карточкам изданий."
-msgstr "Browse published materials and open full publication records."
-
-msgid "Поисковый запрос"
-msgstr "Search query"
-
-msgid "Поиск по заголовку, содержанию и метаданным"
-msgstr "Search by title, content, and metadata"
-
-msgid "Редактировать"
-msgstr "Edit"
-
-msgid "Издания не найдены."
-msgstr "No publications found."
-
-msgid "Первая"
-msgstr "First"
-
-msgid "Последняя"
-msgstr "Last"
-
-msgid "Страница %(number)s из %(total)s"
-msgstr "Page %(number)s of %(total)s"
-
-msgid "Карточка издания"
-msgstr "Publication record"
-
-msgid "Основная информация"
-msgstr "Main information"
-
-msgid "Статус"
-msgstr "Status"
-
-msgid "Тип"
-msgstr "Type"
-
-msgid "Подтип"
-msgstr "Subtype"
-
-msgid "Год"
-msgstr "Year"
-
-msgid "Загрузил"
-msgstr "Uploaded by"
-
-msgid "Последнее редактирование"
-msgstr "Last edited"
-
-msgid "Опубликовано"
-msgstr "Published"
-
-msgid "Режим индексирования"
-msgstr "Indexing mode"
-
-msgid "Основной текст извлечён"
-msgstr "Main text extracted"
-
-msgid "да"
-msgstr "yes"
-
-msgid "нет"
-msgstr "no"
-
-msgid "Описание отсутствует."
-msgstr "No description available."
-
-msgid "Фрагментов в индексе"
-msgstr "Indexed chunks"
-
-msgid "Статус взаимодействия"
-msgstr "Interaction status"
-
-msgid "вы уже скачивали это издание."
-msgstr "you have already downloaded this publication."
-
-msgid "вы уже открывали карточку этого издания."
-msgstr "you have already opened this publication record."
-
-msgid "Управление изданием"
-msgstr "Publication management"
-
-msgid "Редактировать на сайте"
-msgstr "Edit on the site"
-
-msgid "Ко всем черновикам"
-msgstr "Back to all drafts"
-
-msgid "Редакторский workflow"
-msgstr "Editorial workflow"
-
-msgid "Черновики видны всем администраторам. Любой администратор может продолжить заполнение карточки и затем опубликовать издание."
-msgstr "Drafts are visible to all administrators. Any administrator can continue editing the record and publish it afterward."
-
-msgid "Поиск по черновикам"
-msgstr "Search drafts"
-
-msgid "основной текст извлечён"
-msgstr "main text extracted"
-
-msgid "metadata-only"
-msgstr "metadata-only"
-
-msgid "Черновики не найдены."
-msgstr "No drafts found."
-
-msgid "Редакция №%(revision)s · обновлено %(updated)s"
-msgstr "Revision #%(revision)s · updated %(updated)s"
-
-msgid "Добавить издание"
-msgstr "Add publication"
-
-msgid "Работа с изданием разделена на этапы: запись можно сохранить как черновик и опубликовать только после проверки полноты данных."
-msgstr "Publication handling is split into stages: you can save the record as a draft and publish it only after checking that the data is complete."
-
-msgid "Состояние текущей записи"
-msgstr "Current record status"
-
-msgid "Ответственный за загрузку"
-msgstr "Responsible uploader"
-
-msgid "Последнее сохранение"
-msgstr "Last saved"
-
-msgid "Последняя публикация"
-msgstr "Last publication"
-
-msgid "Подсказки по файлу"
-msgstr "File hints"
-
-msgid "Система попытается извлечь текст и предложить черновик названия, года, языка, авторов, ключевых слов и краткого описания."
-msgstr "The system will try to extract the text and suggest a draft title, year, language, authors, keywords, and a short description."
-
-msgid "Предзаполнить из файла"
-msgstr "Prefill from file"
-
-msgid "Сохранить как черновик"
-msgstr "Save as draft"
-
-msgid "К карточке издания"
-msgstr "Back to publication record"
-
-msgid "Отмена"
-msgstr "Cancel"
-
-msgid "Сначала выберите файл в поле «Файл»."
-msgstr "First choose a file in the “File” field."
-
-msgid "Анализ файла…"
-msgstr "Analyzing the file…"
-
-msgid "Не удалось получить рекомендации."
-msgstr "Could not retrieve suggestions."
-
-msgid "Не удалось проанализировать файл."
-msgstr "Could not analyze the file."
-
-msgid "Подсказки получены, но уже заполненные поля форма не перезаписывает."
-msgstr "Suggestions were received, but the form does not overwrite fields that are already filled in."
-
-msgid "Ключевые слова-кандидаты"
-msgstr "Candidate keywords"
-
-msgid "Автоматически заполнены поля"
-msgstr "Fields filled automatically"
-
-msgid "Страниц в файле"
-msgstr "Pages in the file"
-
-msgid "Предполагаемый тип"
-msgstr "Suggested type"
-
-msgid "Выявленные особенности содержания"
-msgstr "Detected content characteristics"
-
-msgid "Режим обработки"
-msgstr "Processing mode"
-
-msgid "Комментарий"
-msgstr "Comment"
-
-msgid "Подсказки получены. Проверьте форму перед сохранением."
-msgstr "Suggestions received. Review the form before saving."
-
-msgid "Год издания"
-msgstr "Publication year"
-
-msgid "Научные руководители"
-msgstr "Scientific supervisors"
-
-msgid "Ключевые слова"
-msgstr "Keywords"
-
-msgid "Пользовательский контент"
-msgstr "User content"
-
-msgid "Пользовательские коллекции"
+msgid "Коллекции пользователей"
 msgstr "User collections"
 
-msgid "Здесь пользователи собирают тематические подборки изданий, делятся ими и оценивают их полезность."
-msgstr "Here users gather themed publication lists, share them, and rate how useful they are."
+msgid "Собирайте тематические подборки и делитесь ими с другими читателями."
+msgstr "Build thematic collections and share them with other readers."
 
-msgid "Поиск по коллекциям"
-msgstr "Search collections"
+msgid "Смотрите, как история запросов постепенно формирует индивидуальную ленту чтения."
+msgstr "See how search history gradually forms a personalized reading feed."
 
-msgid "Название, описание или автор коллекции"
-msgstr "Title, description, or collection author"
+msgid "Последние новости и публикации CMS"
+msgstr "Latest news and CMS publications"
 
-msgid "Сначала популярные"
-msgstr "Most popular first"
+msgid "Например: для получения стипендии, интеллектуальный анализ текста, учебно-методическое пособие"
+msgstr "For example: scholarship support, intelligent text analysis, or an educational guide."
 
-msgid "Недавно обновлённые"
-msgstr "Recently updated"
+#, python-format
+msgid "Превью издания «%(title)s»"
+msgstr "Preview of publication “%(title)s”"
 
-msgid "Показать"
-msgstr "Show"
+msgid "Описание будет доступно после заполнения карточки издания."
+msgstr "A description will appear after the publication card is completed."
 
-msgid "Создать свою коллекцию"
-msgstr "Create your own collection"
+msgid "Скачать"
+msgstr "Download"
 
-msgid "Мои последние коллекции"
-msgstr "My recent collections"
+msgid "Просматривайте опубликованные материалы, ориентируйтесь по превью и переходите к полным карточкам изданий."
+msgstr "Browse published materials, orient yourself with previews, and open full publication cards."
 
-msgid "изд."
-msgstr "pubs."
+msgid "Поиск по заголовку, описанию и метаданным"
+msgstr "Search by title, description, and metadata"
 
-msgid "Изданий"
-msgstr "Publications"
+msgid "Режим превью"
+msgstr "Preview mode"
 
-msgid "Итоговая полезность"
-msgstr "Overall usefulness"
+msgid "Нет превью"
+msgstr "No preview"
 
-msgid "Создана"
-msgstr "Created"
+msgid "Описание и содержимое"
+msgstr "Description and contents"
 
-msgid "Обновлена"
-msgstr "Updated"
+msgid ""
+"Используйте текстовый запрос, фильтры или оба подхода одновременно. Результаты сразу показываются в виде карточек с "
+"превью и пояснением релевантности."
+msgstr "Use a text query, filters, or both together. Results are shown immediately as cards with previews and relevance notes."
 
-msgid "Коллекции пока не созданы."
-msgstr "No collections have been created yet."
+msgid "Запустить поиск"
+msgstr "Run search"
 
-msgid "Коллекция"
-msgstr "Collection"
+msgid "Сбросить параметры"
+msgstr "Reset parameters"
 
-msgid "Автор коллекции"
-msgstr "Collection author"
+msgid "Результаты поиска"
+msgstr "Search results"
+
+msgid "Может быть интересно"
+msgstr "Also worth a look"
+
+msgid ""
+"Ниже показаны издания, добавленные только из выборки по фильтрам. Они не прошли основной релевантностный отбор, но "
+"соответствуют выбранным ограничениям."
+msgstr ""
+"Below are publications added only from the filter-based selection. They did not pass the main relevance cut, but they"
+" still match the selected constraints."
+
+msgid "Управлять историей поиска"
+msgstr "Manage search history"
 
 msgid "Полезная коллекция"
 msgstr "Useful collection"
@@ -795,392 +134,104 @@ msgstr "Useful collection"
 msgid "Не полезная"
 msgstr "Not useful"
 
-msgid "Снять оценку"
-msgstr "Remove rating"
-
 msgid "Добавить издание из репозитория"
 msgstr "Add a publication from the repository"
 
 msgid "Найти издание"
-msgstr "Find a publication"
-
-msgid "Результаты поиска по запросу «%(query)s»"
-msgstr "Search results for “%(query)s”"
-
-msgid "Добавить в коллекцию"
-msgstr "Add to collection"
+msgstr "Find publication"
 
 msgid "Подходящие опубликованные издания не найдены."
-msgstr "No matching published publications were found."
-
-msgid "Издания в коллекции"
-msgstr "Publications in the collection"
-
-msgid "Часть связанных изданий сейчас скрыта от обычных пользователей, потому что переведена в черновики: %(count)s."
-msgstr "Some linked publications are currently hidden from regular users because they were moved back to drafts: %(count)s."
+msgstr "No suitable published publications were found."
 
 msgid "Убрать из коллекции"
 msgstr "Remove from collection"
 
-msgid "В коллекции пока нет изданий."
-msgstr "There are no publications in this collection yet."
-
-msgid "После создания коллекции можно найти опубликованные издания и добавить их в подборку."
-msgstr "After creating the collection, you can find published publications and add them to it."
-
-msgid "Редактировать коллекцию"
-msgstr "Edit collection"
-
-msgid "Вернуться к коллекции"
-msgstr "Back to collection"
-
-msgid "Сохранить изменения"
-msgstr "Save changes"
-
-msgid "Состав коллекции редактируется на странице самой коллекции через поиск по изданиям и кнопки добавления и удаления."
-msgstr "The collection contents are edited on the collection page itself using publication search and add/remove buttons."
-
-msgid "Создать новую коллекцию"
-msgstr "Create a new collection"
-
-msgid "У вас пока нет коллекций."
-msgstr "You do not have any collections yet."
-
-msgid "Аккаунт"
-msgstr "Account"
-
-msgid "Быстрый вход"
-msgstr "Quick sign-in"
-
-msgid "Google OAuth пока не настроен. Добавьте GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET в .env."
-msgstr "Google OAuth is not configured yet. Add GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET to .env."
-
-msgid "Регистрация через Google"
-msgstr "Sign up with Google"
-
-msgid "Google OAuth"
-msgstr "Google OAuth"
-
-msgid "Профиль обновлён."
-msgstr "Profile updated."
-
-msgid "Локальный пароль обновлён."
-msgstr "Local password updated."
-
-msgid "Не удалось определить действие формы."
-msgstr "Could not determine the form action."
-
-msgid "Нельзя отвязать последнюю OAuth-учётную запись, пока у пользователя не установлен локальный пароль."
-msgstr "You cannot disconnect the last OAuth account while the user has no local password set."
-
-msgid "Связь с провайдером %(provider)s удалена."
-msgstr "Connection to provider %(provider)s has been removed."
-
-msgid "Персонализация"
-msgstr "Personalization"
-
-msgid "Здесь хранятся ваши недавние запросы. История используется для персональных рекомендаций, но её можно очистить в любой момент."
-msgstr "Your recent queries are stored here. The history is used for personal recommendations, but you can clear it at any time."
-
-msgid "Очистить всю историю поиска?"
-msgstr "Clear the entire search history?"
-
-msgid "Очистить историю"
-msgstr "Clear history"
-
-msgid "Параметры"
-msgstr "Parameters"
-
-msgid "Повторить поиск"
-msgstr "Repeat search"
-
-msgid "Удалить эту запись из истории?"
-msgstr "Delete this history entry?"
-
-msgid "Удалить"
-msgstr "Delete"
-
-msgid "История поиска пока пуста. Выполните несколько запросов, и на их основе появятся персональные рекомендации."
-msgstr "Your search history is empty. Run a few queries and personal recommendations will appear based on them."
-
-msgid "Запись из истории поиска удалена."
-msgstr "Search history entry deleted."
-
-msgid "История поиска очищена."
-msgstr "Search history cleared."
-
-msgid "История поиска уже была пустой."
-msgstr "Search history was already empty."
-
-msgid "Рекомендации формируются на основе последних поисковых запросов. Более новые запросы влияют сильнее, а уже просмотренные или скачанные издания помечаются отдельно."
-msgstr "Recommendations are based on recent search queries. Newer queries have a stronger influence, and publications already viewed or downloaded are marked separately."
-
-msgid "Для получения персональных рекомендаций нужно войти в систему."
-msgstr "You need to sign in to get personal recommendations."
-
-msgid "Зарегистрироваться"
-msgstr "Sign up"
-
-msgid "Пока недостаточно данных для рекомендаций. Выполните несколько поисковых запросов, и система начнёт предлагать подходящие издания."
-msgstr "There is not enough data for recommendations yet. Run a few search queries and the system will start suggesting suitable publications."
-
-msgid "Управление историей поиска"
-msgstr "Manage search history"
-
-msgid "Что повлияло на рекомендации"
-msgstr "What influenced the recommendations"
-
-msgid "Фильтры"
-msgstr "Filters"
-
-msgid "Управлять историей поиска"
-msgstr "Manage search history"
-
-msgid "Почему рекомендовано"
-msgstr "Why recommended"
-
-msgid "Итоговый recommendation score"
-msgstr "Final recommendation score"
-
-msgid "уже скачивали"
-msgstr "already downloaded"
-
-msgid "уже просматривали"
-msgstr "already viewed"
-
-msgid "Открыть карточку"
-msgstr "Open record"
-
-msgid "По текущей истории поиска система пока не смогла подобрать устойчивые рекомендации. Попробуйте выполнить ещё несколько тематических запросов."
-msgstr "Based on the current search history, the system could not yet produce stable recommendations. Try a few more topical queries."
-
-msgid "Интеллектуальный поиск"
-msgstr "Intelligent search"
-
-msgid "Используйте текстовый запрос, фильтры или оба подхода одновременно. Интерфейс сразу рассчитан на работу и на больших, и на компактных экранах."
-msgstr "Use a text query, filters, or both at once. The interface is designed to work well on both large and compact screens."
-
-msgid "Поле запроса необязательно. Можно искать только по фильтрам или открыть весь каталог результатов."
-msgstr "The query field is optional. You can search by filters only or open the full results catalog."
-
-msgid "Опция влияет только на традиционный поиск. В гибридном режиме полнотекстовое совпадение учитывается автоматически только для уточнения ранжирования."
-msgstr "This option affects only keyword search. In hybrid mode, full-text matching is taken into account automatically only to refine ranking."
-
-msgid "Сбросить фильтры"
-msgstr "Reset filters"
-
-msgid "Найдено результатов: <strong>%(total)s</strong>."
-msgstr "Results found: <strong>%(total)s</strong>."
-
-msgid "Включён относительный отсев: показываются только результаты не ниже %(strictness)s от score лучшего совпадения."
-msgstr "Relative cutoff is enabled: only results not lower than %(strictness)s of the best-match score are shown."
-
-msgid "Используется традиционный поиск. Текстовый запрос ищется по названию, авторам, ключевым словам, издателям, местам публикации и научным руководителям."
-msgstr "Keyword search is being used. The text query is matched against titles, authors, keywords, publishers, publication places, and scientific supervisors."
-
-msgid "Используется семантический поиск. При сортировке по релевантности первыми идут наиболее близкие по смыслу материалы, но нерелевантные фрагменты без лексической опоры на запрос дополнительно штрафуются."
-msgstr "Semantic search is being used. When sorted by relevance, the most semantically similar materials appear first, but irrelevant fragments without lexical support from the query are additionally penalized."
-
-msgid "Используется гибридный поиск. Результаты ранжируются объединённым score: семантическая близость + лексическая опора на запрос. Затем выдача при необходимости дополняется выборкой по фильтрам без дублей."
-msgstr "Hybrid search is being used. Results are ranked by a combined score: semantic similarity plus lexical support from the query. The results may then be supplemented with filter-only matches without duplicates."
-
-msgid "Релевантность"
-msgstr "Relevance"
-
-msgid "семантическое совпадение"
-msgstr "semantic match"
-
-msgid "семантическое совпадение (гибридный приоритет)"
-msgstr "semantic match (hybrid priority)"
-
-msgid "комбинированное гибридное совпадение"
-msgstr "combined hybrid match"
-
-msgid "добавлено из традиционного поиска"
-msgstr "added from keyword search"
-
-msgid "добавлено из выборки по фильтрам"
-msgstr "added from filter-based selection"
-
-msgid "традиционное совпадение"
-msgstr "keyword match"
-
-msgid "итоговый score"
-msgstr "final score"
-
-msgid "сырой retrieval score"
-msgstr "raw retrieval score"
-
-msgid "Основа совпадения"
-msgstr "Match basis"
-
-msgid "метаданные"
-msgstr "metadata"
-
-msgid "основной текст"
-msgstr "main text"
-
-msgid "Наиболее релевантный фрагмент"
-msgstr "Most relevant excerpt"
-
-msgid "По выбранным параметрам ничего не найдено."
-msgstr "No results were found for the selected parameters."
-
-msgid "Может быть интересно"
-msgstr "You may also find interesting"
-
-msgid "Ниже показаны издания, добавленные только из выборки по фильтрам. Они не прошли основной релевантностный отбор, но соответствуют выбранным ограничениям."
-msgstr "Below are publications added only from the filter-based selection. They did not pass the main relevance cutoff, but they match the chosen constraints."
-
-msgid "может быть интересно по выбранным фильтрам"
-msgstr "may be interesting based on the selected filters"
-
-msgid "Коллекция обновлена."
-msgstr "Collection updated."
-
-msgid "Коллекция создана. Теперь можно добавить в неё издания из репозитория."
-msgstr "Collection created. You can now add repository publications to it."
-
-msgid "Издание «%(title)s» добавлено в коллекцию."
-msgstr "Publication “%(title)s” added to the collection."
-
-msgid "Это издание уже есть в коллекции."
-msgstr "This publication is already in the collection."
-
-msgid "Издание удалено из коллекции."
-msgstr "Publication removed from the collection."
-
-msgid "Издание уже отсутствует в коллекции."
-msgstr "The publication is already absent from the collection."
-
-msgid "Оценка коллекции удалена."
-msgstr "Collection rating removed."
-
-msgid "Не удалось обработать оценку коллекции."
-msgstr "Could not process the collection rating."
-
-msgid "Оценка коллекции сохранена."
-msgstr "Collection rating saved."
-
-msgid "Оценка коллекции обновлена."
-msgstr "Collection rating updated."
-
-msgid "У выбранного издания отсутствует прикреплённый файл."
-msgstr "The selected publication has no attached file."
-
-msgid "Файл издания не найден в хранилище."
-msgstr "The publication file was not found in storage."
-
-msgid "Издание опубликовано и теперь доступно в основной коллекции."
-msgstr "The publication has been published and is now available in the main collection."
-
-msgid "Черновик сохранён. Редакция №%(revision)s доступна всем администраторам для дальнейшего заполнения."
-msgstr "Draft saved. Revision #%(revision)s is available to all administrators for further editing."
-
-msgid "Издание опубликовано и проиндексировано для поиска."
-msgstr "The publication has been published and indexed for search."
-
-msgid "Черновик обновлён. Текст извлечён и будет готов к публикации после подтверждения."
-msgstr "Draft updated. The text has been extracted and will be ready for publication after confirmation."
-
-msgid "Черновик сохранён в режиме metadata-only. После публикации он будет доступен через поиск по метаданным."
-msgstr "Draft saved in metadata-only mode. After publication, it will be searchable by metadata."
-
-msgid "Основной текст успешно извлечён и включён в индекс поиска."
-msgstr "The main text was successfully extracted and included in the search index."
-
-msgid "Издание опубликовано в режиме metadata-only. Поиск будет опираться на введённые метаданные."
-msgstr "The publication was published in metadata-only mode. Search will rely on the entered metadata."
-
-msgid "Сначала выберите файл для анализа."
-msgstr "First select a file to analyze."
-
-msgid "Не удалось проанализировать файл (%(name)s)."
-msgstr "Could not analyze the file (%(name)s)."
-
-msgid "Ожидает анализа"
-msgstr "Pending analysis"
-
-msgid "Извлечён основной текст"
-msgstr "Main text extracted"
-
-msgid "Только метаданные"
-msgstr "Metadata only"
-
-msgid "Только метаданные: формат не поддерживается"
-msgstr "Metadata only: unsupported format"
-
-msgid "Только метаданные: нетекстовая структура"
-msgstr "Metadata only: non-text structure"
-
-msgid "Только метаданные: файл отсутствует"
-msgstr "Metadata only: file missing"
-
-msgid "Только метаданные: ошибка извлечения"
-msgstr "Metadata only: extraction error"
-
-msgid "Черновик"
-msgstr "Draft"
-
-msgid "Черновик · редакция #%(revision)s"
-msgstr "Draft · revision #%(revision)s"
-
-msgid "Опубликовано %(date)s"
-msgstr "Published %(date)s"
-
-msgid "CMS admin"
-msgstr "CMS admin"
-
-msgid "Django admin"
-msgstr "Django admin"
-
-msgid "Автоматически выявленные особенности"
-msgstr "Automatically detected features"
-
-msgid "Авторы"
-msgstr "Authors"
-
-msgid "Вперёд"
-msgstr "Next"
-
-msgid "Гибридный поиск"
-msgstr "Hybrid search"
-
-msgid "Меню"
-msgstr "Menu"
-
-msgid "Назад"
-msgstr "Back"
-
-msgid "Найти"
-msgstr "Search"
-
-msgid "Опубликовать"
-msgstr "Publish"
-
-msgid "Перейти к рекомендациям"
-msgstr "Go to recommendations"
-
-msgid "Поиск изданий"
-msgstr "Publication search"
-
-msgid "Поиск только по фильтрам"
-msgstr "Search by filters only"
-
-msgid "После сохранения изменений как черновика издание временно исчезнет из общего каталога до повторной публикации."
-msgstr "After saving changes as a draft, the publication will temporarily disappear from the public catalogue until it is published again."
-
-msgid "Расширенный поиск"
-msgstr "Advanced search"
-
-msgid "Редактирование выполняется на основной части сайта. После сохранения как черновика издание временно исчезнет из открытого каталога до повторной публикации."
-msgstr "Editing is performed on the main site. After saving as a draft, the publication will temporarily disappear from the public catalogue until it is published again."
-
-msgid "Редактирование издания"
-msgstr "Edit publication"
-
-msgid "Скачать файл"
-msgstr "Download file"
-
-msgid "Черновики изданий"
-msgstr "Publication drafts"
+msgid "Проиндексировано"
+msgstr "Indexed"
+
+msgid "Публичных коллекций"
+msgstr "Public collections"
+
+msgid "Сигналов поиска"
+msgstr "Search signals"
+
+msgid ""
+"Комбинирует традиционный поиск по метаданным и семантическое сопоставление текста, чтобы находить материалы не только"
+" по ключевым словам, но и по смыслу."
+msgstr ""
+"Combines traditional metadata search with semantic text matching to find materials not only by keywords but also by "
+"meaning."
+
+msgid "Превью и карточки изданий"
+msgstr "Previews and publication cards"
+
+msgid ""
+"Система автоматически формирует визуальные превью: по первой странице PDF, загруженному изображению или на основе "
+"аккуратной сгенерированной обложки."
+msgstr ""
+"The system automatically generates visual previews from the first PDF page, an uploaded image, or a neatly generated "
+"cover."
+
+msgid "Рекомендации для читателя"
+msgstr "Recommendations for the reader"
+
+msgid ""
+"Рекомендательная лента использует историю поисковых запросов, учитывает новизну интересов и снижает вес уже "
+"просмотренных материалов."
+msgstr ""
+"The recommendation feed uses search history, takes recency of interests into account, and reduces the weight of "
+"already viewed materials."
+
+msgid "Гибкий интерфейс"
+msgstr "Flexible interface"
+
+msgid ""
+"Глобальный стиль задаётся администратором, а пользователь дополнительно переключает тему и язык интерфейса без "
+"перезагрузки логики системы."
+msgstr ""
+"The global style is defined by the administrator, while the user can still switch the interface theme and language "
+"without reloading the system logic."
+
+msgid "Первая страница PDF"
+msgstr "First PDF page"
+
+msgid "Загруженное изображение"
+msgstr "Uploaded image"
+
+msgid "Сгенерированная обложка"
+msgstr "Generated cover"
+
+#, python-format
+msgid "Найдено результатов: %(count)s"
+msgstr "Results found: %(count)s"
+
+msgid ""
+"Платформа для хранения, интеллектуального поиска и персонализированной навигации по научным, учебным и "
+"справочно-энциклопедическим изданиям. Семантический анализ, гибридный retrieval и визуальные карточки делают работу с"
+" репозиторием заметно удобнее уже на уровне прототипа."
+msgstr ""
+"A platform for storage, intelligent search, and personalized navigation across scientific, educational, and reference"
+" publications. Semantic analysis, hybrid retrieval, and visual cards make the repository noticeably easier to use "
+"even at the prototype stage."
+
+
+msgid "Интерфейс поиска"
+msgstr "Search interface"
+
+msgid "О системе"
+msgstr "About the system"
+
+msgid "Главная страница теперь работает как витрина репозитория: новости и ключевые сценарии видны сразу, а новые публикации получают больше пространства для просмотра и перехода в каталог."
+msgstr "The home page now works as a repository showcase: news and key user scenarios are visible immediately, while new publications have more space for previewing and entering the catalogue."
+
+msgid "Институциональный репозиторий"
+msgstr "Institutional repository"
+
+msgid "Прототип демонстрирует, как единая система может объединять каталог публикаций, гибридный поиск, визуальные превью, пользовательские коллекции и рекомендательную ленту без перегруженного интерфейса."
+msgstr "The prototype shows how a single system can combine a publication catalog, hybrid search, visual previews, user collections, and a recommendation feed without an overloaded interface."
+
+msgid "Навигация в футере"
+msgstr "Footer navigation"
+
+msgid "Свежие публикации"
+msgstr "Latest publications"

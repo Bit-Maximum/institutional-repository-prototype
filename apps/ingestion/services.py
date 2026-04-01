@@ -29,6 +29,7 @@ from apps.publications.models import (
     TEXT_EXTRACTION_STATUS_CHOICES,
 )
 from apps.vector_store.services import VectorStoreService
+from apps.publications.previews import ensure_publication_preview
 
 
 @dataclass(slots=True)
@@ -908,6 +909,7 @@ def rebuild_publication_chunks(publication: Publication) -> tuple[FileExtraction
     publication.has_extracted_text = analysis.has_extractable_text
     publication.derived_characteristics = derive_publication_characteristics(publication, analysis, analysis.extracted_text)
     publication.save(update_fields=update_fields)
+    ensure_publication_preview(publication, force=True)
 
     chunk_payloads = build_publication_chunks(publication, analysis=analysis, extracted_text=analysis.extracted_text)
     chunk_objects = sync_publication_chunks(publication, chunk_payloads)

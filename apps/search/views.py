@@ -15,6 +15,7 @@ from django.utils.translation import gettext as _
 
 from apps.search.models import SearchQuery
 from apps.vector_store.exceptions import VectorStoreDependencyError
+from apps.publications.previews import ensure_publication_previews
 
 from .forms import SearchForm
 from .recommendations import RecommendationService
@@ -184,9 +185,11 @@ class SearchView(FormView):
 
         paginator, page_obj = self.paginate_results(results)
         page_results = list(page_obj.object_list)
-        context["results"] = page_results
         context["primary_results"] = [item for item in page_results if getattr(item, "search_source", "") != "hybrid-filter"]
         context["additional_results"] = [item for item in page_results if getattr(item, "search_source", "") == "hybrid-filter"]
+        ensure_publication_previews(context["primary_results"])
+        ensure_publication_previews(context["additional_results"])
+        context["results"] = page_results
         context["page_obj"] = page_obj
         context["paginator"] = paginator
         context["is_paginated"] = page_obj.has_other_pages()
@@ -261,10 +264,12 @@ class RecommendationListView(TemplateView):
         )
         paginator = Paginator(recommendation_context.results, settings.SEARCH_PAGE_SIZE)
         page_obj = paginator.get_page(requested_page_int)
+        recommendations = list(page_obj.object_list)
+        ensure_publication_previews(recommendations)
         context.update(
             {
                 "requires_authentication": False,
-                "recommendations": list(page_obj.object_list),
+                "recommendations": recommendations,
                 "source_queries": recommendation_context.source_queries,
                 "has_history": recommendation_context.has_history,
                 "page_obj": page_obj,

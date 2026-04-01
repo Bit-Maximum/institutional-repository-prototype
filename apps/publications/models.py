@@ -17,6 +17,13 @@ TEXT_EXTRACTION_STATUS_CHOICES = [
     ("metadata_only_error", _("Только метаданные: ошибка извлечения")),
 ]
 
+PREVIEW_KIND_CHOICES = [
+    ("", _("Нет превью")),
+    ("pdf_first_page", _("Первая страница PDF")),
+    ("uploaded_image", _("Загруженное изображение")),
+    ("generated_placeholder", _("Сгенерированная обложка")),
+]
+
 CHUNK_SOURCE_KIND_CHOICES = [
     ("fulltext", _("Основной текст")),
     ("metadata", _("Только метаданные")),
@@ -248,6 +255,9 @@ class Publication(models.Model):
     start_page = models.IntegerField(null=True, blank=True)
     end_page = models.IntegerField(null=True, blank=True)
     file = models.FileField(upload_to="publications/", db_column="main_text_link", null=True, blank=True)
+    preview_image = models.ImageField(upload_to="publication_previews/", blank=True, null=True)
+    preview_kind = models.CharField(max_length=32, choices=PREVIEW_KIND_CHOICES, blank=True, default="")
+    preview_generated_at = models.DateTimeField(null=True, blank=True)
     file_extension = models.CharField(max_length=32, blank=True)
     publication_format_link = models.TextField(blank=True)
     contents = models.TextField(blank=True)
@@ -405,6 +415,17 @@ class Publication(models.Model):
     @property
     def abstract(self) -> str:
         return self.contents
+
+    @property
+    def has_preview(self) -> bool:
+        return bool(self.preview_image)
+
+    @property
+    def preview_url(self) -> str:
+        try:
+            return self.preview_image.url if self.preview_image else ""
+        except Exception:
+            return ""
 
     @property
     def characteristic_labels(self) -> list[str]:

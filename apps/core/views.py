@@ -4,11 +4,15 @@ from django.conf import settings
 from django.db import connections
 from django.http import JsonResponse
 from django.views import View
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 
 from apps.cms.models import AnnouncementPage
 from apps.core.health import startup_state
 from apps.publications.models import Publication
+from apps.publications.previews import ensure_publication_previews
+from apps.collections_app.models import Collection
+from apps.search.models import SearchQuery
 
 
 logger = logging.getLogger(__name__)
@@ -19,8 +23,40 @@ class HomeView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["latest_publications"] = Publication.objects.filter(is_draft=False).order_by("-uploaded_at")[:5]
-        context["latest_announcements"] = AnnouncementPage.objects.live().public().order_by("-first_published_at")[:5]
+        latest_publications = list(
+            Publication.objects.filter(is_draft=False)
+            .select_related("publication_subtype", "publication_subtype__publication_type", "language")
+            .prefetch_related("authors", "keywords", "chunks")
+            .order_by("-uploaded_at")[:8]
+        )
+        ensure_publication_previews(latest_publications)
+        context["latest_publications"] = latest_publications[:4]
+        context["featured_publications"] = latest_publications
+        context["latest_announcements"] = AnnouncementPage.objects.live().public().order_by("-first_published_at")[:4]
+        context["home_metrics"] = [
+            {"label": _("Изданий"), "value": Publication.objects.filter(is_draft=False).count()},
+            {"label": _("Проиндексировано"), "value": Publication.objects.filter(is_draft=False, vector_indexed_at__isnull=False).count()},
+            {"label": _("Публичных коллекций"), "value": Collection.objects.count()},
+            {"label": _("Сигналов поиска"), "value": SearchQuery.objects.count()},
+        ]
+        context["capability_cards"] = [
+            {
+                "title": _("Гибридный поиск"),
+                "text": _("Комбинирует традиционный поиск по метаданным и семантическое сопоставление текста, чтобы находить материалы не только по ключевым словам, но и по смыслу."),
+            },
+            {
+                "title": _("Превью и карточки изданий"),
+                "text": _("Система автоматически формирует визуальные превью: по первой странице PDF, загруженному изображению или на основе аккуратной сгенерированной обложки."),
+            },
+            {
+                "title": _("Рекомендации для читателя"),
+                "text": _("Рекомендательная лента использует историю поисковых запросов, учитывает новизну интересов и снижает вес уже просмотренных материалов."),
+            },
+            {
+                "title": _("Гибкий интерфейс"),
+                "text": _("Глобальный стиль задаётся администратором, а пользователь дополнительно переключает тему и язык интерфейса без перезагрузки логики системы."),
+            },
+        ]
         return context
 
 

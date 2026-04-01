@@ -7,34 +7,47 @@
   <div class="page-intro">
     <div class="page-intro__eyebrow">{% trans "Каталог" %}</div>
     <h1>{% trans "Каталог изданий" %}</h1>
-    <p class="muted">{% trans "Просматривайте опубликованные материалы и переходите к полным карточкам изданий." %}</p>
+    <p class="muted">{% trans "Просматривайте опубликованные материалы, ориентируйтесь по превью и переходите к полным карточкам изданий." %}</p>
   </div>
 
-  <form method="get" class="stack-sm">
+  <form method="get" class="stack-sm card card--soft">
     <label for="id_q">{% trans "Поисковый запрос" %}</label>
-    <input id="id_q" type="search" name="q" value="{{ request.GET.q }}" placeholder="{% trans 'Поиск по заголовку, содержанию и метаданным' %}">
+    <input id="id_q" type="search" name="q" value="{{ request.GET.q }}" placeholder="{% trans 'Поиск по заголовку, описанию и метаданным' %}">
     <div class="inline-actions">
       <button type="submit">{% trans "Найти" %}</button>
       <a class="chip-link" href="{% url 'search:results' %}">{% trans "Расширенный поиск" %}</a>
     </div>
   </form>
 
-  <div class="card-list">
+  <div class="card-list publication-row-list">
     {% for publication in publications %}
-      <article class="card stack-sm">
-        <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
-        <p class="muted">
-          {% if publication.publication_type %}{{ publication.publication_type.name }}{% endif %}
-          {% if publication.publication_year %} · {{ publication.publication_year }}{% endif %}
-          {% if publication.language %} · {{ publication.language.name }}{% endif %}
-        </p>
-        {% if request.user.is_authenticated %}
-          {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
-            <div class="inline-actions">
-              <a class="chip-link" href="{% url 'publications:edit' publication.pk %}">{% trans "Редактировать" %}</a>
-            </div>
-          {% endif %}
-        {% endif %}
+      <article class="card publication-row stack-sm">
+        <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">
+          {% include 'publications/_preview.html' with publication=publication variant='row' %}
+        </a>
+        <div class="publication-row__body stack-sm">
+          <div class="publication-tile__meta">
+            {% if publication.publication_type %}<span>{{ publication.publication_type.name }}</span>{% endif %}
+            {% if publication.publication_year %}<span>{{ publication.publication_year }}</span>{% endif %}
+            {% if publication.language %}<span>{{ publication.language.name }}</span>{% endif %}
+          </div>
+          <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+          {% with authors=publication.authors.all %}
+            {% if authors %}
+              <p class="muted">{% trans "Авторы" %}: {% for author in authors|slice:":4" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+            {% endif %}
+          {% endwith %}
+          <p>{% if publication.contents %}{{ publication.contents|truncatechars:240 }}{% else %}{% trans "Описание отсутствует." %}{% endif %}</p>
+          <div class="inline-actions">
+            <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
+            {% if publication.file %}<a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать файл" %}</a>{% endif %}
+            {% if request.user.is_authenticated %}
+              {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
+                <a class="chip-link" href="{% url 'publications:edit' publication.pk %}">{% trans "Редактировать" %}</a>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
       </article>
     {% empty %}
       <div class="empty-state">{% trans "Издания не найдены." %}</div>

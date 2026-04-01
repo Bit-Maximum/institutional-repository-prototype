@@ -2,41 +2,111 @@
 {% load i18n %}
 
 {% block title %}{% trans "Главная" %}{% endblock %}
+{% block panel_class %}panel--home{% endblock %}
 
 {% block content %}
-  <div class="page-intro">
-    <div class="page-intro__eyebrow">{% trans "Институциональный репозиторий" %}</div>
-    <h1>{{ ui_state.site_title }}</h1>
-    {% if ui_state.site_tagline %}
-      <p class="muted">{{ ui_state.site_tagline }}</p>
-    {% endif %}
-    <div class="page-intro__actions">
-      <a class="button" href="{% url 'search:results' %}">{% trans "Перейти к поиску" %}</a>
-      <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Открыть каталог" %}</a>
+  <section class="home-hero">
+    <div class="home-top-grid">
+      <div class="home-main-stack stack-md">
+        <div class="card--soft stack-md home-hero__intro-card">
+          <div class="page-intro home-hero__intro-copy">
+            <div class="page-intro__eyebrow">{% trans "Институциональный репозиторий" %}</div>
+            <h1>{{ ui_state.site_title }}</h1>
+            <p class="home-hero__lead">
+              {% blocktrans %}Платформа для хранения, интеллектуального поиска и персонализированной навигации по научным, учебным и справочно-энциклопедическим изданиям. Семантический анализ, гибридный retrieval и визуальные карточки делают работу с репозиторием заметно удобнее уже на уровне прототипа.{% endblocktrans %}
+            </p>
+            {% if ui_state.site_tagline %}
+              <p class="muted">{{ ui_state.site_tagline }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <section class="home-hero__showcase stack-sm">
+          <div class="home-section__head">
+            <div>
+              <div class="page-intro__eyebrow">{% trans "Новые поступления" %}</div>
+              <h2>{% trans "Свежие публикации" %}</h2>
+            </div>
+            <div class="inline-actions">
+              <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Открыть каталог" %}</a>
+            </div>
+          </div>
+          <div class="home-showcase-list home-showcase-list--horizontal">
+            {% for publication in latest_publications %}
+              {% include 'publications/_teaser_card.html' with publication=publication layout='horizontal' %}
+            {% empty %}
+              <div class="empty-state">{% trans "Пока нет опубликованных изданий." %}</div>
+            {% endfor %}
+          </div>
+        </section>
+      </div>
+
+      <aside class="home-side-stack stack-md">
+        <form class="hero-search card stack-sm" action="{% url 'search:results' %}" method="get">
+          <div class="stack-xs">
+            <div class="page-intro__eyebrow">{% trans "Интерфейс поиска" %}</div>
+            <label class="hero-search__label" for="hero-search-query">{% trans "Найдите публикации по смыслу, теме, автору или фильтрам" %}</label>
+          </div>
+          <div class="hero-search__controls">
+            <input id="hero-search-query" type="search" name="q" placeholder="{% trans 'Например: для получения стипендии, интеллектуальный анализ текста, учебно-методическое пособие' %}">
+            <button type="submit">{% trans "Искать" %}</button>
+          </div>
+        </form>
+
+        <section class="card stack-sm home-metrics-card">
+          <div class="page-intro">
+            <div class="page-intro__eyebrow">{% trans "Институциональный репозиторий" %}</div>
+            <h2>{% trans "Ключевые показатели" %}</h2>
+          </div>
+          <div class="home-metrics">
+            {% for metric in home_metrics %}
+              <article class="metric-card">
+                <span class="metric-card__value">{{ metric.value }}</span>
+                <span class="metric-card__label">{{ metric.label }}</span>
+              </article>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="card stack-sm home-announcements-card">
+          <div class="home-section__head">
+            <div>
+              <div class="page-intro__eyebrow">{% trans "Объявления" %}</div>
+              <h2>{% trans "Последние новости и публикации CMS" %}</h2>
+            </div>
+          </div>
+          <ul class="list-reset stack-sm">
+            {% for announcement in latest_announcements %}
+              <li class="announcement-item">
+                <a href="{{ announcement.url }}">{{ announcement.title }}</a>
+                {% if announcement.first_published_at %}<div class="muted">{{ announcement.first_published_at|date:"d.m.Y" }}</div>{% endif %}
+              </li>
+            {% empty %}
+              <li class="empty-state">{% trans "Пока нет опубликованных объявлений." %}</li>
+            {% endfor %}
+          </ul>
+        </section>
+      </aside>
     </div>
-  </div>
+  </section>
 
-  <div class="grid-auto grid-auto--wide">
-    <section class="card stack-sm">
-      <h2>{% trans "Последние издания" %}</h2>
-      <ul class="list-reset stack-sm">
-        {% for publication in latest_publications %}
-          <li><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></li>
-        {% empty %}
-          <li class="empty-state">{% trans "Пока нет опубликованных изданий." %}</li>
-        {% endfor %}
-      </ul>
-    </section>
-
-    <section class="card stack-sm">
-      <h2>{% trans "Последние объявления" %}</h2>
-      <ul class="list-reset stack-sm">
-        {% for announcement in latest_announcements %}
-          <li><a href="{{ announcement.url }}">{{ announcement.title }}</a></li>
-        {% empty %}
-          <li class="empty-state">{% trans "Пока нет опубликованных объявлений." %}</li>
-        {% endfor %}
-      </ul>
-    </section>
-  </div>
+  <section class="home-section stack-md">
+    <div class="home-section__head">
+      <div>
+        <div class="page-intro__eyebrow">{% trans "Каталог" %}</div>
+        <h2>{% trans "Издания, которые стоит открыть прямо сейчас" %}</h2>
+      </div>
+      <div class="inline-actions">
+        <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Весь каталог" %}</a>
+        <a class="chip-link" href="{% url 'search:results' %}">{% trans "Расширенный поиск" %}</a>
+      </div>
+    </div>
+    <div class="publication-grid publication-grid--featured">
+      {% for publication in featured_publications %}
+        {% include 'publications/_teaser_card.html' with publication=publication %}
+      {% empty %}
+        <div class="empty-state">{% trans "Каталог пока пуст. Добавьте первое издание через админку или форму загрузки." %}</div>
+      {% endfor %}
+    </div>
+  </section>
 {% endblock %}

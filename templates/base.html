@@ -204,18 +204,26 @@
           </ul>
         {% endif %}
 
-        <section class="panel">
+        <section class="panel {% block panel_class %}{% endblock %}">
           {% block content %}{% endblock %}
         </section>
       </main>
-    </div>
 
-    <footer class="page-footer">
-      <div class="page-footer__inner">
-        <small>
-          {% blocktrans with style=ui_style.label %}Прототип ВКР · активный стиль: {{ style }}{% endblocktrans %}
-        </small>
-      </div>
-    </footer>
+      <footer class="page-footer">
+        <div class="page-footer__inner surface">
+          <div class="page-footer__brand stack-xs">
+            <strong>{{ ui_state.site_title }}</strong>
+            {% if ui_state.site_tagline %}<p>{{ ui_state.site_tagline }}</p>{% endif %}
+            <small>{% blocktrans with style=ui_style.label %}Прототип ВКР · активный стиль: {{ style }}{% endblocktrans %}</small>
+          </div>
+          <nav class="page-footer__nav" aria-label="{% trans 'Навигация в футере' %}">
+            <a href="{% url 'home' %}">{% trans "Главная" %}</a>
+            <a href="{% url 'publications:list' %}">{% trans "Издания" %}</a>
+            <a href="{% url 'search:results' %}">{% trans "Поиск" %}</a>
+            <a href="{% url 'collections:list' %}">{% trans "Коллекции" %}</a>
+          </nav>
+        </div>
+      </footer>
+    </div>
   </body>
 </html>
