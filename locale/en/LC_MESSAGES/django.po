@@ -235,3 +235,129 @@ msgstr "Footer navigation"
 
 msgid "Свежие публикации"
 msgstr "Latest publications"
+
+msgid "Комбинируйте свободный запрос, многокритериальные фильтры и режим поиска. Ниже результаты показываются как полноценные карточки с превью и объяснением релевантности."
+msgstr "Combine a free-text query, multi-criteria filters, and a search mode. Results are shown as full publication cards with previews and a relevance explanation."
+
+msgid "Поле запроса необязательно. Можно отобрать издания только по фильтрам или использовать текст и фильтры одновременно."
+msgstr "The query field is optional. You can filter publications using only filters or combine free text with filters."
+
+msgid "Выберите типы изданий"
+msgstr "Select publication types"
+
+msgid "Выберите подтипы изданий"
+msgstr "Select publication subtypes"
+
+msgid "Выберите языки"
+msgstr "Select languages"
+
+msgid "Выберите периодичность"
+msgstr "Select periodicity values"
+
+msgid "Выберите авторов"
+msgstr "Select authors"
+
+msgid "Выберите ключевые слова"
+msgstr "Select keywords"
+
+msgid "Выберите издателей"
+msgstr "Select publishers"
+
+msgid "Выберите места публикации"
+msgstr "Select publication places"
+
+msgid "Ничего не найдено"
+msgstr "No matches found"
+
+msgid "Выбрано значений"
+msgstr "Selected items"
+
+msgid "Показывать"
+msgstr "Show"
+
+msgid "Количество результатов на странице"
+msgstr "Number of results per page"
+
+msgid "Семантическая выдача"
+msgstr "Semantic results"
+
+msgid "Гибридный поиск · семантический приоритет"
+msgstr "Hybrid search · semantic priority"
+
+msgid "Гибридный поиск · объединённый сигнал"
+msgstr "Hybrid search · fused signal"
+
+msgid "Гибридный поиск · лексическое совпадение"
+msgstr "Hybrid search · lexical match"
+
+msgid "Подобрано по фильтрам"
+msgstr "Matched by filters"
+
+msgid "Традиционная выдача"
+msgstr "Keyword results"
+
+msgid "Почему результат попал в выдачу"
+msgstr "Why this result appears in the list"
+
+msgid "Сырой score"
+msgstr "Raw score"
+
+msgid "Метаданные"
+msgstr "Metadata"
+
+msgid "Этап ранжирования"
+msgstr "Ranking stage"
+
+msgid "После rerank"
+msgstr "After rerank"
+
+msgid "После hybrid fusion"
+msgstr "After hybrid fusion"
+
+msgid "Дополнение по фильтрам"
+msgstr "Filter-only addition"
+
+msgid "Первичный отбор"
+msgstr "Initial retrieval"
+
+msgid "Фрагмент, который повлиял на выдачу"
+msgstr "Fragment that influenced the result"
+
+msgid "Ниже показаны издания, добавленные только из выборки по фильтрам. Они соответствуют заданным ограничениям, но не попали в основную релевантностную часть выдачи."
+msgstr "The publications below were added only from the filter-based selection. They match the chosen constraints but did not enter the main relevance-ranked part of the results."
+
+msgid "Среди выбранных подтипов есть значения, не относящиеся к указанным типам изданий."
+msgstr "Some selected subtypes do not belong to the chosen publication types."
+
+msgid "10 на страницу"
+msgstr "10 per page"
+
+msgid "20 на страницу"
+msgstr "20 per page"
+
+msgid "50 на страницу"
+msgstr "50 per page"
+
+msgid "Поиск изданий"
+msgstr "Search publications"
+
+msgid "Итоговый score"
+msgstr "Final score"
+
+msgid "Основа совпадения"
+msgstr "Match basis"
+
+msgid "Основной текст"
+msgstr "Full text"
+
+msgid "Текущий запрос"
+msgstr "Current query"
+
+msgid "Без текстового запроса"
+msgstr "No free-text query"
+
+msgid "Изменить поиск"
+msgstr "Modify search"
+
+msgid "Скрыть поиск"
+msgstr "Hide search"

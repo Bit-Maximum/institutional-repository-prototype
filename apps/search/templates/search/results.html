@@ -1,52 +1,149 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% trans "Поиск" %}{% endblock %}
 
+{% block extra_head %}
+  {{ block.super }}
+  <script defer src="{% static 'js/ui/search-page.js' %}"></script>
+{% endblock %}
+
 {% block content %}
-  <div class="page-intro">
+  <div class="page-intro{% if page_obj %} page-intro--compact{% endif %}">
     <div class="page-intro__eyebrow">{% trans "Интеллектуальный поиск" %}</div>
     <h1>{% trans "Поиск изданий" %}</h1>
-    <p class="muted">{% trans "Используйте текстовый запрос, фильтры или оба подхода одновременно. Результаты сразу показываются в виде карточек с превью и пояснением релевантности." %}</p>
+    <p class="muted">{% trans "Комбинируйте свободный запрос, многокритериальные фильтры и режим поиска. Ниже результаты показываются как полноценные карточки с превью и объяснением релевантности." %}</p>
   </div>
 
-  <form method="get" class="card stack-md card--soft">
-    <div class="grid-auto grid-auto--wide">
-      <div style="grid-column: 1 / -1;" class="stack-xs">
+  <div class="search-shell" data-search-shell data-initial-collapsed="{% if page_obj %}true{% else %}false{% endif %}">
+    <div class="card stack-sm card--soft search-shell__summary" data-search-shell-summary {% if not page_obj %}hidden{% endif %}>
+      <div class="search-shell__summary-copy stack-xs">
+        <div class="page-intro__eyebrow">{% trans "Поиск изданий" %}</div>
+        <h2>{% trans "Текущий запрос" %}</h2>
+        <p class="muted">
+          {% if request.GET.q %}
+            {{ request.GET.q }}
+          {% else %}
+            {% trans "Без текстового запроса" %}
+          {% endif %}
+          {% if page_obj %}
+            · {% blocktrans with count=total_results %}Найдено результатов: {{ count }}{% endblocktrans %}
+          {% endif %}
+        </p>
+      </div>
+      <div class="inline-actions">
+        <button type="button" class="chip-link" data-search-shell-expand>{% trans "Изменить поиск" %}</button>
+      </div>
+    </div>
+
+    <form method="get" class="card stack-md card--soft search-form-panel search-shell__form" data-search-shell-form {% if page_obj %}hidden{% endif %}>
+      {{ form.results_per_page }}
+      <div class="search-form-panel__hero">
+      <div class="search-form-panel__query stack-xs">
         <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
         {{ form.q }}
-        <small>{% trans "Поле запроса необязательно. Можно искать только по фильтрам или открыть весь каталог результатов." %}</small>
+        <small>{% trans "Поле запроса необязательно. Можно отобрать издания только по фильтрам или использовать текст и фильтры одновременно." %}</small>
       </div>
-      <div class="stack-xs"><label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>{{ form.mode }}</div>
-      <div class="stack-xs"><label for="{{ form.sort.id_for_label }}">{{ form.sort.label }}</label>{{ form.sort }}</div>
-      <div class="stack-xs"><label for="{{ form.strictness.id_for_label }}">{{ form.strictness.label }}</label>{{ form.strictness }}</div>
-      <div class="stack-xs"><label for="{{ form.publication_type.id_for_label }}">{{ form.publication_type.label }}</label>{{ form.publication_type }}</div>
-      <div class="stack-xs"><label for="{{ form.publication_subtype.id_for_label }}">{{ form.publication_subtype.label }}</label>{{ form.publication_subtype }}</div>
-      <div class="stack-xs"><label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>{{ form.language }}</div>
-      <div class="stack-xs"><label for="{{ form.periodicity.id_for_label }}">{{ form.periodicity.label }}</label>{{ form.periodicity }}</div>
-      <div class="stack-xs"><label for="{{ form.author.id_for_label }}">{{ form.author.label }}</label>{{ form.author }}</div>
-      <div class="stack-xs"><label for="{{ form.keyword.id_for_label }}">{{ form.keyword.label }}</label>{{ form.keyword }}</div>
-      <div class="stack-xs"><label for="{{ form.publisher.id_for_label }}">{{ form.publisher.label }}</label>{{ form.publisher }}</div>
-      <div class="stack-xs"><label for="{{ form.publication_place.id_for_label }}">{{ form.publication_place.label }}</label>{{ form.publication_place }}</div>
-      <div class="stack-xs"><label for="{{ form.year_from.id_for_label }}">{{ form.year_from.label }}</label>{{ form.year_from }}</div>
-      <div class="stack-xs"><label for="{{ form.year_to.id_for_label }}">{{ form.year_to.label }}</label>{{ form.year_to }}</div>
+      <div class="search-form-panel__controls grid-auto">
+        <div class="stack-xs search-filter-field">
+          <label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>
+          {{ form.mode }}
+        </div>
+        <div class="stack-xs search-filter-field">
+          <label for="{{ form.sort.id_for_label }}">{{ form.sort.label }}</label>
+          {{ form.sort }}
+        </div>
+        <div class="stack-xs search-filter-field">
+          <label for="{{ form.strictness.id_for_label }}">{{ form.strictness.label }}</label>
+          {{ form.strictness }}
+        </div>
+      </div>
     </div>
 
-    <label class="search-checkbox-row" for="{{ form.include_fulltext_in_keyword.id_for_label }}">
-      {{ form.include_fulltext_in_keyword }}
-      <span>{{ form.include_fulltext_in_keyword.label }}</span>
-    </label>
+    <div class="search-advanced-panel" data-search-advanced-panel data-initial-open="{% if not page_obj %}true{% else %}false{% endif %}">
+      <div class="search-advanced-panel__bar">
+        <button type="button" class="chip-link search-advanced-panel__toggle" data-search-advanced-toggle aria-expanded="false">
+          <span data-search-advanced-toggle-label>{% trans "Показать фильтры" %}</span>
+        </button>
+      </div>
 
-    <div class="inline-actions">
-      <button type="submit">{% trans "Запустить поиск" %}</button>
-      <a class="chip-link" href="{% url 'search:results' %}">{% trans "Сбросить параметры" %}</a>
+      <div class="search-advanced-panel__body" data-search-advanced-body hidden>
+        <div class="search-filter-grid">
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.publication_type.id_for_label }}">{{ form.publication_type.label }}</label>
+            {{ form.publication_type }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.publication_subtype.id_for_label }}">{{ form.publication_subtype.label }}</label>
+            {{ form.publication_subtype }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>
+            {{ form.language }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.periodicity.id_for_label }}">{{ form.periodicity.label }}</label>
+            {{ form.periodicity }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.author.id_for_label }}">{{ form.author.label }}</label>
+            {{ form.author }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.keyword.id_for_label }}">{{ form.keyword.label }}</label>
+            {{ form.keyword }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.publisher.id_for_label }}">{{ form.publisher.label }}</label>
+            {{ form.publisher }}
+          </div>
+          <div class="stack-xs search-filter-field">
+            <label for="{{ form.publication_place.id_for_label }}">{{ form.publication_place.label }}</label>
+            {{ form.publication_place }}
+          </div>
+          <div class="stack-xs">
+            <label for="{{ form.year_from.id_for_label }}">{{ form.year_from.label }}</label>
+            {{ form.year_from }}
+          </div>
+          <div class="stack-xs">
+            <label for="{{ form.year_to.id_for_label }}">{{ form.year_to.label }}</label>
+            {{ form.year_to }}
+          </div>
+        </div>
+
+        <label class="search-checkbox-row" for="{{ form.include_fulltext_in_keyword.id_for_label }}">
+          {{ form.include_fulltext_in_keyword }}
+          <span>{{ form.include_fulltext_in_keyword.label }}</span>
+        </label>
+      </div>
     </div>
-  </form>
 
-  {% if has_active_filters %}
-    <div class="card stack-sm card--soft">
-      <h2>{% trans "Результаты поиска" %}</h2>
-      <p class="muted">{% blocktrans with count=total_results %}Найдено результатов: {{ count }}{% endblocktrans %}</p>
+      <div class="inline-actions">
+        <button type="submit">{% trans "Запустить поиск" %}</button>
+        <a class="chip-link" href="{% url 'search:results' %}">{% trans "Сбросить параметры" %}</a>
+        {% if page_obj %}
+          <button type="button" class="chip-link" data-search-shell-collapse>{% trans "Скрыть поиск" %}</button>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  {% if page_obj %}
+    <div class="card stack-sm card--soft search-results-toolbar">
+      <div class="search-results-toolbar__header">
+        <div>
+          <h2>{% trans "Результаты поиска" %}</h2>
+          <p class="muted">{% blocktrans with count=total_results %}Найдено результатов: {{ count }}{% endblocktrans %}</p>
+        </div>
+        <div class="search-page-size">
+          <span class="search-page-size__label">{% trans "Показывать" %}</span>
+          <div class="chip-switcher" role="group" aria-label="{% trans 'Количество результатов на странице' %}">
+            {% for size in page_size_choices %}
+              <a class="chip-link{% if current_page_size == size %} is-active{% endif %}" href="?{% if page_size_querystring %}{{ page_size_querystring }}&{% endif %}results_per_page={{ size }}">{{ size }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
     </div>
   {% endif %}
 
@@ -67,33 +164,70 @@
           {% with authors=publication.authors.all %}
             {% if authors %}<p class="muted">{% trans "Авторы" %}: {% for author in authors|slice:":4" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
           {% endwith %}
-          {% if publication.search_source %}
-            <p class="muted">
-              <strong>{% trans "Релевантность" %}:</strong>
-              {% if publication.search_source == "semantic" %}
-                {% trans "семантическое совпадение" %}
-              {% elif publication.search_source == "hybrid-semantic" %}
-                {% trans "семантическое совпадение (гибридный приоритет)" %}
-              {% elif publication.search_source == "hybrid-combined" %}
-                {% trans "комбинированное гибридное совпадение" %}
-              {% elif publication.search_source == "hybrid-keyword" %}
-                {% trans "добавлено из традиционного поиска" %}
-              {% elif publication.search_source == "hybrid-filter" %}
-                {% trans "добавлено из выборки по фильтрам" %}
-              {% else %}
-                {% trans "традиционное совпадение" %}
-              {% endif %}
-              {% if publication.search_score %} · {% trans "итоговый score" %}: {{ publication.search_score|floatformat:3 }}{% endif %}
-            </p>
+
+          <div class="search-result-signals muted">
+            {% if publication.search_source %}
+              <span>
+                {% if publication.search_source == "semantic" %}
+                  {% trans "Семантическая выдача" %}
+                {% elif publication.search_source == "hybrid-semantic" %}
+                  {% trans "Гибридный поиск · семантический приоритет" %}
+                {% elif publication.search_source == "hybrid-combined" %}
+                  {% trans "Гибридный поиск · объединённый сигнал" %}
+                {% elif publication.search_source == "hybrid-keyword" %}
+                  {% trans "Гибридный поиск · лексическое совпадение" %}
+                {% elif publication.search_source == "hybrid-filter" %}
+                  {% trans "Подобрано по фильтрам" %}
+                {% else %}
+                  {% trans "Традиционная выдача" %}
+                {% endif %}
+              </span>
+            {% endif %}
+            {% if publication.search_score %}<span>{% trans "Итоговый score" %}: {{ publication.search_score|floatformat:3 }}</span>{% endif %}
+          </div>
+
+          <p>{% if publication.contents %}{{ publication.contents|truncatechars:260 }}{% elif publication.search_excerpt %}{{ publication.search_excerpt }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
+
+          {% if publication.search_source or publication.search_excerpt or publication.retrieval_score %}
+            <details class="search-explanation">
+              <summary>{% trans "Почему результат попал в выдачу" %}</summary>
+              <div class="search-explanation__body stack-sm">
+                <dl class="search-explanation__facts">
+                  <div>
+                    <dt>{% trans "Итоговый score" %}</dt>
+                    <dd>{% if publication.search_score %}{{ publication.search_score|floatformat:3 }}{% else %}—{% endif %}</dd>
+                  </div>
+                  <div>
+                    <dt>{% trans "Сырой score" %}</dt>
+                    <dd>{% if publication.retrieval_score %}{{ publication.retrieval_score|floatformat:3 }}{% else %}—{% endif %}</dd>
+                  </div>
+                  <div>
+                    <dt>{% trans "Основа совпадения" %}</dt>
+                    <dd>
+                      {% if publication.search_match_basis == "metadata" %}{% trans "Метаданные" %}{% elif publication.search_match_basis == "fulltext" %}{% trans "Основной текст" %}{% else %}—{% endif %}
+                      {% if publication.search_match_label %}<span class="muted">· {{ publication.search_match_label }}</span>{% endif %}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{% trans "Этап ранжирования" %}</dt>
+                    <dd>
+                      {% if publication.search_stage == "reranked" %}{% trans "После rerank" %}
+                      {% elif publication.search_stage == "fused" %}{% trans "После hybrid fusion" %}
+                      {% elif publication.search_stage == "filtered" %}{% trans "Дополнение по фильтрам" %}
+                      {% else %}{% trans "Первичный отбор" %}{% endif %}
+                    </dd>
+                  </div>
+                </dl>
+                {% if publication.search_excerpt %}
+                  <div class="search-explanation__fragment stack-xs">
+                    <strong>{% trans "Фрагмент, который повлиял на выдачу" %}</strong>
+                    <p>{{ publication.search_excerpt }}</p>
+                  </div>
+                {% endif %}
+              </div>
+            </details>
           {% endif %}
-          {% if publication.search_match_basis %}
-            <p class="muted">
-              <strong>{% trans "Основа совпадения" %}:</strong>
-              {% if publication.search_match_basis == "metadata" %}{% trans "метаданные" %}{% else %}{% trans "основной текст" %}{% endif %}
-              {% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
-            </p>
-          {% endif %}
-          <p>{% if publication.search_excerpt %}{{ publication.search_excerpt }}{% elif publication.contents %}{{ publication.contents|truncatechars:260 }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
+
           <div class="inline-actions">
             <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
             {% if publication.file %}<a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать файл" %}</a>{% endif %}
@@ -109,7 +243,7 @@
     {% if additional_results %}
       <div class="card stack-sm card--soft">
         <h2>{% trans "Может быть интересно" %}</h2>
-        <p class="muted">{% trans "Ниже показаны издания, добавленные только из выборки по фильтрам. Они не прошли основной релевантностный отбор, но соответствуют выбранным ограничениям." %}</p>
+        <p class="muted">{% trans "Ниже показаны издания, добавленные только из выборки по фильтрам. Они соответствуют заданным ограничениям, но не попали в основную релевантностную часть выдачи." %}</p>
       </div>
       {% for publication in additional_results %}
         <article class="card publication-row stack-sm publication-row--secondary">

@@ -27,22 +27,24 @@ class SearchView(FormView):
     form_class = SearchForm
 
     def get_initial(self):
+        querydict = self.request.GET
         return {
-            "q": self.request.GET.get("q", ""),
-            "mode": self.request.GET.get("mode", "hybrid"),
-            "sort": self.request.GET.get("sort", "relevance"),
-            "strictness": self.request.GET.get("strictness", ""),
-            "publication_type": self.request.GET.get("publication_type", ""),
-            "publication_subtype": self.request.GET.get("publication_subtype", ""),
-            "language": self.request.GET.get("language", ""),
-            "periodicity": self.request.GET.get("periodicity", ""),
-            "author": self.request.GET.get("author", ""),
-            "keyword": self.request.GET.get("keyword", ""),
-            "publisher": self.request.GET.get("publisher", ""),
-            "publication_place": self.request.GET.get("publication_place", ""),
-            "year_from": self.request.GET.get("year_from", ""),
-            "year_to": self.request.GET.get("year_to", ""),
-            "include_fulltext_in_keyword": self.request.GET.get("include_fulltext_in_keyword", ""),
+            "q": querydict.get("q", ""),
+            "mode": querydict.get("mode", "hybrid"),
+            "sort": querydict.get("sort", "relevance"),
+            "strictness": querydict.get("strictness", ""),
+            "results_per_page": querydict.get("results_per_page", "10"),
+            "publication_type": querydict.getlist("publication_type"),
+            "publication_subtype": querydict.getlist("publication_subtype"),
+            "language": querydict.getlist("language"),
+            "periodicity": querydict.getlist("periodicity"),
+            "author": querydict.getlist("author"),
+            "keyword": querydict.getlist("keyword"),
+            "publisher": querydict.getlist("publisher"),
+            "publication_place": querydict.getlist("publication_place"),
+            "year_from": querydict.get("year_from", ""),
+            "year_to": querydict.get("year_to", ""),
+            "include_fulltext_in_keyword": querydict.get("include_fulltext_in_keyword", ""),
         }
 
     def get_form_kwargs(self):
@@ -55,14 +57,14 @@ class SearchView(FormView):
 
     def get_filter_payload(self, cleaned_data):
         return {
-            "publication_type": cleaned_data.get("publication_type"),
-            "publication_subtype": cleaned_data.get("publication_subtype"),
-            "language": cleaned_data.get("language"),
-            "periodicity": cleaned_data.get("periodicity"),
-            "author": cleaned_data.get("author"),
-            "keyword": cleaned_data.get("keyword"),
-            "publisher": cleaned_data.get("publisher"),
-            "publication_place": cleaned_data.get("publication_place"),
+            "publication_type": list(cleaned_data.get("publication_type") or []),
+            "publication_subtype": list(cleaned_data.get("publication_subtype") or []),
+            "language": list(cleaned_data.get("language") or []),
+            "periodicity": list(cleaned_data.get("periodicity") or []),
+            "author": list(cleaned_data.get("author") or []),
+            "keyword": list(cleaned_data.get("keyword") or []),
+            "publisher": list(cleaned_data.get("publisher") or []),
+            "publication_place": list(cleaned_data.get("publication_place") or []),
             "year_from": cleaned_data.get("year_from"),
             "year_to": cleaned_data.get("year_to"),
             "include_fulltext_in_keyword": bool(cleaned_data.get("include_fulltext_in_keyword")),
@@ -74,20 +76,26 @@ class SearchView(FormView):
             "mode": mode,
             "sort": cleaned_data.get("sort") or "relevance",
             "strictness": cleaned_data.get("strictness") or None,
-            "publication_type": getattr(cleaned_data.get("publication_type"), "pk", None),
-            "publication_subtype": getattr(cleaned_data.get("publication_subtype"), "pk", None),
-            "language": getattr(cleaned_data.get("language"), "pk", None),
-            "periodicity": getattr(cleaned_data.get("periodicity"), "pk", None),
-            "author": getattr(cleaned_data.get("author"), "pk", None),
-            "keyword": getattr(cleaned_data.get("keyword"), "pk", None),
-            "publisher": getattr(cleaned_data.get("publisher"), "pk", None),
-            "publication_place": getattr(cleaned_data.get("publication_place"), "pk", None),
+            "results_per_page": cleaned_data.get("results_per_page") or "10",
+            "publication_type": [item.pk for item in cleaned_data.get("publication_type") or []],
+            "publication_subtype": [item.pk for item in cleaned_data.get("publication_subtype") or []],
+            "language": [item.pk for item in cleaned_data.get("language") or []],
+            "periodicity": [item.pk for item in cleaned_data.get("periodicity") or []],
+            "author": [item.pk for item in cleaned_data.get("author") or []],
+            "keyword": [item.pk for item in cleaned_data.get("keyword") or []],
+            "publisher": [item.pk for item in cleaned_data.get("publisher") or []],
+            "publication_place": [item.pk for item in cleaned_data.get("publication_place") or []],
             "year_from": cleaned_data.get("year_from"),
             "year_to": cleaned_data.get("year_to"),
             "include_fulltext_in_keyword": bool(cleaned_data.get("include_fulltext_in_keyword")),
             "relative_score_floor": cleaned_data.get("strictness") or None,
         }
-        return json.dumps({key: value for key, value in payload.items() if value not in (None, "")}, ensure_ascii=False)
+        compact_payload = {}
+        for key, value in payload.items():
+            if value in (None, "", []):
+                continue
+            compact_payload[key] = value
+        return json.dumps(compact_payload, ensure_ascii=False)
 
     def has_active_criteria(self, cleaned_data) -> bool:
         meaningful_keys = {
@@ -105,14 +113,24 @@ class SearchView(FormView):
             "include_fulltext_in_keyword",
             "strictness",
         }
-        return any(cleaned_data.get(key) not in (None, "") for key in meaningful_keys) or self.request.GET.get("mode") not in (
-            None,
-            "",
-            "hybrid",
-        )
+        for key in meaningful_keys:
+            value = cleaned_data.get(key)
+            if value in (None, ""):
+                continue
+            if hasattr(value, "exists"):
+                if value.exists():
+                    return True
+                continue
+            if isinstance(value, (list, tuple, set)):
+                if value:
+                    return True
+                continue
+            if value:
+                return True
+        return self.request.GET.get("mode") not in (None, "", "hybrid")
 
-    def paginate_results(self, results):
-        paginator = Paginator(results, settings.SEARCH_PAGE_SIZE)
+    def paginate_results(self, results, per_page: int):
+        paginator = Paginator(results, per_page)
         page_obj = paginator.get_page(self.request.GET.get("page") or 1)
         return paginator, page_obj
 
@@ -129,6 +147,11 @@ class SearchView(FormView):
         query_params = self.request.GET.copy()
         query_params.pop("page", None)
         context["querystring"] = query_params.urlencode()
+        page_size_params = self.request.GET.copy()
+        page_size_params.pop("page", None)
+        page_size_params.pop("results_per_page", None)
+        context["page_size_querystring"] = page_size_params.urlencode()
+        context["page_size_choices"] = [10, 20, 50]
 
         if not form.is_valid():
             return context
@@ -183,7 +206,8 @@ class SearchView(FormView):
             )
             RecommendationService().prime_from_search_entry(created_history_entry, results)
 
-        paginator, page_obj = self.paginate_results(results)
+        current_page_size = int(form.cleaned_data.get("results_per_page") or settings.SEARCH_PAGE_SIZE)
+        paginator, page_obj = self.paginate_results(results, per_page=current_page_size)
         page_results = list(page_obj.object_list)
         context["primary_results"] = [item for item in page_results if getattr(item, "search_source", "") != "hybrid-filter"]
         context["additional_results"] = [item for item in page_results if getattr(item, "search_source", "") == "hybrid-filter"]
@@ -197,6 +221,7 @@ class SearchView(FormView):
         context["active_mode"] = mode
         context["active_sort"] = sort_by
         context["has_active_filters"] = self.has_active_criteria(form.cleaned_data)
+        context["current_page_size"] = current_page_size
         return context
 
 

@@ -13,6 +13,44 @@ from apps.publications.models import (
 )
 
 
+FILTER_PAGE_SIZE_CHOICES = [
+    ("10", _("10 на страницу")),
+    ("20", _("20 на страницу")),
+    ("50", _("50 на страницу")),
+]
+
+
+class BaseSearchableSelectMixin:
+    def _init_search_attrs(self, placeholder: str = "", enable_search: bool = True):
+        attrs = self.attrs
+        attrs.setdefault("data-enhance-search-select", "true")
+        attrs.setdefault("data-placeholder", placeholder)
+        attrs.setdefault("data-no-results-label", _("Ничего не найдено"))
+        attrs.setdefault("data-selected-many-label", _("Выбрано значений"))
+        attrs.setdefault("data-enable-search", "true" if enable_search else "false")
+
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        if hasattr(label, "publication_type_id"):
+            option["attrs"]["data-publication-type"] = str(label.publication_type_id)
+            option["label"] = str(label)
+        return option
+
+
+class SearchableSelectMultiple(BaseSearchableSelectMixin, forms.SelectMultiple):
+    def __init__(self, *args, placeholder: str = "", enable_search: bool = True, **kwargs):
+        attrs = kwargs.setdefault("attrs", {})
+        super().__init__(*args, **kwargs)
+        self._init_search_attrs(placeholder=placeholder, enable_search=enable_search)
+
+
+class SearchableSelect(BaseSearchableSelectMixin, forms.Select):
+    def __init__(self, *args, placeholder: str = "", enable_search: bool = False, **kwargs):
+        attrs = kwargs.setdefault("attrs", {})
+        super().__init__(*args, **kwargs)
+        self._init_search_attrs(placeholder=placeholder, enable_search=enable_search)
+
+
 class SearchForm(forms.Form):
     q = forms.CharField(
         label=_("Запрос"),
@@ -32,6 +70,7 @@ class SearchForm(forms.Form):
         ],
         initial="hybrid",
         label=_("Режим поиска"),
+        widget=SearchableSelect(placeholder=_("Режим поиска"), enable_search=False),
     )
     sort = forms.ChoiceField(
         choices=[
@@ -46,6 +85,7 @@ class SearchForm(forms.Form):
         initial="relevance",
         label=_("Сортировка"),
         required=False,
+        widget=SearchableSelect(placeholder=_("Сортировка"), enable_search=False),
     )
     strictness = forms.ChoiceField(
         choices=[
@@ -59,54 +99,61 @@ class SearchForm(forms.Form):
         initial="",
         label=_("Строгость отсечения по score"),
         required=False,
+        widget=SearchableSelect(placeholder=_("Строгость отсечения по score"), enable_search=False),
     )
-    publication_type = forms.ModelChoiceField(
+    results_per_page = forms.ChoiceField(
+        choices=FILTER_PAGE_SIZE_CHOICES,
+        initial="10",
+        required=False,
+        widget=forms.HiddenInput(),
+    )
+    publication_type = forms.ModelMultipleChoiceField(
         queryset=PublicationType.objects.all(),
         required=False,
-        empty_label=_("Любой тип издания"),
         label=_("Тип издания"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите типы изданий")),
     )
-    publication_subtype = forms.ModelChoiceField(
+    publication_subtype = forms.ModelMultipleChoiceField(
         queryset=PublicationSubtype.objects.select_related("publication_type").all(),
         required=False,
-        empty_label=_("Любой подтип издания"),
         label=_("Подтип издания"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите подтипы изданий")),
     )
-    language = forms.ModelChoiceField(
+    language = forms.ModelMultipleChoiceField(
         queryset=PublicationLanguage.objects.all(),
         required=False,
-        empty_label=_("Любой язык"),
         label=_("Язык"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите языки")),
     )
-    periodicity = forms.ModelChoiceField(
+    periodicity = forms.ModelMultipleChoiceField(
         queryset=PublicationPeriodicity.objects.all(),
         required=False,
-        empty_label=_("Любая периодичность"),
         label=_("Периодичность"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите периодичность")),
     )
-    author = forms.ModelChoiceField(
+    author = forms.ModelMultipleChoiceField(
         queryset=Author.objects.select_related("academic_degree").all(),
         required=False,
-        empty_label=_("Любой автор"),
         label=_("Автор"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите авторов")),
     )
-    keyword = forms.ModelChoiceField(
+    keyword = forms.ModelMultipleChoiceField(
         queryset=Keyword.objects.all(),
         required=False,
-        empty_label=_("Любое ключевое слово"),
         label=_("Ключевое слово"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите ключевые слова")),
     )
-    publisher = forms.ModelChoiceField(
+    publisher = forms.ModelMultipleChoiceField(
         queryset=Publisher.objects.all(),
         required=False,
-        empty_label=_("Любой издатель"),
         label=_("Издатель"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите издателей")),
     )
-    publication_place = forms.ModelChoiceField(
+    publication_place = forms.ModelMultipleChoiceField(
         queryset=PublicationPlace.objects.all(),
         required=False,
-        empty_label=_("Любое место публикации"),
         label=_("Место публикации"),
+        widget=SearchableSelectMultiple(placeholder=_("Выберите места публикации")),
     )
     year_from = forms.IntegerField(
         required=False,
@@ -126,35 +173,41 @@ class SearchForm(forms.Form):
         label=_("Для традиционного поиска учитывать совпадения в основном тексте"),
     )
 
+    multiselect_field_names = (
+        "publication_type",
+        "publication_subtype",
+        "language",
+        "periodicity",
+        "author",
+        "keyword",
+        "publisher",
+        "publication_place",
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        publication_type = None
-        raw_publication_type = self.data.get("publication_type") or self.initial.get("publication_type")
-        if raw_publication_type:
-            try:
-                publication_type = PublicationType.objects.filter(pk=raw_publication_type).first()
-            except (TypeError, ValueError):
-                publication_type = None
-
-        subtype_queryset = PublicationSubtype.objects.select_related("publication_type")
-        if publication_type is not None:
-            subtype_queryset = subtype_queryset.filter(publication_type=publication_type)
-        self.fields["publication_subtype"].queryset = subtype_queryset
 
     def clean(self):
         cleaned_data = super().clean()
-        publication_type = cleaned_data.get("publication_type")
-        publication_subtype = cleaned_data.get("publication_subtype")
+        publication_types = cleaned_data.get("publication_type")
+        publication_subtypes = cleaned_data.get("publication_subtype")
         year_from = cleaned_data.get("year_from")
         year_to = cleaned_data.get("year_to")
 
-        if publication_type and publication_subtype and publication_subtype.publication_type_id != publication_type.pk:
-            self.add_error(
-                "publication_subtype",
-                _("Выбранный подтип не относится к указанному типу издания."),
-            )
+        if publication_types and publication_subtypes:
+            valid_type_ids = {item.pk for item in publication_types}
+            invalid_subtypes = [item for item in publication_subtypes if item.publication_type_id not in valid_type_ids]
+            if invalid_subtypes:
+                self.add_error(
+                    "publication_subtype",
+                    _("Среди выбранных подтипов есть значения, не относящиеся к указанным типам изданий."),
+                )
 
         if year_from is not None and year_to is not None and year_from > year_to:
             self.add_error("year_to", _("Верхняя граница диапазона не может быть меньше нижней."))
+
+        results_per_page = cleaned_data.get("results_per_page") or "10"
+        if results_per_page not in {"10", "20", "50"}:
+            cleaned_data["results_per_page"] = "10"
 
         return cleaned_data

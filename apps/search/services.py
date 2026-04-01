@@ -42,35 +42,44 @@ class BaseSearchService:
             queryset = queryset.prefetch_related("chunks")
         return queryset
 
+    def _normalize_filter_values(self, value: Any) -> list[Any]:
+        if value in (None, ""):
+            return []
+        if isinstance(value, QuerySet):
+            return list(value)
+        if isinstance(value, (list, tuple, set)):
+            return [item for item in value if item not in (None, "")]
+        return [value]
+
     def apply_filters(self, queryset: QuerySet[Publication], filters: dict[str, Any] | None = None) -> QuerySet[Publication]:
         filters = filters or {}
-        publication_type = filters.get("publication_type")
-        publication_subtype = filters.get("publication_subtype")
-        language = filters.get("language")
-        periodicity = filters.get("periodicity")
-        author = filters.get("author")
-        keyword = filters.get("keyword")
-        publisher = filters.get("publisher")
-        publication_place = filters.get("publication_place")
+        publication_types = self._normalize_filter_values(filters.get("publication_type"))
+        publication_subtypes = self._normalize_filter_values(filters.get("publication_subtype"))
+        languages = self._normalize_filter_values(filters.get("language"))
+        periodicities = self._normalize_filter_values(filters.get("periodicity"))
+        authors = self._normalize_filter_values(filters.get("author"))
+        keywords = self._normalize_filter_values(filters.get("keyword"))
+        publishers = self._normalize_filter_values(filters.get("publisher"))
+        publication_places = self._normalize_filter_values(filters.get("publication_place"))
         year_from = filters.get("year_from")
         year_to = filters.get("year_to")
 
-        if publication_type:
-            queryset = queryset.filter(publication_subtype__publication_type=publication_type)
-        if publication_subtype:
-            queryset = queryset.filter(publication_subtype=publication_subtype)
-        if language:
-            queryset = queryset.filter(language=language)
-        if periodicity:
-            queryset = queryset.filter(periodicity=periodicity)
-        if author:
-            queryset = queryset.filter(authors=author)
-        if keyword:
-            queryset = queryset.filter(keywords=keyword)
-        if publisher:
-            queryset = queryset.filter(publishers=publisher)
-        if publication_place:
-            queryset = queryset.filter(publication_places=publication_place)
+        if publication_types:
+            queryset = queryset.filter(publication_subtype__publication_type__in=publication_types)
+        if publication_subtypes:
+            queryset = queryset.filter(publication_subtype__in=publication_subtypes)
+        if languages:
+            queryset = queryset.filter(language__in=languages)
+        if periodicities:
+            queryset = queryset.filter(periodicity__in=periodicities)
+        if authors:
+            queryset = queryset.filter(authors__in=authors)
+        if keywords:
+            queryset = queryset.filter(keywords__in=keywords)
+        if publishers:
+            queryset = queryset.filter(publishers__in=publishers)
+        if publication_places:
+            queryset = queryset.filter(publication_places__in=publication_places)
         if year_from is not None:
             queryset = queryset.filter(publication_year__gte=year_from)
         if year_to is not None:
@@ -81,7 +90,13 @@ class BaseSearchService:
     def has_active_filters(self, filters: dict[str, Any] | None = None) -> bool:
         if not filters:
             return False
-        return any(value not in (None, "") for value in filters.values())
+        for value in filters.values():
+            normalized = self._normalize_filter_values(value)
+            if normalized:
+                return True
+            if value not in (None, "") and not isinstance(value, (QuerySet, list, tuple, set)):
+                return True
+        return False
 
     def normalize_text(self, value: str | None) -> str:
         return re.sub(r"\s+", " ", (value or "").strip().lower())

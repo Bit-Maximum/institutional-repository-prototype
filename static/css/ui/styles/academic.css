@@ -1,6 +1,6 @@
 :root[data-ui-style="academic"] {
-  --font-sans: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-serif: "Merriweather", Georgia, Cambria, serif;
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: var(--font-sans);
   --accent: #0f4fa8;
   --accent-strong: #0b3e82;
   --accent-soft: rgba(15, 79, 168, 0.12);
@@ -21,7 +21,7 @@
 :root[data-ui-style="academic"] h1,
 :root[data-ui-style="academic"] h2,
 :root[data-ui-style="academic"] .nav-menu-link__label {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 :root[data-ui-style="academic"] .site-header__inner,
