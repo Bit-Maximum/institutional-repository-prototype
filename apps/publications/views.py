@@ -8,6 +8,7 @@ from django.http import FileResponse, Http404, HttpResponseRedirect, JsonRespons
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.utils.translation import gettext as _
 
 from apps.ingestion.services import generate_metadata_prefill_from_upload, ingest_publication
 
@@ -140,12 +141,12 @@ class PublicationDownloadView(PublicationVisibilityMixin, View):
         if publication is None:
             raise Http404
         if not publication.file:
-            messages.error(request, "У выбранного издания отсутствует прикреплённый файл.")
+            messages.error(request, _("У выбранного издания отсутствует прикреплённый файл."))
             return redirect(publication.get_absolute_url())
         try:
             publication.file.open("rb")
         except FileNotFoundError:
-            messages.error(request, "Файл издания не найден в хранилище.")
+            messages.error(request, _("Файл издания не найден в хранилище."))
             return redirect(publication.get_absolute_url())
         if request.user.is_authenticated:
             PublicationUserEngagement.record_download(user=request.user, publication=publication)
@@ -181,15 +182,15 @@ class PublicationWorkflowMixin(PublicationEditorRequiredMixin):
     def _success_response(self, publication: Publication, *, action: str):
         if publication.is_draft:
             if action == "publish":
-                messages.success(self.request, "Издание опубликовано и теперь доступно в основной коллекции.")
+                messages.success(self.request, _("Издание опубликовано и теперь доступно в основной коллекции."))
             else:
                 messages.success(
                     self.request,
-                    f"Черновик сохранён. Редакция №{publication.draft_revision or 1} доступна всем администраторам для дальнейшего заполнения.",
+                    _("Черновик сохранён. Редакция №%(revision)s доступна всем администраторам для дальнейшего заполнения.") % {"revision": publication.draft_revision or 1},
                 )
             return HttpResponseRedirect(reverse("publications:edit", kwargs={"pk": publication.pk}))
 
-        messages.success(self.request, "Издание опубликовано и проиндексировано для поиска.")
+        messages.success(self.request, _("Издание опубликовано и проиндексировано для поиска."))
         return HttpResponseRedirect(publication.get_absolute_url())
 
     def form_valid(self, form):
@@ -202,13 +203,13 @@ class PublicationWorkflowMixin(PublicationEditorRequiredMixin):
         form.save_m2m()
         ingest_publication(self.object, index_in_vector_store=not self.object.is_draft)
         if self.object.is_draft and self.object.has_extracted_text:
-            messages.info(self.request, "Черновик обновлён. Текст извлечён и будет готов к публикации после подтверждения.")
+            messages.info(self.request, _("Черновик обновлён. Текст извлечён и будет готов к публикации после подтверждения."))
         elif self.object.is_draft:
-            messages.warning(self.request, "Черновик сохранён в режиме metadata-only. После публикации он будет доступен через поиск по метаданным.")
+            messages.warning(self.request, _("Черновик сохранён в режиме metadata-only. После публикации он будет доступен через поиск по метаданным."))
         elif self.object.has_extracted_text:
-            messages.info(self.request, "Основной текст успешно извлечён и включён в индекс поиска.")
+            messages.info(self.request, _("Основной текст успешно извлечён и включён в индекс поиска."))
         else:
-            messages.warning(self.request, "Издание опубликовано в режиме metadata-only. Поиск будет опираться на введённые метаданные.")
+            messages.warning(self.request, _("Издание опубликовано в режиме metadata-only. Поиск будет опираться на введённые метаданные."))
         return self._success_response(self.object, action=action)
 
 
@@ -246,13 +247,13 @@ class PublicationMetadataPrefillView(PublicationEditorRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
-            return JsonResponse({"error": "Сначала выберите файл для анализа."}, status=400)
+            return JsonResponse({"error": _("Сначала выберите файл для анализа.")}, status=400)
 
         try:
             payload = generate_metadata_prefill_from_upload(uploaded_file)
         except Exception as exc:  # pragma: no cover - defensive fallback for malformed uploads
             return JsonResponse(
-                {"error": f"Не удалось проанализировать файл ({exc.__class__.__name__})."},
+                {"error": _("Не удалось проанализировать файл (%(name)s).") % {"name": exc.__class__.__name__}},
                 status=400,
             )
         return JsonResponse(payload)

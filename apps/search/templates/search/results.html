@@ -1,75 +1,42 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Поиск{% endblock %}
+{% block title %}{% trans "Поиск" %}{% endblock %}
 
 {% block content %}
-  <h1>Поиск изданий</h1>
-  <form method="get">
-    <div style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); align-items:end;">
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Интеллектуальный поиск" %}</div>
+    <h1>{% trans "Поиск изданий" %}</h1>
+    <p class="muted">{% trans "Используйте текстовый запрос, фильтры или оба подхода одновременно. Интерфейс сразу рассчитан на работу и на больших, и на компактных экранах." %}</p>
+  </div>
+
+  <form method="get" class="stack-md">
+    <div class="grid-auto">
       <div style="grid-column: 1 / -1;">
         <label for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>
         {{ form.q }}
-        <small>Поле запроса необязательно. Можно искать только по фильтрам или открыть весь каталог результатов.</small>
-        <div style="margin-top:.5rem;">
+        <small>{% trans "Поле запроса необязательно. Можно искать только по фильтрам или открыть весь каталог результатов." %}</small>
+        <div class="stack-xs" style="margin-top:.5rem;">
           <label for="{{ form.include_fulltext_in_keyword.id_for_label }}" style="display:flex; gap:.5rem; align-items:center;">
             {{ form.include_fulltext_in_keyword }}
             <span>{{ form.include_fulltext_in_keyword.label }}</span>
           </label>
-          <small>Опция влияет только на традиционный поиск. В гибридном режиме полнотекстовое совпадение учитывается автоматически только для уточнения ранжирования.</small>
+          <small>{% trans "Опция влияет только на традиционный поиск. В гибридном режиме полнотекстовое совпадение учитывается автоматически только для уточнения ранжирования." %}</small>
         </div>
       </div>
-      <div>
-        <label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>
-        {{ form.mode }}
-      </div>
-      <div>
-        <label for="{{ form.sort.id_for_label }}">{{ form.sort.label }}</label>
-        {{ form.sort }}
-      </div>
-      <div>
-        <label for="{{ form.strictness.id_for_label }}">{{ form.strictness.label }}</label>
-        {{ form.strictness }}
-      </div>
-      <div>
-        <label for="{{ form.publication_type.id_for_label }}">{{ form.publication_type.label }}</label>
-        {{ form.publication_type }}
-      </div>
-      <div>
-        <label for="{{ form.publication_subtype.id_for_label }}">{{ form.publication_subtype.label }}</label>
-        {{ form.publication_subtype }}
-      </div>
-      <div>
-        <label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>
-        {{ form.language }}
-      </div>
-      <div>
-        <label for="{{ form.periodicity.id_for_label }}">{{ form.periodicity.label }}</label>
-        {{ form.periodicity }}
-      </div>
-      <div>
-        <label for="{{ form.author.id_for_label }}">{{ form.author.label }}</label>
-        {{ form.author }}
-      </div>
-      <div>
-        <label for="{{ form.keyword.id_for_label }}">{{ form.keyword.label }}</label>
-        {{ form.keyword }}
-      </div>
-      <div>
-        <label for="{{ form.publisher.id_for_label }}">{{ form.publisher.label }}</label>
-        {{ form.publisher }}
-      </div>
-      <div>
-        <label for="{{ form.publication_place.id_for_label }}">{{ form.publication_place.label }}</label>
-        {{ form.publication_place }}
-      </div>
-      <div>
-        <label for="{{ form.year_from.id_for_label }}">{{ form.year_from.label }}</label>
-        {{ form.year_from }}
-      </div>
-      <div>
-        <label for="{{ form.year_to.id_for_label }}">{{ form.year_to.label }}</label>
-        {{ form.year_to }}
-      </div>
+      <div><label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>{{ form.mode }}</div>
+      <div><label for="{{ form.sort.id_for_label }}">{{ form.sort.label }}</label>{{ form.sort }}</div>
+      <div><label for="{{ form.strictness.id_for_label }}">{{ form.strictness.label }}</label>{{ form.strictness }}</div>
+      <div><label for="{{ form.publication_type.id_for_label }}">{{ form.publication_type.label }}</label>{{ form.publication_type }}</div>
+      <div><label for="{{ form.publication_subtype.id_for_label }}">{{ form.publication_subtype.label }}</label>{{ form.publication_subtype }}</div>
+      <div><label for="{{ form.language.id_for_label }}">{{ form.language.label }}</label>{{ form.language }}</div>
+      <div><label for="{{ form.periodicity.id_for_label }}">{{ form.periodicity.label }}</label>{{ form.periodicity }}</div>
+      <div><label for="{{ form.author.id_for_label }}">{{ form.author.label }}</label>{{ form.author }}</div>
+      <div><label for="{{ form.keyword.id_for_label }}">{{ form.keyword.label }}</label>{{ form.keyword }}</div>
+      <div><label for="{{ form.publisher.id_for_label }}">{{ form.publisher.label }}</label>{{ form.publisher }}</div>
+      <div><label for="{{ form.publication_place.id_for_label }}">{{ form.publication_place.label }}</label>{{ form.publication_place }}</div>
+      <div><label for="{{ form.year_from.id_for_label }}">{{ form.year_from.label }}</label>{{ form.year_from }}</div>
+      <div><label for="{{ form.year_to.id_for_label }}">{{ form.year_to.label }}</label>{{ form.year_to }}</div>
     </div>
 
     {% if form.errors %}
@@ -82,40 +49,38 @@
       </ul>
     {% endif %}
 
-    <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
-      <button type="submit">Найти</button>
-      <a href="{% url 'search:results' %}">Сбросить фильтры</a>
+    <div class="inline-actions">
+      <button type="submit">{% trans "Найти" %}</button>
+      <a class="chip-link" href="{% url 'search:results' %}">{% trans "Сбросить фильтры" %}</a>
     </div>
   </form>
 
-  <p>
-    Найдено результатов: <strong>{{ total_results }}</strong>.
+  <p class="info-note">
+    {% blocktrans with total=total_results %}Найдено результатов: <strong>{{ total }}</strong>.{% endblocktrans %}
     {% if form.cleaned_data.strictness %}
-      Включён относительный отсев: показываются только результаты не ниже {{ form.cleaned_data.strictness }} от score лучшего совпадения.
+      {% blocktrans with strictness=form.cleaned_data.strictness %}Включён относительный отсев: показываются только результаты не ниже {{ strictness }} от score лучшего совпадения.{% endblocktrans %}
     {% endif %}
     {% if active_mode == "keyword" %}
-      Используется традиционный поиск. Текстовый запрос ищется по названию, авторам, ключевым словам, издателям, местам публикации и научным руководителям.
+      {% trans "Используется традиционный поиск. Текстовый запрос ищется по названию, авторам, ключевым словам, издателям, местам публикации и научным руководителям." %}
     {% elif active_mode == "semantic" %}
-      Используется семантический поиск. При сортировке по релевантности первыми идут наиболее близкие по смыслу материалы, но нерелевантные фрагменты без лексической опоры на запрос дополнительно штрафуются.
+      {% trans "Используется семантический поиск. При сортировке по релевантности первыми идут наиболее близкие по смыслу материалы, но нерелевантные фрагменты без лексической опоры на запрос дополнительно штрафуются." %}
     {% else %}
-      Используется гибридный поиск. Результаты ранжируются объединённым score: семантическая близость + лексическая опора на запрос. Затем выдача при необходимости дополняется выборкой по фильтрам без дублей.
+      {% trans "Используется гибридный поиск. Результаты ранжируются объединённым score: семантическая близость + лексическая опора на запрос. Затем выдача при необходимости дополняется выборкой по фильтрам без дублей." %}
     {% endif %}
   </p>
 
-  <div style="display:grid; gap:1rem;">
+  <div class="card-list">
     {% for publication in primary_results %}
-      <article class="card">
-        <h3 style="margin-top:0; margin-bottom:.5rem;">
-          <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
-        </h3>
-        <p style="margin:.25rem 0;">
-          <strong>Тип:</strong> {{ publication.publication_type|default:"—" }}
-          · <strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}
-          · <strong>Год:</strong> {{ publication.publication_year|default:"—" }}
-          · <strong>Язык:</strong> {{ publication.language|default:"—" }}
+      <article class="card stack-sm">
+        <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+        <p class="muted">
+          <strong>{% trans "Тип" %}:</strong> {{ publication.publication_type|default:"—" }} ·
+          <strong>{% trans "Подтип" %}:</strong> {{ publication.publication_subtype|default:"—" }} ·
+          <strong>{% trans "Год" %}:</strong> {{ publication.publication_year|default:"—" }} ·
+          <strong>{% trans "Язык" %}:</strong> {{ publication.language|default:"—" }}
         </p>
-        <p style="margin:.25rem 0;">
-          <strong>Авторы:</strong>
+        <p>
+          <strong>{% trans "Авторы" %}:</strong>
           {% for author in publication.authors.all %}
             {{ author.full_name }}{% if not forloop.last %}, {% endif %}
           {% empty %}
@@ -123,88 +88,84 @@
           {% endfor %}
         </p>
         {% if publication.search_source %}
-          <p style="margin:.25rem 0;">
-            <strong>Релевантность:</strong>
+          <p>
+            <strong>{% trans "Релевантность" %}:</strong>
             {% if publication.search_source == "semantic" %}
-              семантическое совпадение
+              {% trans "семантическое совпадение" %}
             {% elif publication.search_source == "hybrid-semantic" %}
-              семантическое совпадение (гибридный приоритет)
+              {% trans "семантическое совпадение (гибридный приоритет)" %}
             {% elif publication.search_source == "hybrid-combined" %}
-              комбинированное гибридное совпадение
+              {% trans "комбинированное гибридное совпадение" %}
             {% elif publication.search_source == "hybrid-keyword" %}
-              добавлено из традиционного поиска
+              {% trans "добавлено из традиционного поиска" %}
             {% elif publication.search_source == "hybrid-filter" %}
-              добавлено из выборки по фильтрам
+              {% trans "добавлено из выборки по фильтрам" %}
             {% else %}
-              традиционное совпадение
+              {% trans "традиционное совпадение" %}
             {% endif %}
             {% if publication.search_score %}
-              · итоговый score: {{ publication.search_score|floatformat:3 }}
+              · {% trans "итоговый score" %}: {{ publication.search_score|floatformat:3 }}
             {% endif %}
             {% if publication.retrieval_score and publication.search_stage == "reranked" %}
-              · сырой retrieval score: {{ publication.retrieval_score|floatformat:3 }}
+              · {% trans "сырой retrieval score" %}: {{ publication.retrieval_score|floatformat:3 }}
             {% elif publication.retrieval_score and publication.search_stage != "filtered" and publication.retrieval_score != publication.search_score %}
-              · сырой retrieval score: {{ publication.retrieval_score|floatformat:3 }}
+              · {% trans "сырой retrieval score" %}: {{ publication.retrieval_score|floatformat:3 }}
             {% endif %}
           </p>
         {% endif %}
         {% if publication.search_match_basis %}
-          <p style="margin:.25rem 0;">
-            <strong>Основа совпадения:</strong>
+          <p>
+            <strong>{% trans "Основа совпадения" %}:</strong>
             {% if publication.search_match_basis == "metadata" %}
-              метаданные{% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
+              {% trans "метаданные" %}{% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
             {% else %}
-              основной текст{% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
+              {% trans "основной текст" %}{% if publication.search_match_label %} · {{ publication.search_match_label }}{% endif %}
             {% endif %}
           </p>
         {% endif %}
         {% if publication.search_excerpt %}
-          <p style="margin:.25rem 0;"><strong>Наиболее релевантный фрагмент:</strong> {{ publication.search_excerpt }}</p>
+          <p><strong>{% trans "Наиболее релевантный фрагмент" %}:</strong> {{ publication.search_excerpt }}</p>
         {% else %}
-          <p style="margin:.25rem 0;">{{ publication.contents|default:"Описание отсутствует."|truncatechars:260 }}</p>
+          <p>{% if publication.contents %}{{ publication.contents|truncatechars:260 }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
         {% endif %}
       </article>
     {% empty %}
       {% if not additional_results %}
-        <p>По выбранным параметрам ничего не найдено.</p>
+        <div class="empty-state">{% trans "По выбранным параметрам ничего не найдено." %}</div>
       {% endif %}
     {% endfor %}
 
     {% if additional_results %}
-      <div class="card" style="background:#fafafa; border-style:dashed;">
-        <h3 style="margin-top:0;">Может быть интересно</h3>
-        <p style="margin-bottom:0;">Ниже показаны издания, добавленные только из выборки по фильтрам. Они не прошли основной релевантностный отбор, но соответствуют выбранным ограничениям.</p>
+      <div class="card stack-sm">
+        <h2>{% trans "Может быть интересно" %}</h2>
+        <p class="muted">{% trans "Ниже показаны издания, добавленные только из выборки по фильтрам. Они не прошли основной релевантностный отбор, но соответствуют выбранным ограничениям." %}</p>
       </div>
       {% for publication in additional_results %}
-        <article class="card">
-          <h3 style="margin-top:0; margin-bottom:.5rem;">
-            <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
-          </h3>
-          <p style="margin:.25rem 0;">
-            <strong>Тип:</strong> {{ publication.publication_type|default:"—" }}
-            · <strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}
-            · <strong>Год:</strong> {{ publication.publication_year|default:"—" }}
-            · <strong>Язык:</strong> {{ publication.language|default:"—" }}
+        <article class="card stack-sm">
+          <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+          <p class="muted">
+            <strong>{% trans "Тип" %}:</strong> {{ publication.publication_type|default:"—" }} ·
+            <strong>{% trans "Подтип" %}:</strong> {{ publication.publication_subtype|default:"—" }} ·
+            <strong>{% trans "Год" %}:</strong> {{ publication.publication_year|default:"—" }} ·
+            <strong>{% trans "Язык" %}:</strong> {{ publication.language|default:"—" }}
           </p>
-          <p style="margin:.25rem 0;"><strong>Релевантность:</strong> может быть интересно по выбранным фильтрам</p>
-          <p style="margin:.25rem 0;">{{ publication.contents|default:"Описание отсутствует."|truncatechars:260 }}</p>
+          <p><strong>{% trans "Релевантность" %}:</strong> {% trans "может быть интересно по выбранным фильтрам" %}</p>
+          <p>{% if publication.contents %}{{ publication.contents|truncatechars:260 }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
         </article>
       {% endfor %}
     {% endif %}
   </div>
 
   {% if page_obj %}
-    <nav style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+    <nav class="pagination">
       {% if page_obj.has_previous %}
-        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">Первая</a>
-        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Назад</a>
+        <a class="chip-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page=1">{% trans "Первая" %}</a>
+        <a class="chip-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">{% trans "Назад" %}</a>
       {% endif %}
-
-      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-
+      <span>{% blocktrans with number=page_obj.number total=page_obj.paginator.num_pages %}Страница {{ number }} из {{ total }}{% endblocktrans %}</span>
       {% if page_obj.has_next %}
-        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд</a>
-        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Последняя</a>
+        <a class="chip-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">{% trans "Вперёд" %}</a>
+        <a class="chip-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.paginator.num_pages }}">{% trans "Последняя" %}</a>
       {% endif %}
     </nav>
   {% endif %}

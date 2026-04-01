@@ -1,54 +1,74 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}{{ publication.title }}{% endblock %}
 
 {% block content %}
-  <h1>{{ publication.title }}</h1>
-  <p><strong>Статус:</strong> {{ publication.workflow_status_label }}</p>
-  <p><strong>Тип:</strong> {{ publication.publication_type|default:"—" }}</p>
-  <p><strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}</p>
-  <p><strong>Год:</strong> {{ publication.publication_year|default:"—" }}</p>
-  <p><strong>Язык:</strong> {{ publication.language|default:"—" }}</p>
-  <p><strong>Загрузил:</strong> {{ publication.uploaded_by }}</p>
-  {% if publication.last_saved_by %}<p><strong>Последнее редактирование:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>{% endif %}
-  {% if publication.published_at %}<p><strong>Опубликовано:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>{% endif %}
-  <p>
-    <strong>Режим индексирования:</strong>
-    {{ publication.get_text_extraction_status_display }}
-    {% if publication.text_extraction_notes %}
-      <br><small>{{ publication.text_extraction_notes }}</small>
-    {% endif %}
-  </p>
-  <p><strong>Основной текст извлечён:</strong> {% if publication.has_extracted_text %}да{% else %}нет{% endif %}</p>
-  <p>
-    <strong>Авторы:</strong>
-    {% for author in publication.authors.all %}
-      {{ author.full_name }}{% if not forloop.last %}, {% endif %}
-    {% empty %}
-      —
-    {% endfor %}
-  </p>
-  <p>{{ publication.contents|default:"Описание отсутствует." }}</p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Карточка издания" %}</div>
+    <h1>{{ publication.title }}</h1>
+  </div>
 
-  {% if user_has_downloaded_publication %}<p><strong>Статус взаимодействия:</strong> вы уже скачивали это издание.</p>{% elif user_has_viewed_publication %}<p><strong>Статус взаимодействия:</strong> вы уже открывали карточку этого издания.</p>{% endif %}
+  <div class="grid-auto grid-auto--wide">
+    <section class="card stack-sm">
+      <h2>{% trans "Основная информация" %}</h2>
+      <p><strong>{% trans "Статус" %}:</strong> {{ publication.workflow_status_label }}</p>
+      <p><strong>{% trans "Тип" %}:</strong> {{ publication.publication_type|default:"—" }}</p>
+      <p><strong>{% trans "Подтип" %}:</strong> {{ publication.publication_subtype|default:"—" }}</p>
+      <p><strong>{% trans "Год" %}:</strong> {{ publication.publication_year|default:"—" }}</p>
+      <p><strong>{% trans "Язык" %}:</strong> {{ publication.language|default:"—" }}</p>
+      <p><strong>{% trans "Загрузил" %}:</strong> {{ publication.uploaded_by }}</p>
+      {% if publication.last_saved_by %}<p><strong>{% trans "Последнее редактирование" %}:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>{% endif %}
+      {% if publication.published_at %}<p><strong>{% trans "Опубликовано" %}:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>{% endif %}
+      <p><strong>{% trans "Режим индексирования" %}:</strong> {{ publication.get_text_extraction_status_display }}</p>
+      {% if publication.text_extraction_notes %}<p class="muted">{{ publication.text_extraction_notes }}</p>{% endif %}
+      <p><strong>{% trans "Основной текст извлечён" %}:</strong> {% if publication.has_extracted_text %}{% trans "да" %}{% else %}{% trans "нет" %}{% endif %}</p>
+      <p>
+        <strong>{% trans "Авторы" %}:</strong>
+        {% for author in publication.authors.all %}
+          {{ author.full_name }}{% if not forloop.last %}, {% endif %}
+        {% empty %}
+          —
+        {% endfor %}
+      </p>
+    </section>
+
+    <section class="card stack-sm">
+      <h2>{% trans "Описание" %}</h2>
+      <p>{% if publication.contents %}{{ publication.contents }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
+      {% if publication.file %}
+        <div class="inline-actions">
+          <a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать файл" %}</a>
+        </div>
+      {% endif %}
+      {% if publication.chunks.all %}
+        <p><strong>{% trans "Фрагментов в индексе" %}:</strong> {{ publication.chunks.count }}</p>
+      {% endif %}
+      {% if user_has_downloaded_publication %}
+        <p class="info-note"><strong>{% trans "Статус взаимодействия" %}:</strong> {% trans "вы уже скачивали это издание." %}</p>
+      {% elif user_has_viewed_publication %}
+        <p class="info-note"><strong>{% trans "Статус взаимодействия" %}:</strong> {% trans "вы уже открывали карточку этого издания." %}</p>
+      {% endif %}
+    </section>
+  </div>
 
   {% if can_manage_publication %}
-    <section class="card" style="margin:1rem 0; background:#fdfdfd;">
-      <h2 style="margin-top:0;">Управление изданием</h2>
-      <p style="margin:.35rem 0;">Редактирование выполняется на основной части сайта. После сохранения как черновика издание временно исчезнет из открытого каталога до повторной публикации.</p>
-      <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
-        <a href="{% url 'publications:edit' publication.pk %}">Редактировать на сайте</a>
+    <section class="card stack-sm">
+      <h2>{% trans "Управление изданием" %}</h2>
+      <p class="muted">{% trans "Редактирование выполняется на основной части сайта. После сохранения как черновика издание временно исчезнет из открытого каталога до повторной публикации." %}</p>
+      <div class="inline-actions">
+        <a class="chip-link" href="{% url 'publications:edit' publication.pk %}">{% trans "Редактировать на сайте" %}</a>
         {% if publication.is_draft %}
-          <a href="{% url 'publications:drafts' %}">Ко всем черновикам</a>
+          <a class="chip-link" href="{% url 'publications:drafts' %}">{% trans "Ко всем черновикам" %}</a>
         {% endif %}
       </div>
     </section>
   {% endif %}
 
   {% if publication.derived_characteristics %}
-    <section class="card" style="margin:1rem 0;">
-      <h2 style="margin-top:0;">Автоматически выявленные особенности</h2>
-      <ul style="margin:0; padding-left:1.2rem;">
+    <section class="card stack-sm">
+      <h2>{% trans "Автоматически выявленные особенности" %}</h2>
+      <ul>
         {% for item in publication.derived_characteristics %}
           <li>
             <strong>{{ item.label }}</strong>
@@ -57,11 +77,5 @@
         {% endfor %}
       </ul>
     </section>
-  {% endif %}
-  {% if publication.file %}
-    <p><a href="{% url 'publications:download' publication.pk %}">Скачать файл</a></p>
-  {% endif %}
-  {% if publication.chunks.all %}
-    <p><strong>Фрагментов в индексе:</strong> {{ publication.chunks.count }}</p>
   {% endif %}
 {% endblock %}

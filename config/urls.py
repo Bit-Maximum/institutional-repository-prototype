@@ -19,6 +19,7 @@ urlpatterns = [
     path("publications/", include("apps.publications.urls")),
     path("collections/", include("apps.collections_app.urls")),
     path("search/", include("apps.search.urls")),
+    path("interface/", include("apps.ui.urls")),
     path("cms-admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
     path("pages/", include(wagtail_urls)),

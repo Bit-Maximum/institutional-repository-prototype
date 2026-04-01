@@ -1,22 +1,29 @@
 {% extends "base.html" %}
-{% load socialaccount %}
+{% load socialaccount i18n %}
 
-{% block title %}Регистрация{% endblock %}
+{% block title %}{% trans "Регистрация" %}{% endblock %}
 
 {% block content %}
-  <h1>Регистрация</h1>
-  <form method="post">
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Аккаунт" %}</div>
+    <h1>{% trans "Регистрация" %}</h1>
+  </div>
+  <form method="post" class="stack-md">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Создать аккаунт</button>
+    <div class="inline-actions">
+      <button type="submit">{% trans "Создать аккаунт" %}</button>
+    </div>
   </form>
 
   {% if google_oauth_enabled %}
-    <hr>
-    <p>Либо можно сразу создать пользователя через Google:</p>
-    <form method="post" action="{% provider_login_url 'google' process='login' %}">
-      {% csrf_token %}
-      <button type="submit">Продолжить через Google</button>
-    </form>
+    <section class="card stack-sm">
+      <h2>{% trans "Регистрация через Google" %}</h2>
+      <p>{% trans "Либо можно сразу создать пользователя через Google:" %}</p>
+      <form method="post" action="{% provider_login_url 'google' process='login' %}">
+        {% csrf_token %}
+        <button type="submit">{% trans "Продолжить через Google" %}</button>
+      </form>
+    </section>
   {% endif %}
 {% endblock %}

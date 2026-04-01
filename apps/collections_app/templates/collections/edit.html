@@ -1,14 +1,20 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Редактировать коллекцию{% endblock %}
+{% block title %}{% trans "Редактировать коллекцию" %}{% endblock %}
 
 {% block content %}
-  <h1>Редактировать коллекцию</h1>
-  <p><a href="{% url 'collections:detail' object.pk %}">← Вернуться к коллекции</a></p>
-  <form method="post">
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
+    <h1>{% trans "Редактировать коллекцию" %}</h1>
+    <p><a class="chip-link" href="{% url 'collections:detail' object.pk %}">← {% trans "Вернуться к коллекции" %}</a></p>
+  </div>
+  <form method="post" class="stack-md">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Сохранить изменения</button>
+    <div class="inline-actions">
+      <button type="submit">{% trans "Сохранить изменения" %}</button>
+    </div>
   </form>
-  <p style="color:#666;">Состав коллекции редактируется на странице самой коллекции через поиск по изданиям и кнопки добавления/удаления.</p>
+  <p class="muted">{% trans "Состав коллекции редактируется на странице самой коллекции через поиск по изданиям и кнопки добавления и удаления." %}</p>
 {% endblock %}

@@ -1,30 +1,42 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Главная{% endblock %}
+{% block title %}{% trans "Главная" %}{% endblock %}
 
 {% block content %}
-  <h1>Институциональный репозиторий</h1>
-  <p>Стартовый прототип диссертационного проекта.</p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Институциональный репозиторий" %}</div>
+    <h1>{{ ui_state.site_title }}</h1>
+    {% if ui_state.site_tagline %}
+      <p class="muted">{{ ui_state.site_tagline }}</p>
+    {% endif %}
+    <div class="page-intro__actions">
+      <a class="button" href="{% url 'search:results' %}">{% trans "Перейти к поиску" %}</a>
+      <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Открыть каталог" %}</a>
+    </div>
+  </div>
 
-  <section>
-    <h2>Последние издания</h2>
-    <ul>
-      {% for publication in latest_publications %}
-        <li><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></li>
-      {% empty %}
-        <li>Пока нет опубликованных изданий.</li>
-      {% endfor %}
-    </ul>
-  </section>
+  <div class="grid-auto grid-auto--wide">
+    <section class="card stack-sm">
+      <h2>{% trans "Последние издания" %}</h2>
+      <ul class="list-reset stack-sm">
+        {% for publication in latest_publications %}
+          <li><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></li>
+        {% empty %}
+          <li class="empty-state">{% trans "Пока нет опубликованных изданий." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
 
-  <section>
-    <h2>Последние объявления</h2>
-    <ul>
-      {% for announcement in latest_announcements %}
-        <li><a href="{{ announcement.url }}">{{ announcement.title }}</a></li>
-      {% empty %}
-        <li>Пока нет опубликованных объявлений.</li>
-      {% endfor %}
-    </ul>
-  </section>
+    <section class="card stack-sm">
+      <h2>{% trans "Последние объявления" %}</h2>
+      <ul class="list-reset stack-sm">
+        {% for announcement in latest_announcements %}
+          <li><a href="{{ announcement.url }}">{{ announcement.title }}</a></li>
+        {% empty %}
+          <li class="empty-state">{% trans "Пока нет опубликованных объявлений." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
 {% endblock %}

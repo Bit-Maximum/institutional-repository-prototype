@@ -3,23 +3,28 @@ from __future__ import annotations
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.utils.translation import gettext_lazy as _
 
 
 User = get_user_model()
 
 
 class RegisterForm(forms.ModelForm):
-    password1 = forms.CharField(label="Пароль", widget=forms.PasswordInput)
-    password2 = forms.CharField(label="Подтверждение пароля", widget=forms.PasswordInput)
+    password1 = forms.CharField(label=_("Пароль"), widget=forms.PasswordInput)
+    password2 = forms.CharField(label=_("Подтверждение пароля"), widget=forms.PasswordInput)
 
     class Meta:
         model = User
         fields = ("full_name", "email")
+        labels = {
+            "full_name": _("ФИО"),
+            "email": _("Электронная почта"),
+        }
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Пользователь с таким email уже существует.")
+            raise forms.ValidationError(_("Пользователь с таким email уже существует."))
         return email
 
     def clean(self):
@@ -27,7 +32,7 @@ class RegisterForm(forms.ModelForm):
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            self.add_error("password2", "Пароли не совпадают.")
+            self.add_error("password2", _("Пароли не совпадают."))
         if password1:
             validate_password(password1, self.instance)
         return cleaned_data
@@ -41,12 +46,11 @@ class RegisterForm(forms.ModelForm):
         return user
 
 
-
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ("full_name",)
-        labels = {"full_name": "Отображаемое имя"}
+        labels = {"full_name": _("Отображаемое имя")}
         help_texts = {
-            "full_name": "Используется в профиле, коллекциях, черновиках и других пользовательских сценариях.",
+            "full_name": _("Используется в профиле, коллекциях, черновиках и других пользовательских сценариях."),
         }

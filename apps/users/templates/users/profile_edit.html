@@ -1,33 +1,43 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Редактирование профиля{% endblock %}
+{% block title %}{% trans "Редактирование профиля" %}{% endblock %}
 
 {% block content %}
-  <h1>Редактирование профиля</h1>
-  <p><a href="{% url 'profile' %}">← Вернуться к профилю</a></p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Аккаунт" %}</div>
+    <h1>{% trans "Редактирование профиля" %}</h1>
+    <p><a class="chip-link" href="{% url 'profile' %}">← {% trans "Вернуться к профилю" %}</a></p>
+  </div>
 
-  <h2>Основные данные</h2>
-  <p><strong>Email:</strong> {{ request.user.email }}<br><small>Email в рамках прототипа не редактируется, так как в реальной системе им обычно управляет внешний корпоративный провайдер.</small></p>
-  <form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="action" value="profile">
-    {{ profile_form.as_p }}
-    <button type="submit">Сохранить профиль</button>
-  </form>
+  <section class="card stack-sm">
+    <h2>{% trans "Основные данные" %}</h2>
+    <p><strong>Email:</strong> {{ request.user.email }}<br><small>{% trans "Email в рамках прототипа не редактируется, так как в реальной системе им обычно управляет внешний корпоративный провайдер." %}</small></p>
+    <form method="post" class="stack-md">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="profile">
+      {{ profile_form.as_p }}
+      <div class="inline-actions">
+        <button type="submit">{% trans "Сохранить профиль" %}</button>
+      </div>
+    </form>
+  </section>
 
-  <hr>
+  <section class="card stack-sm">
+    <h2>{% if has_local_password %}{% trans "Сменить локальный пароль" %}{% else %}{% trans "Задать локальный пароль" %}{% endif %}</h2>
+    <p><small>{% trans "Локальный пароль полезен как резервный способ входа в дополнение к OAuth. Для пользователей, созданных только через Google, его можно задать здесь впервые." %}</small></p>
+    <form method="post" class="stack-md">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="password">
+      {{ password_form.as_p }}
+      <div class="inline-actions">
+        <button type="submit">{% trans "Сохранить пароль" %}</button>
+      </div>
+    </form>
+  </section>
 
-  <h2>{% if has_local_password %}Сменить локальный пароль{% else %}Задать локальный пароль{% endif %}</h2>
-  <p><small>Локальный пароль полезен как резервный способ входа в дополнение к OAuth. Для пользователей, созданных только через Google, его можно задать здесь впервые.</small></p>
-  <form method="post">
-    {% csrf_token %}
-    <input type="hidden" name="action" value="password">
-    {{ password_form.as_p }}
-    <button type="submit">Сохранить пароль</button>
-  </form>
-
-  <hr>
-
-  <h2>Связанные способы входа</h2>
-  <p><a href="{% url 'oauth-settings' %}">Управление связанными OAuth-аккаунтами</a></p>
+  <section class="card stack-sm">
+    <h2>{% trans "Связанные способы входа" %}</h2>
+    <p><a class="chip-link" href="{% url 'oauth-settings' %}">{% trans "Управление связанными OAuth-аккаунтами" %}</a></p>
+  </section>
 {% endblock %}

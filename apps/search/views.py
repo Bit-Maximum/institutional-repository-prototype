@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import FormView, TemplateView
+from django.utils.translation import gettext as _
 
 from apps.search.models import SearchQuery
 from apps.vector_store.exceptions import VectorStoreDependencyError
@@ -217,7 +218,7 @@ class SearchHistoryDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk: int, *args, **kwargs):
         entry = get_object_or_404(SearchQuery, pk=pk, user=request.user)
         entry.delete()
-        messages.success(request, "Запись из истории поиска удалена.")
+        messages.success(request, _("Запись из истории поиска удалена."))
         return redirect("search:history")
 
 
@@ -227,9 +228,9 @@ class SearchHistoryClearView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
         deleted_count, _ = SearchQuery.objects.filter(user=request.user).delete()
         if deleted_count:
-            messages.success(request, "История поиска очищена.")
+            messages.success(request, _("История поиска очищена."))
         else:
-            messages.info(request, "История поиска уже была пустой.")
+            messages.info(request, _("История поиска уже была пустой."))
         return redirect("search:history")
 
 

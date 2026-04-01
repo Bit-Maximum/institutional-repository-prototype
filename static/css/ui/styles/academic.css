@@ -1,0 +1,147 @@
+:root[data-ui-style="academic"] {
+  --font-sans: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: "Merriweather", Georgia, Cambria, serif;
+  --accent: #0f4fa8;
+  --accent-strong: #0b3e82;
+  --accent-soft: rgba(15, 79, 168, 0.12);
+  --surface-1: rgba(255, 255, 255, 0.95);
+  --surface-2: rgba(245, 248, 252, 0.98);
+  --surface-3: rgba(234, 240, 248, 0.98);
+  --surface-4: rgba(219, 229, 243, 0.95);
+  --border-subtle: rgba(28, 61, 115, 0.14);
+  --border-strong: rgba(28, 61, 115, 0.24);
+  --shadow-sm: 0 12px 28px rgba(25, 50, 90, 0.08);
+  --shadow-md: 0 20px 42px rgba(25, 50, 90, 0.11);
+  --page-gradient: radial-gradient(circle at top left, rgba(15, 79, 168, 0.1), transparent 24%),
+                   radial-gradient(circle at top right, rgba(14, 116, 144, 0.08), transparent 22%),
+                   linear-gradient(180deg, #f4f7fb 0%, #eaf0f8 100%);
+}
+
+:root[data-ui-style="academic"] .brand-block__title,
+:root[data-ui-style="academic"] h1,
+:root[data-ui-style="academic"] h2,
+:root[data-ui-style="academic"] .nav-menu-link__label {
+  font-family: var(--font-serif);
+}
+
+:root[data-ui-style="academic"] .site-header__inner,
+:root[data-ui-style="academic"] .panel,
+:root[data-ui-style="academic"] .card,
+:root[data-ui-style="academic"] article.card {
+  border-radius: 24px;
+}
+
+:root[data-ui-style="academic"] .site-header__inner {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+:root[data-ui-style="academic"] .panel,
+:root[data-ui-style="academic"] .card,
+:root[data-ui-style="academic"] article.card,
+:root[data-ui-style="academic"] .empty-state,
+:root[data-ui-style="academic"] .info-note,
+:root[data-ui-style="academic"] .message.info,
+:root[data-ui-style="academic"] .message.debug {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-1), white 7%) 0%, var(--surface-2) 100%);
+  border-color: color-mix(in srgb, var(--border-subtle), var(--accent) 16%);
+}
+
+:root[data-ui-style="academic"] .panel::before,
+:root[data-ui-style="academic"] .card::before,
+:root[data-ui-style="academic"] article.card::before {
+  content: "";
+  display: block;
+  height: 4px;
+  margin: -1rem -1rem 1rem;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent), white 28%), transparent 75%);
+}
+
+:root[data-ui-style="academic"] .nav-pill,
+:root[data-ui-style="academic"] .nav-group__summary,
+:root[data-ui-style="academic"] .utility-menu__summary,
+:root[data-ui-style="academic"] .chip-link,
+:root[data-ui-style="academic"] .site-nav-toggle,
+:root[data-ui-style="academic"] .select-shell--compact select,
+:root[data-ui-style="academic"] input,
+:root[data-ui-style="academic"] select,
+:root[data-ui-style="academic"] textarea {
+  background: color-mix(in srgb, var(--surface-1), white 18%);
+}
+
+:root[data-ui-style="academic"] .nav-group__menu,
+:root[data-ui-style="academic"] .utility-menu__menu {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(241, 246, 252, 0.98) 100%);
+}
+
+:root[data-ui-style="academic"] .page-intro__eyebrow,
+:root[data-ui-style="academic"] .utility-menu__label,
+:root[data-ui-style="academic"] .nav-group__summary {
+  letter-spacing: .01em;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-ui-style="academic"][data-theme-mode="system"] {
+    --surface-1: rgba(9, 18, 34, 0.92);
+    --surface-2: rgba(12, 24, 46, 0.95);
+    --surface-3: rgba(18, 33, 56, 0.96);
+    --surface-4: rgba(31, 49, 82, 0.92);
+    --border-subtle: rgba(125, 160, 220, 0.2);
+    --border-strong: rgba(125, 160, 220, 0.32);
+    --page-gradient: radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 22%),
+                     linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  }
+}
+
+:root[data-ui-style="academic"][data-theme-mode="dark"] {
+  --surface-1: rgba(9, 18, 34, 0.92);
+  --surface-2: rgba(12, 24, 46, 0.95);
+  --surface-3: rgba(18, 33, 56, 0.96);
+  --surface-4: rgba(31, 49, 82, 0.92);
+  --border-subtle: rgba(125, 160, 220, 0.2);
+  --border-strong: rgba(125, 160, 220, 0.32);
+  --page-gradient: radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 22%),
+                   linear-gradient(180deg, #020617 0%, #0f172a 100%);
+}
+
+:root[data-ui-style="academic"][data-theme-mode="dark"] .nav-group__menu,
+:root[data-ui-style="academic"][data-theme-mode="dark"] .utility-menu__menu,
+:root[data-ui-style="academic"][data-theme-mode="dark"] .select-shell--compact select,
+:root[data-ui-style="academic"][data-theme-mode="dark"] input,
+:root[data-ui-style="academic"][data-theme-mode="dark"] select,
+:root[data-ui-style="academic"][data-theme-mode="dark"] textarea {
+  background: linear-gradient(180deg, rgba(12, 24, 46, 0.98) 0%, rgba(16, 31, 58, 0.98) 100%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-ui-style="academic"][data-theme-mode="system"] .nav-group__menu,
+  :root[data-ui-style="academic"][data-theme-mode="system"] .utility-menu__menu,
+  :root[data-ui-style="academic"][data-theme-mode="system"] .select-shell--compact select,
+  :root[data-ui-style="academic"][data-theme-mode="system"] input,
+  :root[data-ui-style="academic"][data-theme-mode="system"] select,
+  :root[data-ui-style="academic"][data-theme-mode="system"] textarea {
+    background: linear-gradient(180deg, rgba(12, 24, 46, 0.98) 0%, rgba(16, 31, 58, 0.98) 100%);
+  }
+}
+
+
+@layer components {
+:root[data-ui-style="academic"] .select-shell {
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244, 248, 255, 0.96) 100%);
+  border-color: rgba(28, 57, 108, 0.16);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-ui-style="academic"][data-theme-mode="dark"] .select-shell {
+  background: linear-gradient(180deg, rgba(17, 28, 47, 0.94) 0%, rgba(20, 33, 55, 0.9) 100%);
+  border-color: rgba(125, 211, 252, 0.16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-ui-style="academic"][data-theme-mode="system"] .select-shell {
+    background: linear-gradient(180deg, rgba(17, 28, 47, 0.94) 0%, rgba(20, 33, 55, 0.9) 100%);
+    border-color: rgba(125, 211, 252, 0.16);
+  }
+}
+}

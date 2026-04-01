@@ -1,13 +1,19 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Создать коллекцию{% endblock %}
+{% block title %}{% trans "Создать коллекцию" %}{% endblock %}
 
 {% block content %}
-  <h1>Создать коллекцию</h1>
-  <p>После создания коллекции можно будет найти опубликованные издания и добавить их в подборку.</p>
-  <form method="post">
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
+    <h1>{% trans "Создать коллекцию" %}</h1>
+    <p class="muted">{% trans "После создания коллекции можно найти опубликованные издания и добавить их в подборку." %}</p>
+  </div>
+  <form method="post" class="stack-md">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Создать коллекцию</button>
+    <div class="inline-actions">
+      <button type="submit">{% trans "Создать коллекцию" %}</button>
+    </div>
   </form>
 {% endblock %}

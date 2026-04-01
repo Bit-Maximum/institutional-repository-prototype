@@ -1,44 +1,58 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Издания{% endblock %}
+{% block title %}{% trans "Издания" %}{% endblock %}
 
 {% block content %}
-  <h1>Каталог изданий</h1>
-  <form method="get">
-    <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Поиск по заголовку, содержанию и метаданным">
-    <button type="submit">Найти</button>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Каталог" %}</div>
+    <h1>{% trans "Каталог изданий" %}</h1>
+    <p class="muted">{% trans "Просматривайте опубликованные материалы и переходите к полным карточкам изданий." %}</p>
+  </div>
+
+  <form method="get" class="stack-sm">
+    <label for="id_q">{% trans "Поисковый запрос" %}</label>
+    <input id="id_q" type="search" name="q" value="{{ request.GET.q }}" placeholder="{% trans 'Поиск по заголовку, содержанию и метаданным' %}">
+    <div class="inline-actions">
+      <button type="submit">{% trans "Найти" %}</button>
+      <a class="chip-link" href="{% url 'search:results' %}">{% trans "Расширенный поиск" %}</a>
+    </div>
   </form>
 
-  <ul>
+  <div class="card-list">
     {% for publication in publications %}
-      <li>
-        <a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a>
-        {% if publication.publication_type %}
-          — {{ publication.publication_type.name }}
-        {% endif %}
+      <article class="card stack-sm">
+        <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+        <p class="muted">
+          {% if publication.publication_type %}{{ publication.publication_type.name }}{% endif %}
+          {% if publication.publication_year %} · {{ publication.publication_year }}{% endif %}
+          {% if publication.language %} · {{ publication.language.name }}{% endif %}
+        </p>
         {% if request.user.is_authenticated %}
           {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
-            · <a href="{% url 'publications:edit' publication.pk %}">Редактировать</a>
+            <div class="inline-actions">
+              <a class="chip-link" href="{% url 'publications:edit' publication.pk %}">{% trans "Редактировать" %}</a>
+            </div>
           {% endif %}
         {% endif %}
-      </li>
+      </article>
     {% empty %}
-      <li>Издания не найдены.</li>
+      <div class="empty-state">{% trans "Издания не найдены." %}</div>
     {% endfor %}
-  </ul>
+  </div>
 
   {% if page_obj and page_obj.paginator.num_pages > 1 %}
-    <nav style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+    <nav class="pagination">
       {% if page_obj.has_previous %}
-        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page=1">Первая</a>
-        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">Назад</a>
+        <a class="chip-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page=1">{% trans "Первая" %}</a>
+        <a class="chip-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">{% trans "Назад" %}</a>
       {% endif %}
 
-      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      <span>{% blocktrans with number=page_obj.number total=page_obj.paginator.num_pages %}Страница {{ number }} из {{ total }}{% endblocktrans %}</span>
 
       {% if page_obj.has_next %}
-        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд</a>
-        <a href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Последняя</a>
+        <a class="chip-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">{% trans "Вперёд" %}</a>
+        <a class="chip-link" href="?{% if request.GET.q %}q={{ request.GET.q|urlencode }}&{% endif %}page={{ page_obj.paginator.num_pages }}">{% trans "Последняя" %}</a>
       {% endif %}
     </nav>
   {% endif %}

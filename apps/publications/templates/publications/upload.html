@@ -1,42 +1,43 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}{% if workflow_mode == "edit" %}Редактирование издания{% else %}Добавить издание{% endif %}{% endblock %}
+{% block title %}{% if workflow_mode == "edit" %}{% trans "Редактирование издания" %}{% else %}{% trans "Добавить издание" %}{% endif %}{% endblock %}
 
 {% block content %}
-  <h1>{% if workflow_mode == "edit" %}Редактирование издания{% else %}Добавить издание{% endif %}</h1>
-  <p>
-    Работа с изданием теперь разделена на этапы: можно сохранить запись как черновик, чтобы к ней вернулись другие администраторы,
-    и опубликовать только после проверки полноты данных.
-  </p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Редакторский workflow" %}</div>
+    <h1>{% if workflow_mode == "edit" %}{% trans "Редактирование издания" %}{% else %}{% trans "Добавить издание" %}{% endif %}</h1>
+    <p class="muted">{% trans "Работа с изданием разделена на этапы: запись можно сохранить как черновик и опубликовать только после проверки полноты данных." %}</p>
+  </div>
 
   {% if publication and publication.pk %}
-    <section class="card" style="margin-bottom:1rem; background:#fdfdfd;">
-      <h2 style="margin-top:0;">Состояние текущей записи</h2>
-      <p style="margin:.35rem 0;"><strong>Статус:</strong> {{ publication.workflow_status_label }}</p>
-      <p style="margin:.35rem 0;"><strong>Ответственный за загрузку:</strong> {{ publication.uploaded_by }}</p>
+    <section class="card stack-sm">
+      <h2>{% trans "Состояние текущей записи" %}</h2>
+      <p><strong>{% trans "Статус" %}:</strong> {{ publication.workflow_status_label }}</p>
+      <p><strong>{% trans "Ответственный за загрузку" %}:</strong> {{ publication.uploaded_by }}</p>
       {% if publication.last_saved_by %}
-        <p style="margin:.35rem 0;"><strong>Последнее сохранение:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>
+        <p><strong>{% trans "Последнее сохранение" %}:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>
       {% endif %}
       {% if publication.published_at %}
-        <p style="margin:.35rem 0;"><strong>Последняя публикация:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>
+        <p><strong>{% trans "Последняя публикация" %}:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>
       {% endif %}
       {% if not publication.is_draft %}
-        <p style="margin:.35rem 0; color:#6b4f00;">После сохранения изменений как черновика издание временно исчезнет из общего каталога до повторной публикации.</p>
+        <p class="warning-note">{% trans "После сохранения изменений как черновика издание временно исчезнет из общего каталога до повторной публикации." %}</p>
       {% endif %}
     </section>
   {% endif %}
 
-  <section class="card" style="margin-bottom:1rem; background:#fdfdfd;">
-    <h2 style="margin-top:0;">Подсказки по файлу</h2>
-    <p style="margin-top:0;">Система попытается извлечь текст и предложить черновик названия, года, языка, авторов, ключевых слов и краткого описания.</p>
-    <div style="display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;">
-      <button type="button" id="prefill-from-file" data-endpoint="{{ prefill_endpoint }}">Предзаполнить из файла</button>
+  <section class="card stack-sm">
+    <h2>{% trans "Подсказки по файлу" %}</h2>
+    <p class="muted">{% trans "Система попытается извлечь текст и предложить черновик названия, года, языка, авторов, ключевых слов и краткого описания." %}</p>
+    <div class="inline-actions">
+      <button type="button" id="prefill-from-file" data-endpoint="{{ prefill_endpoint }}">{% trans "Предзаполнить из файла" %}</button>
       <span id="prefill-status" aria-live="polite"></span>
     </div>
-    <div id="prefill-summary" style="margin-top:.75rem; display:none;"></div>
+    <div id="prefill-summary" style="display:none;"></div>
   </section>
 
-  <form method="post" enctype="multipart/form-data" id="publication-upload-form">
+  <form method="post" enctype="multipart/form-data" id="publication-upload-form" class="stack-md">
     {% csrf_token %}
     {% if form.non_field_errors %}
       <ul>
@@ -46,13 +47,13 @@
       </ul>
     {% endif %}
 
-    <div style="display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); align-items:start;">
+    <div class="grid-auto grid-auto--wide">
       {% for field in form %}
         <div {% if field.name == "contents" or field.name == "grant_text" or field.name == "grif_text" %}style="grid-column: 1 / -1;"{% endif %}>
           <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
           {{ field }}
           {% if field.help_text %}
-            <small style="display:block; margin-top:.35rem; color:#555;">{{ field.help_text }}</small>
+            <small style="display:block; margin-top:.35rem;">{{ field.help_text }}</small>
           {% endif %}
           {% if field.errors %}
             <ul>
@@ -65,19 +66,43 @@
       {% endfor %}
     </div>
 
-    <div style="display:flex; gap:.75rem; flex-wrap:wrap; margin-top:1rem; align-items:center;">
-      <button type="submit" name="workflow_action" value="save_draft">Сохранить как черновик</button>
-      <button type="submit" name="workflow_action" value="publish">Опубликовать</button>
+    <div class="inline-actions">
+      <button type="submit" name="workflow_action" value="save_draft">{% trans "Сохранить как черновик" %}</button>
+      <button type="submit" name="workflow_action" value="publish">{% trans "Опубликовать" %}</button>
       {% if publication and publication.pk %}
-        <a href="{% url 'publications:detail' publication.pk %}">К карточке издания</a>
+        <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "К карточке издания" %}</a>
       {% else %}
-        <a href="{% url 'publications:list' %}">Отмена</a>
+        <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Отмена" %}</a>
       {% endif %}
     </div>
   </form>
 
   <script>
     (function() {
+      const i18n = {
+        selectFile: "{% trans 'Сначала выберите файл в поле «Файл».'|escapejs %}",
+        loading: "{% trans 'Анализ файла…'|escapejs %}",
+        failedRecommendations: "{% trans 'Не удалось получить рекомендации.'|escapejs %}",
+        fileAnalyzeError: "{% trans 'Не удалось проанализировать файл.'|escapejs %}",
+        noOverwrite: "{% trans 'Подсказки получены, но уже заполненные поля форма не перезаписывает.'|escapejs %}",
+        keywordHints: "{% trans 'Ключевые слова-кандидаты'|escapejs %}",
+        appliedFields: "{% trans 'Автоматически заполнены поля'|escapejs %}",
+        pageCount: "{% trans 'Страниц в файле'|escapejs %}",
+        inferredType: "{% trans 'Предполагаемый тип'|escapejs %}",
+        characteristics: "{% trans 'Выявленные особенности содержания'|escapejs %}",
+        processingMode: "{% trans 'Режим обработки'|escapejs %}",
+        comment: "{% trans 'Комментарий'|escapejs %}",
+        draftReady: "{% trans 'Подсказки получены. Проверьте форму перед сохранением.'|escapejs %}",
+        title: "{% trans 'Название'|escapejs %}",
+        year: "{% trans 'Год издания'|escapejs %}",
+        language: "{% trans 'Язык'|escapejs %}",
+        subtype: "{% trans 'Подтип издания'|escapejs %}",
+        authors: "{% trans 'Авторы'|escapejs %}",
+        supervisors: "{% trans 'Научные руководители'|escapejs %}",
+        keywords: "{% trans 'Ключевые слова'|escapejs %}",
+        description: "{% trans 'Описание'|escapejs %}",
+      };
+
       const form = document.getElementById('publication-upload-form');
       const trigger = document.getElementById('prefill-from-file');
       const statusNode = document.getElementById('prefill-status');
@@ -87,7 +112,7 @@
 
       function setStatus(message, isError) {
         statusNode.textContent = message || '';
-        statusNode.style.color = isError ? '#8b0000' : '#2f4f4f';
+        statusNode.style.color = isError ? '#8b0000' : '';
       }
 
       function setFieldValue(fieldName, value) {
@@ -133,22 +158,22 @@
 
       function renderSummary(payload, appliedFields) {
         const keywordHints = (payload.keyword_name_suggestions || []).length
-          ? `<p style="margin:.35rem 0;"><strong>Ключевые слова-кандидаты:</strong> ${payload.keyword_name_suggestions.join(', ')}</p>`
+          ? `<p><strong>${i18n.keywordHints}:</strong> ${payload.keyword_name_suggestions.join(', ')}</p>`
           : '';
         const fields = appliedFields.length
-          ? `<p style="margin:.35rem 0;"><strong>Автоматически заполнены поля:</strong> ${appliedFields.join(', ')}</p>`
-          : '<p style="margin:.35rem 0;">Подсказки получены, но уже заполненные поля форма не перезаписывает.</p>';
-        const pageInfo = payload.page_count ? `<p style="margin:.35rem 0;"><strong>Страниц в файле:</strong> ${payload.page_count}</p>` : '';
+          ? `<p><strong>${i18n.appliedFields}:</strong> ${appliedFields.join(', ')}</p>`
+          : `<p>${i18n.noOverwrite}</p>`;
+        const pageInfo = payload.page_count ? `<p><strong>${i18n.pageCount}:</strong> ${payload.page_count}</p>` : '';
         const typeInfo = payload.field_values && payload.field_values.publication_type_label
-          ? `<p style="margin:.35rem 0;"><strong>Предполагаемый тип:</strong> ${payload.field_values.publication_type_label}</p>`
+          ? `<p><strong>${i18n.inferredType}:</strong> ${payload.field_values.publication_type_label}</p>`
           : '';
         const characteristics = Array.isArray(payload.characteristics) && payload.characteristics.length
-          ? `<div style="margin-top:.5rem;"><strong>Выявленные особенности содержания:</strong><ul style="margin:.35rem 0 0 1.1rem;">${payload.characteristics.map(item => `<li><strong>${item.label}</strong>${item.detail ? ` — ${item.detail}` : ''}</li>`).join('')}</ul></div>`
+          ? `<div><strong>${i18n.characteristics}:</strong><ul>${payload.characteristics.map(item => `<li><strong>${item.label}</strong>${item.detail ? ` — ${item.detail}` : ''}</li>`).join('')}</ul></div>`
           : '';
         summaryNode.style.display = 'block';
         summaryNode.innerHTML = `
-          <p style="margin:.35rem 0;"><strong>Режим обработки:</strong> ${payload.status_label || '—'}</p>
-          ${payload.notes ? `<p style="margin:.35rem 0;"><strong>Комментарий:</strong> ${payload.notes}</p>` : ''}
+          <p><strong>${i18n.processingMode}:</strong> ${payload.status_label || '—'}</p>
+          ${payload.notes ? `<p><strong>${i18n.comment}:</strong> ${payload.notes}</p>` : ''}
           ${pageInfo}
           ${typeInfo}
           ${keywordHints}
@@ -159,10 +184,10 @@
 
       trigger.addEventListener('click', async function() {
         if (!fileInput || !fileInput.files || !fileInput.files.length) {
-          setStatus('Сначала выберите файл в поле «Файл».', true);
+          setStatus(i18n.selectFile, true);
           return;
         }
-        setStatus('Анализ файла…', false);
+        setStatus(i18n.loading, false);
         summaryNode.style.display = 'none';
         trigger.disabled = true;
         const formData = new FormData();
@@ -180,17 +205,17 @@
           });
           const payload = await response.json();
           if (!response.ok) {
-            throw new Error(payload.error || 'Не удалось получить рекомендации.');
+            throw new Error(payload.error || i18n.failedRecommendations);
           }
           const fieldLabels = {
-            title: 'Название',
-            publication_year: 'Год издания',
-            language: 'Язык',
-            publication_subtype: 'Подтип издания',
-            authors: 'Авторы',
-            scientific_supervisors: 'Научные руководители',
-            keywords: 'Ключевые слова',
-            contents: 'Описание',
+            title: i18n.title,
+            publication_year: i18n.year,
+            language: i18n.language,
+            publication_subtype: i18n.subtype,
+            authors: i18n.authors,
+            scientific_supervisors: i18n.supervisors,
+            keywords: i18n.keywords,
+            contents: i18n.description,
           };
           const appliedFields = [];
           for (const [fieldName, value] of Object.entries(payload.field_values || {})) {
@@ -200,9 +225,9 @@
             }
           }
           renderSummary(payload, appliedFields);
-          setStatus('Подсказки получены. Проверьте форму перед сохранением.', false);
+          setStatus(i18n.draftReady, false);
         } catch (error) {
-          setStatus(error.message || 'Не удалось проанализировать файл.', true);
+          setStatus(error.message || i18n.fileAnalyzeError, true);
         } finally {
           trigger.disabled = false;
         }

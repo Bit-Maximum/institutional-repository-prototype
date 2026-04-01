@@ -5,6 +5,8 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from apps.ui.models import THEME_MODE_CHOICES, THEME_MODE_SYSTEM
+
 
 class UserManager(BaseUserManager):
     use_in_migrations = True
@@ -47,6 +49,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True, max_length=255)
     password = models.CharField(_("password"), max_length=128, db_column="password_hash")
     full_name = models.TextField()
+    preferred_theme_mode = models.CharField(
+        max_length=16,
+        choices=THEME_MODE_CHOICES,
+        default=THEME_MODE_SYSTEM,
+        verbose_name=_("Предпочитаемая тема интерфейса"),
+    )
+    preferred_language = models.CharField(
+        max_length=16,
+        default="ru",
+        verbose_name=_("Предпочитаемый язык интерфейса"),
+    )
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

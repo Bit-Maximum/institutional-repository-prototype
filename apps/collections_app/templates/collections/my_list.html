@@ -1,21 +1,30 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Мои коллекции{% endblock %}
+{% block title %}{% trans "Мои коллекции" %}{% endblock %}
 
 {% block content %}
-  <h1>Мои коллекции</h1>
-  <p><a href="{% url 'collections:create' %}">Создать новую коллекцию</a> · <a href="{% url 'collections:list' %}">Все коллекции</a></p>
-  <div style="display:grid;gap:1rem;">
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
+    <h1>{% trans "Мои коллекции" %}</h1>
+    <div class="inline-actions">
+      <a class="button" href="{% url 'collections:create' %}">{% trans "Создать новую коллекцию" %}</a>
+      <a class="chip-link" href="{% url 'collections:list' %}">{% trans "Все коллекции" %}</a>
+    </div>
+  </div>
+  <div class="card-list">
     {% for collection in collections %}
-      <article style="border:1px solid #ddd;border-radius:12px;padding:1rem;background:#fff;">
-        <h2 style="margin-top:0;"><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
+      <article class="card stack-sm">
+        <h2><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
         {% if collection.description %}<p>{{ collection.description|truncatechars:220 }}</p>{% endif %}
-        <p>Изданий: {{ collection.publication_count|default:0 }} · 👍 {{ collection.like_count|default:0 }} · 👎 {{ collection.dislike_count|default:0 }}</p>
-        <p>Обновлена: {{ collection.updated_at|date:"d.m.Y H:i" }}</p>
-        <p><a href="{% url 'collections:edit' collection.pk %}">Редактировать коллекцию</a></p>
+        <p class="muted">{% trans "Изданий" %}: {{ collection.publication_count|default:0 }} · 👍 {{ collection.like_count|default:0 }} · 👎 {{ collection.dislike_count|default:0 }}</p>
+        <p class="muted">{% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y H:i" }}</p>
+        <div class="inline-actions">
+          <a class="chip-link" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать коллекцию" %}</a>
+        </div>
       </article>
     {% empty %}
-      <p>У вас пока нет коллекций.</p>
+      <div class="empty-state">{% trans "У вас пока нет коллекций." %}</div>
     {% endfor %}
   </div>
 {% endblock %}

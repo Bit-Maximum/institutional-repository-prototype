@@ -925,3 +925,69 @@
     padding: .75rem;
   }
 }
+
+
+/* Селекторы в Django admin / Unfold: аккуратная стилизация без ломания нативного рендера */
+#content select:not([multiple]):not([size]),
+#content-main select:not([multiple]):not([size]),
+.related-widget-wrapper select:not([multiple]):not([size]) {
+  min-height: 2.75rem !important;
+  padding: .65rem 2.5rem .65rem .9rem !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(148, 163, 184, .32) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(243,246,252,.92)) !important;
+  color: inherit !important;
+  line-height: 1.35 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.52), 0 8px 20px rgba(15, 23, 42, .05) !important;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease !important;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+#content select[multiple],
+#content-main select[multiple],
+#content select[size]:not([size='1']),
+#content-main select[size]:not([size='1']) {
+  border-radius: 16px !important;
+  border: 1px solid rgba(148, 163, 184, .28) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(244,247,252,.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 8px 18px rgba(15, 23, 42, .04) !important;
+}
+
+#content select:not([multiple]):not([size]):focus,
+#content-main select:not([multiple]):not([size]):focus,
+.related-widget-wrapper select:not([multiple]):not([size]):focus,
+#content select[multiple]:focus,
+#content-main select[multiple]:focus,
+#content select[size]:not([size='1']):focus,
+#content-main select[size]:not([size='1']):focus {
+  border-color: rgba(79, 70, 229, .34) !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, .12), 0 12px 26px rgba(15, 23, 42, .07) !important;
+  outline: none !important;
+}
+
+html.dark #content select:not([multiple]):not([size]),
+html.dark #content-main select:not([multiple]):not([size]),
+html.dark .related-widget-wrapper select:not([multiple]):not([size]),
+html[data-theme='dark'] #content select:not([multiple]):not([size]),
+html[data-theme='dark'] #content-main select:not([multiple]):not([size]),
+html[data-theme='dark'] .related-widget-wrapper select:not([multiple]):not([size]) {
+  border-color: rgba(148, 163, 184, .24) !important;
+  background: linear-gradient(180deg, rgba(15,23,42,.94), rgba(30,41,59,.88)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 24px rgba(2, 8, 23, .22) !important;
+}
+
+html.dark #content select[multiple],
+html.dark #content-main select[multiple],
+html.dark #content select[size]:not([size='1']),
+html.dark #content-main select[size]:not([size='1']),
+html[data-theme='dark'] #content select[multiple],
+html[data-theme='dark'] #content-main select[multiple],
+html[data-theme='dark'] #content select[size]:not([size='1']),
+html[data-theme='dark'] #content-main select[size]:not([size='1']) {
+  border-color: rgba(148, 163, 184, .22) !important;
+  background: linear-gradient(180deg, rgba(15,23,42,.94), rgba(30,41,59,.88)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 24px rgba(2, 8, 23, .22) !important;
+}
+

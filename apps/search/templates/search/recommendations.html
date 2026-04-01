@@ -1,76 +1,88 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Рекомендации{% endblock %}
+{% block title %}{% trans "Рекомендации" %}{% endblock %}
 
 {% block content %}
-  <h1>Персональные рекомендации</h1>
-  <p>Рекомендации формируются на основе ваших последних поисковых запросов. Более новые запросы влияют сильнее, а уже просмотренные или скачанные издания помечаются отдельно.</p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Персонализация" %}</div>
+    <h1>{% trans "Персональные рекомендации" %}</h1>
+    <p class="muted">{% trans "Рекомендации формируются на основе последних поисковых запросов. Более новые запросы влияют сильнее, а уже просмотренные или скачанные издания помечаются отдельно." %}</p>
+  </div>
 
   {% if requires_authentication %}
-    <p>Для получения персональных рекомендаций нужно войти в систему.</p>
-    <p><a href="{% url 'login' %}">Войти</a> · <a href="{% url 'register' %}">Зарегистрироваться</a></p>
+    <div class="empty-state">{% trans "Для получения персональных рекомендаций нужно войти в систему." %}</div>
+    <div class="inline-actions">
+      <a class="button" href="{% url 'login' %}">{% trans "Войти" %}</a>
+      <a class="chip-link" href="{% url 'register' %}">{% trans "Зарегистрироваться" %}</a>
+    </div>
   {% elif not has_history %}
-    <p>Пока недостаточно данных для рекомендаций. Выполните несколько поисковых запросов, и система начнёт предлагать подходящие издания.</p>
-    <p><a href="{% url 'search:results' %}">Перейти к поиску</a> · <a href="{% url 'search:history' %}">Управление историей поиска</a></p>
+    <div class="empty-state">{% trans "Пока недостаточно данных для рекомендаций. Выполните несколько поисковых запросов, и система начнёт предлагать подходящие издания." %}</div>
+    <div class="inline-actions">
+      <a class="button" href="{% url 'search:results' %}">{% trans "Перейти к поиску" %}</a>
+      <a class="chip-link" href="{% url 'search:history' %}">{% trans "Управление историей поиска" %}</a>
+    </div>
   {% else %}
-    <div class="card" style="background:#fafafa;">
-      <h2 style="margin-top:0;">Что повлияло на рекомендации</h2>
-      <ul style="margin:0;">
+    <section class="card stack-sm">
+      <h2>{% trans "Что повлияло на рекомендации" %}</h2>
+      <ul class="stack-sm">
         {% for item in source_queries %}
           <li>
-            <strong>{{ item.recommendation_query_label|default:item.query_text|default:"Поиск только по фильтрам" }}</strong>
-            <small>· {{ item.recommendation_mode_label|default:"Гибридный поиск" }} · {{ item.created_at|date:"d.m.Y H:i" }}</small>
+            <strong>{% if item.recommendation_query_label %}{{ item.recommendation_query_label }}{% elif item.query_text %}{{ item.query_text }}{% else %}{% trans 'Поиск только по фильтрам' %}{% endif %}</strong>
+            <small>· {% if item.recommendation_mode_label %}{{ item.recommendation_mode_label }}{% else %}{% trans 'Гибридный поиск' %}{% endif %} · {{ item.created_at|date:"d.m.Y H:i" }}</small>
             {% if item.recommendation_filter_label %}
-              <div style="color:#555; font-size:.95em; margin-top:.15rem;">Фильтры: {{ item.recommendation_filter_label }}</div>
+              <div class="muted">{% trans "Фильтры" %}: {{ item.recommendation_filter_label }}</div>
             {% endif %}
           </li>
         {% endfor %}
       </ul>
-      <p style="margin-bottom:0; margin-top:.75rem;"><a href="{% url 'search:history' %}">Управлять историей поиска</a></p>
-    </div>
+      <div class="inline-actions">
+        <a class="chip-link" href="{% url 'search:history' %}">{% trans "Управлять историей поиска" %}</a>
+      </div>
+    </section>
 
     {% if recommendations %}
-      <div style="display:grid; gap:1rem; margin-top:1rem;">
+      <div class="card-list">
         {% for publication in recommendations %}
-          <article class="card">
-            <h3 style="margin-top:0; margin-bottom:.5rem;"><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
-            <p style="margin:.25rem 0;">
-              <strong>Почему рекомендовано:</strong>
+          <article class="card stack-sm">
+            <h2><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h2>
+            <p>
+              <strong>{% trans "Почему рекомендовано" %}:</strong>
               {% for item in publication.recommendation_queries %}
                 {{ item }}{% if not forloop.last %}, {% endif %}
               {% endfor %}
             </p>
-            <p style="margin:.25rem 0;">
-              <strong>Итоговый recommendation score:</strong> {{ publication.recommendation_score|floatformat:3 }}
-              {% if publication.user_has_downloaded %} · <strong>уже скачивали</strong>{% elif publication.user_has_viewed %} · уже просматривали{% endif %}
+            <p>
+              <strong>{% trans "Итоговый recommendation score" %}:</strong> {{ publication.recommendation_score|floatformat:3 }}
+              {% if publication.user_has_downloaded %} · <strong>{% trans "уже скачивали" %}</strong>{% elif publication.user_has_viewed %} · {% trans "уже просматривали" %}{% endif %}
             </p>
-            <p style="margin:.25rem 0;">
-              <strong>Тип:</strong> {{ publication.publication_type|default:"—" }}
-              · <strong>Подтип:</strong> {{ publication.publication_subtype|default:"—" }}
-              · <strong>Год:</strong> {{ publication.publication_year|default:"—" }}
+            <p class="muted">
+              <strong>{% trans "Тип" %}:</strong> {{ publication.publication_type|default:"—" }} ·
+              <strong>{% trans "Подтип" %}:</strong> {{ publication.publication_subtype|default:"—" }} ·
+              <strong>{% trans "Год" %}:</strong> {{ publication.publication_year|default:"—" }}
             </p>
-            <p style="margin:.25rem 0;">{{ publication.contents|default:"Описание отсутствует."|truncatechars:260 }}</p>
-            <p style="margin:.25rem 0; display:flex; gap:.75rem; flex-wrap:wrap;">
-              <a href="{% url 'publications:detail' publication.pk %}">Открыть карточку</a>
-              {% if publication.file %}<a href="{% url 'publications:download' publication.pk %}">Скачать файл</a>{% endif %}
-            </p>
+            <p>{% if publication.contents %}{{ publication.contents|truncatechars:260 }}{% else %}{% trans 'Описание отсутствует.' %}{% endif %}</p>
+            <div class="inline-actions">
+              <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
+              {% if publication.file %}<a class="button" href="{% url 'publications:download' publication.pk %}">{% trans "Скачать файл" %}</a>{% endif %}
+            </div>
           </article>
         {% endfor %}
       </div>
     {% else %}
-      <p>По текущей истории поиска система пока не смогла подобрать устойчивые рекомендации. Попробуйте выполнить ещё несколько тематических запросов.</p>
+      <div class="empty-state">{% trans "По текущей истории поиска система пока не смогла подобрать устойчивые рекомендации. Попробуйте выполнить ещё несколько тематических запросов." %}</div>
     {% endif %}
 
     {% if page_obj and page_obj.paginator.num_pages > 1 %}
-      <nav style="display:flex; gap:.5rem; align-items:center; flex-wrap:wrap; margin-top:1rem;">
+      <nav class="pagination">
         {% if page_obj.has_previous %}
-          <a href="?page=1">Первая</a>
-          <a href="?page={{ page_obj.previous_page_number }}">Назад</a>
+          <a class="chip-link" href="?page=1">{% trans "Первая" %}</a>
+          <a class="chip-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Назад" %}</a>
         {% endif %}
-        <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        <span>{% blocktrans with number=page_obj.number total=page_obj.paginator.num_pages %}Страница {{ number }} из {{ total }}{% endblocktrans %}</span>
         {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}">Вперёд</a>
-          <a href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+          <a class="chip-link" href="?page={{ page_obj.next_page_number }}">{% trans "Вперёд" %}</a>
+          <a class="chip-link" href="?page={{ page_obj.paginator.num_pages }}">{% trans "Последняя" %}</a>
         {% endif %}
       </nav>
     {% endif %}

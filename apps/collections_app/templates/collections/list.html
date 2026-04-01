@@ -1,42 +1,48 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Коллекции{% endblock %}
+{% block title %}{% trans "Коллекции" %}{% endblock %}
 
 {% block content %}
-  <h1>Пользовательские коллекции</h1>
-  <p>Здесь пользователи могут собирать тематические подборки изданий из репозитория, делиться ими и оценивать их полезность.</p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
+    <h1>{% trans "Пользовательские коллекции" %}</h1>
+    <p class="muted">{% trans "Здесь пользователи собирают тематические подборки изданий, делятся ими и оценивают их полезность." %}</p>
+  </div>
 
-  <form method="get" style="display:grid;grid-template-columns:2fr 1fr auto;gap:.75rem;align-items:end;margin-bottom:1rem;">
+  <form method="get" class="grid-auto">
     <div>
-      <label for="id_q">Поиск по коллекциям</label>
-      <input id="id_q" type="text" name="q" value="{{ search_query }}" placeholder="Название, описание или автор коллекции">
+      <label for="id_q">{% trans "Поиск по коллекциям" %}</label>
+      <input id="id_q" type="text" name="q" value="{{ search_query }}" placeholder="{% trans 'Название, описание или автор коллекции' %}">
     </div>
     <div>
-      <label for="id_sort">Сортировка</label>
+      <label for="id_sort">{% trans "Сортировка" %}</label>
       <select id="id_sort" name="sort">
-        <option value="popular" {% if sort_value == 'popular' %}selected{% endif %}>Сначала популярные</option>
-        <option value="updated" {% if sort_value == 'updated' %}selected{% endif %}>Недавно обновлённые</option>
-        <option value="newest" {% if sort_value == 'newest' %}selected{% endif %}>Сначала новые</option>
+        <option value="popular" {% if sort_value == 'popular' %}selected{% endif %}>{% trans "Сначала популярные" %}</option>
+        <option value="updated" {% if sort_value == 'updated' %}selected{% endif %}>{% trans "Недавно обновлённые" %}</option>
+        <option value="newest" {% if sort_value == 'newest' %}selected{% endif %}>{% trans "Сначала новые" %}</option>
       </select>
     </div>
-    <button type="submit">Показать</button>
+    <div class="inline-actions">
+      <button type="submit">{% trans "Показать" %}</button>
+    </div>
   </form>
 
   {% if request.user.is_authenticated %}
-    <p>
-      <a href="{% url 'collections:create' %}">Создать свою коллекцию</a>
-      · <a href="{% url 'collections:my-list' %}">Мои коллекции</a>
-    </p>
+    <div class="inline-actions">
+      <a class="button" href="{% url 'collections:create' %}">{% trans "Создать свою коллекцию" %}</a>
+      <a class="chip-link" href="{% url 'collections:my-list' %}">{% trans "Мои коллекции" %}</a>
+    </div>
   {% endif %}
 
   {% if my_collections %}
-    <section style="margin-bottom:1.25rem;">
-      <h2>Мои последние коллекции</h2>
-      <ul>
+    <section class="card stack-sm">
+      <h2>{% trans "Мои последние коллекции" %}</h2>
+      <ul class="stack-sm">
         {% for collection in my_collections %}
           <li>
             <a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a>
-            — {{ collection.publication_count|default:0 }} издан.
+            — {{ collection.publication_count|default:0 }} {% trans "изд." %}
             · 👍 {{ collection.like_count|default:0 }}
             · 👎 {{ collection.dislike_count|default:0 }}
           </li>
@@ -45,38 +51,38 @@
     </section>
   {% endif %}
 
-  <div style="display:grid;gap:1rem;">
+  <div class="card-list">
     {% for collection in collections %}
-      <article style="border:1px solid #ddd;border-radius:12px;padding:1rem;background:#fff;">
-        <h2 style="margin-top:0;"><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
-        <p style="margin:.35rem 0;"><strong>Автор:</strong> {{ collection.author_user }}</p>
+      <article class="card stack-sm">
+        <h2><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
+        <p><strong>{% trans "Автор" %}:</strong> {{ collection.author_user }}</p>
         {% if collection.description %}
-          <p style="margin:.35rem 0;">{{ collection.description|truncatechars:240 }}</p>
+          <p>{{ collection.description|truncatechars:240 }}</p>
         {% endif %}
-        <p style="margin:.35rem 0;color:#555;">
-          Изданий: {{ collection.publication_count|default:0 }}
+        <p class="muted">
+          {% trans "Изданий" %}: {{ collection.publication_count|default:0 }}
           · 👍 {{ collection.like_count|default:0 }}
           · 👎 {{ collection.dislike_count|default:0 }}
-          · Итоговая полезность: {{ collection.rating_score }}
+          · {% trans "Итоговая полезность" %}: {{ collection.rating_score }}
         </p>
-        <p style="margin:.35rem 0;color:#666;">
-          Создана: {{ collection.created_at|date:"d.m.Y H:i" }}
-          · Обновлена: {{ collection.updated_at|date:"d.m.Y H:i" }}
+        <p class="muted">
+          {% trans "Создана" %}: {{ collection.created_at|date:"d.m.Y H:i" }}
+          · {% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y H:i" }}
         </p>
       </article>
     {% empty %}
-      <p>Коллекции пока не созданы.</p>
+      <div class="empty-state">{% trans "Коллекции пока не созданы." %}</div>
     {% endfor %}
   </div>
 
   {% if is_paginated %}
-    <nav style="margin-top:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+    <nav class="pagination">
       {% if page_obj.has_previous %}
-        <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&sort={{ sort_value }}">← Назад</a>
+        <a class="chip-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&sort={{ sort_value }}">{% trans "Назад" %}</a>
       {% endif %}
-      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      <span>{% blocktrans with number=page_obj.number total=page_obj.paginator.num_pages %}Страница {{ number }} из {{ total }}{% endblocktrans %}</span>
       {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&sort={{ sort_value }}">Вперёд →</a>
+        <a class="chip-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&sort={{ sort_value }}">{% trans "Вперёд" %}</a>
       {% endif %}
     </nav>
   {% endif %}

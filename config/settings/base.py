@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     "wagtail.admin",
     "wagtail",
     "apps.core",
+    "apps.ui",
     "apps.users",
     "apps.publications",
     "apps.collections_app",
@@ -86,9 +87,11 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.ui.middleware.InterfaceStateMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -106,8 +109,10 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.ui.context_processors.ui_context",
             ],
         },
     },
@@ -155,7 +160,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-LANGUAGE_CODE = "ru-ru"
+LANGUAGE_CODE = "ru"
+LANGUAGES = [("ru", _("Русский")), ("en", _("Английский"))]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "Europe/Moscow"
 USE_I18N = True
 USE_TZ = True
@@ -285,6 +292,11 @@ UNFOLD = {
                         "title": _("История поиска"),
                         "icon": "history",
                         "link": reverse_lazy("admin:search_searchquery_changelist"),
+                    },
+                    {
+                        "title": _("Интерфейс сайта"),
+                        "icon": "palette",
+                        "link": reverse_lazy("admin:ui_interfaceconfiguration_changelist"),
                     },
                 ],
             },

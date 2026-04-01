@@ -1,0 +1,308 @@
+@layer components {
+  :root[data-ui-style="liquid_glass"] {
+    --accent: #0f5bd8;
+    --accent-strong: #0b49b0;
+    --accent-soft: rgba(15, 91, 216, 0.16);
+    --accent-contrast: #f8fbff;
+    --surface-1: rgba(250, 252, 255, 0.84);
+    --surface-2: rgba(244, 248, 255, 0.88);
+    --surface-3: rgba(229, 238, 252, 0.82);
+    --surface-4: rgba(214, 226, 246, 0.78);
+    --border-subtle: rgba(79, 110, 160, 0.16);
+    --border-strong: rgba(79, 110, 160, 0.28);
+    --text-1: #10233d;
+    --text-2: #35506f;
+    --text-3: #627992;
+    --page-gradient:
+      radial-gradient(circle at 12% 10%, rgba(56, 189, 248, 0.18), transparent 22%),
+      radial-gradient(circle at 88% 14%, rgba(59, 130, 246, 0.18), transparent 24%),
+      linear-gradient(180deg, #f4f8ff 0%, #e7effb 55%, #dce7f7 100%);
+    --shadow-sm: 0 14px 28px rgba(25, 58, 110, 0.10);
+    --shadow-md: 0 24px 54px rgba(20, 52, 104, 0.16);
+    --shadow-lg: 0 32px 76px rgba(20, 52, 104, 0.20);
+    --backdrop-blur: blur(22px);
+  }
+
+  :root[data-ui-style="liquid_glass"] .site-header__inner,
+  :root[data-ui-style="liquid_glass"] .nav-pill,
+  :root[data-ui-style="liquid_glass"] .nav-group__summary,
+  :root[data-ui-style="liquid_glass"] .utility-menu__summary,
+  :root[data-ui-style="liquid_glass"] .preference-menu__summary,
+  :root[data-ui-style="liquid_glass"] .utility-menu__menu,
+  :root[data-ui-style="liquid_glass"] .nav-group__menu,
+  :root[data-ui-style="liquid_glass"] .preference-menu__menu,
+  :root[data-ui-style="liquid_glass"] .site-nav-toggle {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.74) 0%, rgba(230, 239, 252, 0.52) 100%);
+    border-color: rgba(90, 122, 172, 0.24);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.56),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.12),
+      var(--shadow-md);
+    backdrop-filter: blur(24px) saturate(1.18);
+    -webkit-backdrop-filter: blur(24px) saturate(1.18);
+  }
+
+  :root[data-ui-style="liquid_glass"] .nav-pill:hover,
+  :root[data-ui-style="liquid_glass"] .nav-group__summary:hover,
+  :root[data-ui-style="liquid_glass"] .utility-menu__summary:hover,
+  :root[data-ui-style="liquid_glass"] .preference-menu__summary:hover,
+  :root[data-ui-style="liquid_glass"] .site-nav-toggle:hover {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(223, 234, 250, 0.60) 100%);
+  }
+
+  :root[data-ui-style="liquid_glass"] .nav-group.is-open > .nav-group__summary,
+  :root[data-ui-style="liquid_glass"] .utility-menu.is-open > .utility-menu__summary,
+  :root[data-ui-style="liquid_glass"] .preference-menu.is-open > .preference-menu__summary {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(215, 229, 250, 0.64) 100%);
+  }
+
+  :root[data-ui-style="liquid_glass"] .site-nav-bar {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :root[data-ui-style="liquid_glass"] .site-nav-bar::before {
+    display: none;
+  }
+
+  :root[data-ui-style="liquid_glass"] .panel,
+  :root[data-ui-style="liquid_glass"] .card,
+  :root[data-ui-style="liquid_glass"] article.card,
+  :root[data-ui-style="liquid_glass"] .empty-state,
+  :root[data-ui-style="liquid_glass"] .info-note,
+  :root[data-ui-style="liquid_glass"] .message.info,
+  :root[data-ui-style="liquid_glass"] .message.debug {
+    background: linear-gradient(180deg, rgba(252, 253, 255, 0.86) 0%, rgba(243, 247, 254, 0.78) 100%);
+    border-color: rgba(90, 122, 172, 0.18);
+    box-shadow: 0 18px 36px rgba(20, 52, 104, 0.10);
+    backdrop-filter: blur(14px) saturate(1.04);
+    -webkit-backdrop-filter: blur(14px) saturate(1.04);
+  }
+
+  :root[data-ui-style="liquid_glass"] .nav-menu-link:hover,
+  :root[data-ui-style="liquid_glass"] .preference-menu__menu .preference-option:hover {
+    background: rgba(213, 225, 246, 0.48);
+  }
+
+  :root[data-ui-style="liquid_glass"] input,
+  :root[data-ui-style="liquid_glass"] select,
+  :root[data-ui-style="liquid_glass"] textarea {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.90) 0%, rgba(244, 248, 255, 0.84) 100%);
+    border-color: rgba(90, 122, 172, 0.22);
+  }
+
+  :root[data-ui-style="liquid_glass"] .button,
+  :root[data-ui-style="liquid_glass"] .nav-link--primary,
+  :root[data-ui-style="liquid_glass"] button[type="submit"]:not(.preference-option) {
+    background: linear-gradient(180deg, rgba(15, 91, 216, 0.96) 0%, rgba(37, 99, 235, 0.92) 100%);
+    border-color: rgba(96, 165, 250, 0.42);
+    box-shadow: 0 18px 38px rgba(15, 91, 216, 0.24);
+    color: var(--accent-contrast);
+  }
+
+  :root[data-ui-style="liquid_glass"] .button:hover,
+  :root[data-ui-style="liquid_glass"] .nav-link--primary:hover,
+  :root[data-ui-style="liquid_glass"] button[type="submit"]:not(.preference-option):hover {
+    background: linear-gradient(180deg, rgba(11, 73, 176, 0.98) 0%, rgba(15, 91, 216, 0.96) 100%);
+  }
+
+  :root[data-ui-style="liquid_glass"] .brand-block__title {
+    letter-spacing: -0.05em;
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] {
+    --accent: #7ab4ff;
+    --accent-strong: #4b8ff2;
+    --accent-soft: rgba(122, 180, 255, 0.18);
+    --accent-contrast: #051120;
+    --surface-1: rgba(10, 17, 31, 0.88);
+    --surface-2: rgba(14, 23, 40, 0.90);
+    --surface-3: rgba(19, 31, 55, 0.86);
+    --surface-4: rgba(28, 44, 74, 0.82);
+    --border-subtle: rgba(152, 194, 255, 0.14);
+    --border-strong: rgba(152, 194, 255, 0.24);
+    --text-1: #edf5ff;
+    --text-2: #d3e3f8;
+    --text-3: #9eb7d2;
+    --page-gradient:
+      radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.16), transparent 20%),
+      radial-gradient(circle at 88% 14%, rgba(59, 130, 246, 0.14), transparent 22%),
+      linear-gradient(180deg, #050a14 0%, #0c1528 54%, #14233f 100%);
+    --shadow-sm: 0 14px 30px rgba(2, 8, 23, 0.34);
+    --shadow-md: 0 24px 58px rgba(2, 8, 23, 0.46);
+    --shadow-lg: 0 34px 82px rgba(2, 8, 23, 0.56);
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .site-header__inner,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-pill,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-group__summary,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .utility-menu__summary,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .preference-menu__summary,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .utility-menu__menu,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-group__menu,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .preference-menu__menu,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .site-nav-toggle {
+    background: linear-gradient(180deg, rgba(20, 31, 54, 0.74) 0%, rgba(9, 16, 29, 0.64) 100%);
+    border-color: rgba(152, 194, 255, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      inset 0 -1px 0 rgba(122, 180, 255, 0.04),
+      var(--shadow-md);
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-pill:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-group__summary:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .utility-menu__summary:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .preference-menu__summary:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .site-nav-toggle:hover {
+    background: linear-gradient(180deg, rgba(26, 40, 68, 0.82) 0%, rgba(12, 20, 37, 0.70) 100%);
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-group.is-open > .nav-group__summary,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .utility-menu.is-open > .utility-menu__summary,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .preference-menu.is-open > .preference-menu__summary {
+    background: linear-gradient(180deg, rgba(31, 49, 83, 0.84) 0%, rgba(14, 25, 44, 0.76) 100%);
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .site-nav-bar {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .site-nav-bar::before {
+    display: none;
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .panel,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .card,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] article.card,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .empty-state,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .info-note,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .message.info,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .message.debug,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] input,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] select,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] textarea {
+    background: linear-gradient(180deg, rgba(12, 21, 37, 0.92) 0%, rgba(17, 28, 48, 0.86) 100%);
+    border-color: rgba(152, 194, 255, 0.16);
+    box-shadow: 0 18px 34px rgba(2, 8, 23, 0.30);
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-menu-link:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .preference-menu__menu .preference-option:hover {
+    background: rgba(31, 58, 103, 0.32);
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .button,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-link--primary,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] button[type="submit"]:not(.preference-option) {
+    background: linear-gradient(180deg, rgba(74, 139, 242, 0.96) 0%, rgba(46, 108, 220, 0.92) 100%);
+    border-color: rgba(152, 194, 255, 0.34);
+    color: #eff6ff;
+  }
+
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .button:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] .nav-link--primary:hover,
+  :root[data-ui-style="liquid_glass"][data-theme-mode="dark"] button[type="submit"]:not(.preference-option):hover {
+    background: linear-gradient(180deg, rgba(56, 120, 233, 0.98) 0%, rgba(35, 94, 205, 0.94) 100%);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] {
+      --accent: #7ab4ff;
+      --accent-strong: #4b8ff2;
+      --accent-soft: rgba(122, 180, 255, 0.18);
+      --accent-contrast: #051120;
+      --surface-1: rgba(10, 17, 31, 0.88);
+      --surface-2: rgba(14, 23, 40, 0.90);
+      --surface-3: rgba(19, 31, 55, 0.86);
+      --surface-4: rgba(28, 44, 74, 0.82);
+      --border-subtle: rgba(152, 194, 255, 0.14);
+      --border-strong: rgba(152, 194, 255, 0.24);
+      --text-1: #edf5ff;
+      --text-2: #d3e3f8;
+      --text-3: #9eb7d2;
+      --page-gradient:
+        radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.16), transparent 20%),
+        radial-gradient(circle at 88% 14%, rgba(59, 130, 246, 0.14), transparent 22%),
+        linear-gradient(180deg, #050a14 0%, #0c1528 54%, #14233f 100%);
+      --shadow-sm: 0 14px 30px rgba(2, 8, 23, 0.34);
+      --shadow-md: 0 24px 58px rgba(2, 8, 23, 0.46);
+      --shadow-lg: 0 34px 82px rgba(2, 8, 23, 0.56);
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .site-header__inner,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-pill,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-group__summary,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .utility-menu__summary,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .preference-menu__summary,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .utility-menu__menu,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-group__menu,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .preference-menu__menu,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .site-nav-toggle {
+      background: linear-gradient(180deg, rgba(20, 31, 54, 0.74) 0%, rgba(9, 16, 29, 0.64) 100%);
+      border-color: rgba(152, 194, 255, 0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 -1px 0 rgba(122, 180, 255, 0.04),
+        var(--shadow-md);
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-pill:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-group__summary:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .utility-menu__summary:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .preference-menu__summary:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .site-nav-toggle:hover {
+      background: linear-gradient(180deg, rgba(26, 40, 68, 0.82) 0%, rgba(12, 20, 37, 0.70) 100%);
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-group.is-open > .nav-group__summary,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .utility-menu.is-open > .utility-menu__summary,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .preference-menu.is-open > .preference-menu__summary {
+      background: linear-gradient(180deg, rgba(31, 49, 83, 0.84) 0%, rgba(14, 25, 44, 0.76) 100%);
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .site-nav-bar {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .site-nav-bar::before {
+      display: none;
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .panel,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .card,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] article.card,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .empty-state,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .info-note,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .message.info,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .message.debug,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] input,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] select,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] textarea {
+      background: linear-gradient(180deg, rgba(12, 21, 37, 0.92) 0%, rgba(17, 28, 48, 0.86) 100%);
+      border-color: rgba(152, 194, 255, 0.16);
+      box-shadow: 0 18px 34px rgba(2, 8, 23, 0.30);
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-menu-link:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .preference-menu__menu .preference-option:hover {
+      background: rgba(31, 58, 103, 0.32);
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .button,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-link--primary,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] button[type="submit"]:not(.preference-option) {
+      background: linear-gradient(180deg, rgba(74, 139, 242, 0.96) 0%, rgba(46, 108, 220, 0.92) 100%);
+      border-color: rgba(152, 194, 255, 0.34);
+      color: #eff6ff;
+    }
+
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .button:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] .nav-link--primary:hover,
+    :root[data-ui-style="liquid_glass"][data-theme-mode="system"] button[type="submit"]:not(.preference-option):hover {
+      background: linear-gradient(180deg, rgba(56, 120, 233, 0.98) 0%, rgba(35, 94, 205, 0.94) 100%);
+    }
+  }
+}

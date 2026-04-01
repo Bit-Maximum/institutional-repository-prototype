@@ -1,71 +1,221 @@
+{% load static i18n %}
 <!doctype html>
-<html lang="ru">
+<html lang="{{ LANGUAGE_CODE|default:ui_state.language }}"
+      data-ui-style="{{ ui_state.style.identifier }}"
+      data-theme-mode="{{ ui_state.theme_mode }}">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Институциональный репозиторий{% endblock %}</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 0; background: #f7f7f7; color: #222; }
-      header, main, footer { max-width: 1100px; margin: 0 auto; padding: 1rem; }
-      header { display: flex; justify-content: space-between; align-items: center; }
-      nav a { margin-right: 1rem; }
-      nav form { display: inline; margin: 0; }
-      nav button.link-button { background: none; border: 0; padding: 0; margin-right: 1rem; color: #06c; text-decoration: underline; cursor: pointer; font: inherit; }
-      .card { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-      main { display: grid; gap: 1rem; }
-      form { display: grid; gap: .75rem; }
-      input, select, textarea, button { padding: .65rem; font: inherit; }
-      ul { padding-left: 1.25rem; }
-    </style>
+    <title>{% block title %}{{ ui_state.site_title }}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/ui/base.css' %}">
+    <link rel="stylesheet" href="{% static ui_style.stylesheet_path %}">
+    <script defer src="{% static 'js/ui/preferences.js' %}"></script>
+    {% block extra_head %}{% endblock %}
   </head>
   <body>
-    <header>
-      <div>
-        <strong><a href="/">Институциональный репозиторий</a></strong>
-      </div>
-      <nav>
-        <a href="{% url 'publications:list' %}">Издания</a>
-        <a href="{% url 'search:results' %}">Поиск</a>
-        <a href="{% url 'collections:list' %}">Коллекции</a>
-        {% if request.user.is_authenticated %}
-          <a href="{% url 'collections:my-list' %}">Мои коллекции</a>
-          <a href="{% url 'search:recommendations' %}">Рекомендации</a>
-          <a href="{% url 'search:history' %}">История поиска</a>
-        {% endif %}
-        <a href="/pages/">Страницы CMS</a>
-        {% if request.user.is_authenticated %}
-          <a href="{% url 'profile' %}">Профиль</a>
-          <a href="{% url 'oauth-settings' %}">Связанные аккаунты</a>
-          {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
-            <a href="{% url 'publications:drafts' %}">Черновики</a>
-            <a href="{% url 'publications:upload' %}">Загрузить</a>
-            <a href="{% url 'admin:index' %}">Админ-панель Django</a>
-            <a href="/cms-admin/">CMS-админка</a>
-          {% endif %}
-          <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="link-button">Выход</button>
-          </form>
-        {% else %}
-          <a href="{% url 'login' %}">Вход</a>
-          <a href="{% url 'register' %}">Регистрация</a>
-        {% endif %}
-      </nav>
-    </header>
-    <main>
-      <div class="card">
+    <a class="skip-link" href="#main-content">{% trans "Перейти к содержимому" %}</a>
+
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="surface site-header__inner">
+          <div class="site-topbar">
+            <div class="brand-block">
+              <a class="brand-block__title" href="{% url 'home' %}">{{ ui_state.site_title }}</a>
+              {% if ui_state.site_tagline %}
+                <p class="brand-block__subtitle">{{ ui_state.site_tagline }}</p>
+              {% endif %}
+            </div>
+
+            <div class="site-toolbar">
+              {% if ui_state.config.allow_user_theme_mode_switch %}
+                <form class="compact-preference compact-preference--menu" method="post" action="{% url 'ui:set-theme' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <div class="preference-menu" data-disclosure>
+                    <button type="button" class="preference-menu__summary" aria-expanded="false" aria-controls="theme-mode-menu" data-disclosure-trigger>
+                      <span class="preference-menu__eyebrow">{% trans "Тема" %}</span>
+                      <span class="preference-menu__value">
+                        {% for value, label in ui_theme_mode_choices %}{% if value == ui_state.theme_mode %}{{ label }}{% endif %}{% endfor %}
+                      </span>
+                    </button>
+                    <div class="preference-menu__menu" id="theme-mode-menu" data-disclosure-menu hidden>
+                      {% for value, label in ui_theme_mode_choices %}
+                        <button type="submit" name="theme_mode" value="{{ value }}" class="preference-option{% if value == ui_state.theme_mode %} is-active{% endif %}">
+                          <span class="preference-option__label">{{ label }}</span>
+                          {% if value == ui_state.theme_mode %}<span class="preference-option__mark" aria-hidden="true">✓</span>{% endif %}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </form>
+              {% endif %}
+
+              {% if ui_state.config.allow_user_language_switch %}
+                <form class="compact-preference compact-preference--menu" method="post" action="{% url 'ui:set-language' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <div class="preference-menu" data-disclosure>
+                    <button type="button" class="preference-menu__summary" aria-expanded="false" aria-controls="language-menu" data-disclosure-trigger>
+                      <span class="preference-menu__eyebrow">{% trans "Язык" %}</span>
+                      <span class="preference-menu__value">
+                        {% for value, label in ui_language_choices %}{% if value == ui_state.language %}{{ label }}{% endif %}{% endfor %}
+                      </span>
+                    </button>
+                    <div class="preference-menu__menu preference-menu__menu--right" id="language-menu" data-disclosure-menu hidden>
+                      {% for value, label in ui_language_choices %}
+                        <button type="submit" name="language" value="{{ value }}" class="preference-option{% if value == ui_state.language %} is-active{% endif %}">
+                          <span class="preference-option__label">{{ label }}</span>
+                          {% if value == ui_state.language %}<span class="preference-option__mark" aria-hidden="true">✓</span>{% endif %}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </form>
+              {% endif %}
+
+              {% if request.user.is_authenticated %}
+                <div class="utility-menu" data-disclosure>
+                  <button type="button" class="utility-menu__summary" aria-expanded="false" aria-controls="user-menu-panel" data-disclosure-trigger>
+                    <span class="utility-menu__label">{{ request.user.full_name|default:request.user.email }}</span>
+                  </button>
+                  <div class="utility-menu__menu utility-menu__menu--right" id="user-menu-panel" data-disclosure-menu hidden>
+                    <a class="nav-menu-link" href="{% url 'profile' %}">
+                      <span class="nav-menu-link__label">{% trans "Профиль" %}</span>
+                      <span class="nav-menu-link__meta">{% trans "Настройки аккаунта и интерфейса" %}</span>
+                    </a>
+                    <a class="nav-menu-link" href="{% url 'oauth-settings' %}">
+                      <span class="nav-menu-link__label">{% trans "Связанные аккаунты" %}</span>
+                      <span class="nav-menu-link__meta">{% trans "Локальный пароль и OAuth" %}</span>
+                    </a>
+                    <form method="post" action="{% url 'logout' %}">
+                      {% csrf_token %}
+                      <button type="submit" class="link-button">{% trans "Выход" %}</button>
+                    </form>
+                  </div>
+                </div>
+              {% else %}
+                <a class="nav-link--primary" href="{% url 'login' %}">{% trans "Вход" %}</a>
+                <a class="chip-link" href="{% url 'register' %}">{% trans "Регистрация" %}</a>
+              {% endif %}
+
+              <button class="site-nav-toggle" type="button" aria-controls="site-nav-drawer" aria-expanded="false" data-nav-toggle>
+                <span class="site-nav-toggle__icon" aria-hidden="true"></span>
+                <span>{% trans "Меню" %}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="site-nav-drawer" id="site-nav-drawer" data-nav-drawer>
+            <nav class="site-nav-bar" aria-label="{% trans 'Основная навигация' %}">
+              <div class="site-nav-section site-nav-section--primary">
+                <a class="nav-pill" href="{% url 'home' %}">{% trans "Главная" %}</a>
+                <a class="nav-pill" href="{% url 'publications:list' %}">{% trans "Издания" %}</a>
+                <a class="nav-pill" href="{% url 'search:results' %}">{% trans "Поиск" %}</a>
+              </div>
+
+              <div class="site-nav-section site-nav-section--secondary">
+                <div class="nav-group" data-disclosure>
+                  <button type="button" class="nav-group__summary" aria-expanded="false" aria-controls="collections-menu" data-disclosure-trigger>{% trans "Коллекции" %}</button>
+                  <div class="nav-group__menu" id="collections-menu" data-disclosure-menu hidden>
+                    <a class="nav-menu-link" href="{% url 'collections:list' %}">
+                      <span class="nav-menu-link__label">{% trans "Все коллекции" %}</span>
+                      <span class="nav-menu-link__meta">{% trans "Открытые пользовательские подборки" %}</span>
+                    </a>
+                    {% if request.user.is_authenticated %}
+                      <a class="nav-menu-link" href="{% url 'collections:my-list' %}">
+                        <span class="nav-menu-link__label">{% trans "Мои коллекции" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Личные подборки и управление" %}</span>
+                      </a>
+                      <a class="nav-menu-link" href="{% url 'collections:create' %}">
+                        <span class="nav-menu-link__label">{% trans "Создать коллекцию" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Новая тематическая подборка" %}</span>
+                      </a>
+                    {% endif %}
+                  </div>
+                </div>
+
+                {% if request.user.is_authenticated %}
+                  <div class="nav-group" data-disclosure>
+                    <button type="button" class="nav-group__summary" aria-expanded="false" aria-controls="for-you-menu" data-disclosure-trigger>{% trans "Для вас" %}</button>
+                    <div class="nav-group__menu" id="for-you-menu" data-disclosure-menu hidden>
+                      <a class="nav-menu-link" href="{% url 'search:recommendations' %}">
+                        <span class="nav-menu-link__label">{% trans "Рекомендации" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Персональная подборка по истории поиска" %}</span>
+                      </a>
+                      <a class="nav-menu-link" href="{% url 'search:history' %}">
+                        <span class="nav-menu-link__label">{% trans "История поиска" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Недавние запросы и сигналы рекомендаций" %}</span>
+                      </a>
+                      <a class="nav-menu-link" href="{% url 'profile' %}">
+                        <span class="nav-menu-link__label">{% trans "Профиль" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Аккаунт, язык и тема" %}</span>
+                      </a>
+                    </div>
+                  </div>
+                {% endif %}
+
+                <div class="nav-group" data-disclosure>
+                  <button type="button" class="nav-group__summary" aria-expanded="false" aria-controls="about-project-menu" data-disclosure-trigger>{% trans "О проекте" %}</button>
+                  <div class="nav-group__menu" id="about-project-menu" data-disclosure-menu hidden>
+                    <a class="nav-menu-link" href="/pages/">
+                      <span class="nav-menu-link__label">{% trans "Страницы CMS" %}</span>
+                      <span class="nav-menu-link__meta">{% trans "Новости, объявления и статические страницы" %}</span>
+                    </a>
+                  </div>
+                </div>
+
+                {% if request.user.is_authenticated %}
+                  {% if request.user.is_staff or request.user.is_admin or request.user.is_superuser %}
+                  <div class="nav-group" data-disclosure>
+                    <button type="button" class="nav-group__summary" aria-expanded="false" aria-controls="admin-menu" data-disclosure-trigger>{% trans "Администрирование" %}</button>
+                    <div class="nav-group__menu nav-group__menu--right" id="admin-menu" data-disclosure-menu hidden>
+                      <a class="nav-menu-link" href="{% url 'publications:drafts' %}">
+                        <span class="nav-menu-link__label">{% trans "Черновики" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Совместная редакторская работа" %}</span>
+                      </a>
+                      <a class="nav-menu-link" href="{% url 'publications:upload' %}">
+                        <span class="nav-menu-link__label">{% trans "Загрузить издание" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Создание новой карточки" %}</span>
+                      </a>
+                      <a class="nav-menu-link" href="{% url 'admin:index' %}">
+                        <span class="nav-menu-link__label">{% trans "Django admin" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Справочники, пользователи и статистика" %}</span>
+                      </a>
+                      <a class="nav-menu-link" href="/cms-admin/">
+                        <span class="nav-menu-link__label">{% trans "CMS admin" %}</span>
+                        <span class="nav-menu-link__meta">{% trans "Управление страницами и новостями" %}</span>
+                      </a>
+                    </div>
+                  </div>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main id="main-content" class="page-main">
         {% if messages %}
-          <ul>
+          <ul class="messages" aria-live="polite">
             {% for message in messages %}
-              <li>{{ message }}</li>
+              <li class="message {{ message.tags|default:'info' }}">{{ message }}</li>
             {% endfor %}
           </ul>
         {% endif %}
-        {% block content %}{% endblock %}
+
+        <section class="panel">
+          {% block content %}{% endblock %}
+        </section>
+      </main>
+    </div>
+
+    <footer class="page-footer">
+      <div class="page-footer__inner">
+        <small>
+          {% blocktrans with style=ui_style.label %}Прототип ВКР · активный стиль: {{ style }}{% endblocktrans %}
+        </small>
       </div>
-    </main>
-    <footer>
-      <small>Прототип ВКР</small>
     </footer>
   </body>
 </html>

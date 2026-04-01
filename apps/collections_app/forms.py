@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import Collection
 
@@ -7,12 +8,18 @@ class CollectionForm(forms.ModelForm):
     class Meta:
         model = Collection
         fields = ["name", "description"]
+        labels = {
+            "name": _("Название"),
+            "description": _("Описание"),
+        }
         widgets = {
-            "name": forms.TextInput(attrs={"placeholder": "Например, Материалы по цифровым библиотекам"}),
+            "name": forms.TextInput(attrs={"placeholder": _("Например, Материалы по цифровым библиотекам")}),
             "description": forms.Textarea(
                 attrs={
                     "rows": 5,
-                    "placeholder": "Кратко опишите, для чего создана коллекция и кому она может быть полезна.",
+                    "placeholder": _(
+                        "Кратко опишите, для чего создана коллекция и кому она может быть полезна."
+                    ),
                 }
             ),
         }
@@ -21,10 +28,10 @@ class CollectionForm(forms.ModelForm):
 class CollectionPublicationSearchForm(forms.Form):
     q = forms.CharField(
         required=False,
-        label="Найти издание для добавления",
+        label=_("Найти издание для добавления"),
         widget=forms.TextInput(
             attrs={
-                "placeholder": "Введите название, автора или ключевые слова",
+                "placeholder": _("Введите название, автора или ключевые слова"),
             }
         ),
     )

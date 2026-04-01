@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import Publication
 
@@ -45,12 +46,11 @@ class PublicationForm(forms.ModelForm):
             "graphic_editions": forms.SelectMultiple(attrs={"size": 6}),
         }
         help_texts = {
-            "file": (
-                "Можно загрузить PDF, DOCX или файл любого другого формата. "
-                "Если извлечь текст не удастся, система продолжит работать по метаданным."
+            "file": _(
+                "Можно загрузить PDF, DOCX или файл любого другого формата. Если извлечь текст не удастся, система продолжит работать по метаданным."
             ),
-            "contents": "Краткое описание или аннотация издания. Может быть предзаполнено автоматически на основе файла.",
-            "publication_format_link": "Внешняя ссылка на издание или альтернативный источник файла, если это необходимо.",
+            "contents": _("Краткое описание или аннотация издания. Может быть предзаполнено автоматически на основе файла."),
+            "publication_format_link": _("Внешняя ссылка на издание или альтернативный источник файла, если это необходимо."),
         }
 
     def __init__(self, *args, **kwargs):
@@ -70,7 +70,7 @@ class PublicationForm(forms.ModelForm):
         ):
             self.fields[field_name].required = False
 
-        self.fields["title"].help_text = (
+        self.fields["title"].help_text = _(
             "Поле обязательно. Его можно заполнить вручную или получить предварительную подсказку из загруженного файла."
         )
         self.fields["publication_year"].required = False

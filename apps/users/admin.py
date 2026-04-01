@@ -65,6 +65,8 @@ class UserAdmin(LocalizedModelAdminMixin, ModelAdmin):
         "email": _("Электронная почта"),
         "password": _("Хеш пароля"),
         "full_name": _("ФИО"),
+        "preferred_theme_mode": _("Предпочитаемая тема интерфейса"),
+        "preferred_language": _("Предпочитаемый язык интерфейса"),
         "is_admin": _("Администратор"),
         "is_staff": _("Есть доступ в админку"),
         "is_active": _("Учётная запись активна"),

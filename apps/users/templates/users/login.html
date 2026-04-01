@@ -1,23 +1,30 @@
 {% extends "base.html" %}
-{% load socialaccount %}
+{% load socialaccount i18n %}
 
-{% block title %}Вход{% endblock %}
+{% block title %}{% trans "Вход" %}{% endblock %}
 
 {% block content %}
-  <h1>Вход</h1>
-  <form method="post">
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Аккаунт" %}</div>
+    <h1>{% trans "Вход" %}</h1>
+  </div>
+  <form method="post" class="stack-md">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Войти</button>
+    <div class="inline-actions">
+      <button type="submit">{% trans "Войти" %}</button>
+    </div>
   </form>
 
   {% if google_oauth_enabled %}
-    <hr>
-    <form method="post" action="{% provider_login_url 'google' process='login' %}">
-      {% csrf_token %}
-      <button type="submit">Войти через Google</button>
-    </form>
+    <section class="card stack-sm">
+      <h2>{% trans "Быстрый вход" %}</h2>
+      <form method="post" action="{% provider_login_url 'google' process='login' %}">
+        {% csrf_token %}
+        <button type="submit">{% trans "Войти через Google" %}</button>
+      </form>
+    </section>
   {% else %}
-    <p><small>Google OAuth пока не настроен. Добавь GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET в .env.</small></p>
+    <p class="muted"><small>{% trans "Google OAuth пока не настроен. Добавьте GOOGLE_OAUTH_CLIENT_ID и GOOGLE_OAUTH_CLIENT_SECRET в .env." %}</small></p>
   {% endif %}
 {% endblock %}

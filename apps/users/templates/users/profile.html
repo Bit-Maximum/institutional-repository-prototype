@@ -1,48 +1,67 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Профиль{% endblock %}
+{% block title %}{% trans "Профиль" %}{% endblock %}
 
 {% block content %}
-  <h1>Профиль пользователя</h1>
-  <p><strong>{{ request.user.full_name }}</strong><br>
-     <small>{{ request.user.email }}</small></p>
+  <div class="page-intro">
+    <div class="page-intro__eyebrow">{% trans "Аккаунт" %}</div>
+    <h1>{% trans "Профиль пользователя" %}</h1>
+    <p><strong>{{ request.user.full_name }}</strong><br><small>{{ request.user.email }}</small></p>
+    <div class="inline-actions">
+      <a class="chip-link" href="{% url 'profile-edit' %}">{% trans "Редактировать профиль" %}</a>
+      <a class="chip-link" href="{% url 'oauth-settings' %}">{% trans "Связанные аккаунты" %}</a>
+      <a class="chip-link" href="{% url 'search:recommendations' %}">{% trans "Персональные рекомендации" %}</a>
+      <a class="chip-link" href="{% url 'search:history' %}">{% trans "История поиска" %}</a>
+    </div>
+  </div>
 
-  <p>
-    <a href="{% url 'profile-edit' %}">Редактировать профиль</a>
-    · <a href="{% url 'oauth-settings' %}">Связанные аккаунты</a>
-    · <a href="{% url 'search:recommendations' %}">Персональные рекомендации</a>
-    · <a href="{% url 'search:history' %}">История поиска</a>
-  </p>
+  <div class="grid-auto grid-auto--wide">
+    <section class="card stack-sm">
+      <h2>{% trans "Предпочтения интерфейса" %}</h2>
+      <ul>
+        <li>{% trans "Глобальный стиль сайта" %}: {{ ui_style.label }}</li>
+        <li>{% trans "Тема интерфейса" %}: {{ request.user.get_preferred_theme_mode_display }}</li>
+        <li>{% trans "Язык интерфейса" %}: {{ preferred_language_label }}</li>
+      </ul>
+    </section>
 
-  <h2>Способы входа</h2>
-  <ul>
-    <li>Локальный пароль: {% if has_local_password %}подключён{% else %}не задан{% endif %}</li>
-    <li>Google OAuth: {% if google_accounts %}подключён{% else %}не подключён{% endif %}</li>
-  </ul>
+    <section class="card stack-sm">
+      <h2>{% trans "Способы входа" %}</h2>
+      <ul>
+        <li>{% trans "Локальный пароль" %}: {% if has_local_password %}{% trans "подключён" %}{% else %}{% trans "не задан" %}{% endif %}</li>
+        <li>{% trans "Google OAuth" %}: {% if google_accounts %}{% trans "подключён" %}{% else %}{% trans "не подключён" %}{% endif %}</li>
+      </ul>
+    </section>
 
-  <h2>Активность в системе</h2>
-  <ul>
-    <li>Создано коллекций: {{ collection_count }}</li>
-    <li>Изданий в коллекциях: {{ collection_publication_count }}</li>
-    <li>Сохранённых поисковых запросов: {{ search_query_count }}</li>
-    <li>Загружено изданий: {{ uploaded_publication_count }}</li>
-    <li>Просмотрено изданий: {{ viewed_publication_count }}</li>
-    <li>Скачано изданий: {{ downloaded_publication_count }}</li>
-    <li>Из них опубликовано: {{ published_publication_count }}</li>
-    <li>Из них в черновиках: {{ draft_publication_count }}</li>
-  </ul>
+    <section class="card stack-sm">
+      <h2>{% trans "Активность в системе" %}</h2>
+      <ul>
+        <li>{% trans "Создано коллекций" %}: {{ collection_count }}</li>
+        <li>{% trans "Изданий в коллекциях" %}: {{ collection_publication_count }}</li>
+        <li>{% trans "Сохранённых поисковых запросов" %}: {{ search_query_count }}</li>
+        <li>{% trans "Загружено изданий" %}: {{ uploaded_publication_count }}</li>
+        <li>{% trans "Просмотрено изданий" %}: {{ viewed_publication_count }}</li>
+        <li>{% trans "Скачано изданий" %}: {{ downloaded_publication_count }}</li>
+        <li>{% trans "Из них опубликовано" %}: {{ published_publication_count }}</li>
+        <li>{% trans "Из них в черновиках" %}: {{ draft_publication_count }}</li>
+      </ul>
+    </section>
+  </div>
 
-  <h2>Связанные аккаунты</h2>
-  {% if social_accounts %}
-    <ul>
-      {% for account in social_accounts %}
-        <li>
-          {{ account.get_provider.name }} — {{ account.extra_data.email|default:account.uid }}
-          {% if account.extra_data.name %}<br><small>{{ account.extra_data.name }}</small>{% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Дополнительных связанных аккаунтов пока нет.</p>
-  {% endif %}
+  <section class="card stack-sm">
+    <h2>{% trans "Связанные аккаунты" %}</h2>
+    {% if social_accounts %}
+      <ul>
+        {% for account in social_accounts %}
+          <li>
+            {{ account.get_provider.name }} — {{ account.extra_data.email|default:account.uid }}
+            {% if account.extra_data.name %}<br><small>{{ account.extra_data.name }}</small>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>{% trans "Дополнительных связанных аккаунтов пока нет." %}</p>
+    {% endif %}
+  </section>
 {% endblock %}

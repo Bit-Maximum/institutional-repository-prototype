@@ -11,6 +11,7 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views import View
+from django.utils.translation import gettext as _
 from django.views.generic import CreateView, TemplateView
 
 from apps.collections_app.models import Collection
@@ -62,6 +63,7 @@ class UserProfileView(LoginRequiredMixin, OAuthContextMixin, TemplateView):
         publication_published = Publication.objects.filter(uploaded_by=user, is_draft=False).count()
         total_viewed = PublicationUserEngagement.objects.filter(user=user, view_count__gt=0).values("publication_id").distinct().count()
         total_downloaded = PublicationUserEngagement.objects.filter(user=user, download_count__gt=0).values("publication_id").distinct().count()
+        language_labels = dict(getattr(settings, "LANGUAGES", []))
         context.update(
             {
                 "social_accounts": accounts,
@@ -75,6 +77,9 @@ class UserProfileView(LoginRequiredMixin, OAuthContextMixin, TemplateView):
                 "published_publication_count": publication_published,
                 "viewed_publication_count": total_viewed,
                 "downloaded_publication_count": total_downloaded,
+                "preferred_theme_mode": getattr(user, "preferred_theme_mode", "system"),
+                "preferred_language": getattr(user, "preferred_language", "ru"),
+                "preferred_language_label": language_labels.get(getattr(user, "preferred_language", "ru"), getattr(user, "preferred_language", "ru")),
             }
         )
         return context
@@ -105,7 +110,7 @@ class UserProfileEditView(LoginRequiredMixin, OAuthContextMixin, TemplateView):
             form = UserProfileForm(request.POST, instance=request.user)
             if form.is_valid():
                 form.save()
-                messages.success(request, "Профиль обновлён.")
+                messages.success(request, _("Профиль обновлён."))
                 return redirect("profile")
             return self.render_to_response(self.get_context_data(profile_form=form, password_form=self.get_password_form()))
 
@@ -115,11 +120,11 @@ class UserProfileEditView(LoginRequiredMixin, OAuthContextMixin, TemplateView):
             if password_form.is_valid():
                 password_form.save()
                 update_session_auth_hash(request, request.user)
-                messages.success(request, "Локальный пароль обновлён.")
+                messages.success(request, _("Локальный пароль обновлён."))
                 return redirect("profile")
             return self.render_to_response(self.get_context_data(profile_form=self.get_profile_form(), password_form=password_form))
 
-        messages.error(request, "Не удалось определить действие формы.")
+        messages.error(request, _("Не удалось определить действие формы."))
         return redirect("profile-edit")
 
 
@@ -142,12 +147,12 @@ class OAuthDisconnectView(LoginRequiredMixin, View):
         if not request.user.has_usable_password() and total_accounts <= 1:
             messages.error(
                 request,
-                "Нельзя отвязать последнюю OAuth-учётную запись, пока у пользователя не установлен локальный пароль.",
+                _("Нельзя отвязать последнюю OAuth-учётную запись, пока у пользователя не установлен локальный пароль."),
             )
             return redirect("oauth-settings")
 
         SocialToken.objects.filter(account=social_account).delete()
         provider_label = social_account.get_provider().name if hasattr(social_account, "get_provider") else social_account.provider
         social_account.delete()
-        messages.success(request, f"Связь с провайдером {provider_label} удалена.")
+        messages.success(request, _("Связь с провайдером %(provider)s удалена.") % {"provider": provider_label})
         return redirect("oauth-settings")

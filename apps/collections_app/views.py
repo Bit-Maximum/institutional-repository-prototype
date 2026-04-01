@@ -7,6 +7,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.utils.translation import gettext as _
 
 from apps.publications.models import Publication
 
@@ -159,7 +160,7 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author_user = self.request.user
-        messages.success(self.request, "Коллекция создана. Теперь можно добавить в неё издания из репозитория.")
+        messages.success(self.request, _("Коллекция создана. Теперь можно добавить в неё издания из репозитория."))
         return super().form_valid(form)
 
 
@@ -172,7 +173,7 @@ class CollectionUpdateView(CollectionOwnerRequiredMixin, UpdateView):
         return Collection.objects.with_stats().select_related("author_user")
 
     def form_valid(self, form):
-        messages.success(self.request, "Коллекция обновлена.")
+        messages.success(self.request, _("Коллекция обновлена."))
         return super().form_valid(form)
 
 
@@ -185,9 +186,9 @@ class CollectionAddPublicationView(CollectionOwnerRequiredMixin, UpdateView):
         publication = get_object_or_404(Publication, pk=publication_id, is_draft=False)
         _, created = CollectionPublication.objects.get_or_create(collection=collection, publication=publication)
         if created:
-            messages.success(request, f"Издание «{publication.title}» добавлено в коллекцию.")
+            messages.success(request, _("Издание «%(title)s» добавлено в коллекцию.") % {"title": publication.title})
         else:
-            messages.info(request, "Это издание уже есть в коллекции.")
+            messages.info(request, _("Это издание уже есть в коллекции."))
         return redirect(reverse("collections:detail", kwargs={"pk": collection.pk}) + (f"?q={request.POST.get('q','').strip()}" if request.POST.get('q') else ""))
 
 
@@ -199,9 +200,9 @@ class CollectionRemovePublicationView(CollectionOwnerRequiredMixin, UpdateView):
         publication_id = request.POST.get("publication_id")
         deleted, _ = CollectionPublication.objects.filter(collection=collection, publication_id=publication_id).delete()
         if deleted:
-            messages.success(request, "Издание удалено из коллекции.")
+            messages.success(request, _("Издание удалено из коллекции."))
         else:
-            messages.info(request, "Издание уже отсутствует в коллекции.")
+            messages.info(request, _("Издание уже отсутствует в коллекции."))
         return redirect("collections:detail", pk=collection.pk)
 
 
@@ -218,10 +219,10 @@ class CollectionReactView(LoginRequiredMixin, DetailView):
             value = -1
         elif action == "clear":
             CollectionReaction.objects.filter(collection=collection, user=request.user).delete()
-            messages.success(request, "Оценка коллекции удалена.")
+            messages.success(request, _("Оценка коллекции удалена."))
             return redirect("collections:detail", pk=collection.pk)
         else:
-            messages.error(request, "Не удалось обработать оценку коллекции.")
+            messages.error(request, _("Не удалось обработать оценку коллекции."))
             return redirect("collections:detail", pk=collection.pk)
 
         reaction, created = CollectionReaction.objects.update_or_create(
@@ -230,7 +231,7 @@ class CollectionReactView(LoginRequiredMixin, DetailView):
             defaults={"value": value},
         )
         if created:
-            messages.success(request, "Оценка коллекции сохранена.")
+            messages.success(request, _("Оценка коллекции сохранена."))
         else:
-            messages.success(request, "Оценка коллекции обновлена.")
+            messages.success(request, _("Оценка коллекции обновлена."))
         return redirect("collections:detail", pk=collection.pk)

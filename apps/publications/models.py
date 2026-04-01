@@ -5,20 +5,21 @@ from django.db import models
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 TEXT_EXTRACTION_STATUS_CHOICES = [
-    ("pending", "Ожидает анализа"),
-    ("fulltext", "Извлечён основной текст"),
-    ("metadata_only_unsupported", "Только метаданные: формат не поддерживается"),
-    ("metadata_only_nontext", "Только метаданные: нетекстовая структура"),
-    ("metadata_only_missing", "Только метаданные: файл отсутствует"),
-    ("metadata_only_error", "Только метаданные: ошибка извлечения"),
+    ("pending", _("Ожидает анализа")),
+    ("fulltext", _("Извлечён основной текст")),
+    ("metadata_only_unsupported", _("Только метаданные: формат не поддерживается")),
+    ("metadata_only_nontext", _("Только метаданные: нетекстовая структура")),
+    ("metadata_only_missing", _("Только метаданные: файл отсутствует")),
+    ("metadata_only_error", _("Только метаданные: ошибка извлечения")),
 ]
 
 CHUNK_SOURCE_KIND_CHOICES = [
-    ("fulltext", "Основной текст"),
-    ("metadata", "Только метаданные"),
+    ("fulltext", _("Основной текст")),
+    ("metadata", _("Только метаданные")),
 ]
 
 
@@ -422,15 +423,15 @@ class Publication(models.Model):
         return "draft" if self.is_draft else "published"
 
     def get_status_display(self) -> str:
-        return "Черновик" if self.is_draft else "Опубликовано"
+        return str(_("Черновик")) if self.is_draft else str(_("Опубликовано"))
 
     @property
     def workflow_status_label(self) -> str:
         if self.is_draft:
-            return f"Черновик · редакция #{self.draft_revision or 1}"
+            return _("Черновик · редакция #%(revision)s") % {"revision": self.draft_revision or 1}
         if self.published_at:
-            return f"Опубликовано {self.published_at:%d.%m.%Y %H:%M}"
-        return "Опубликовано"
+            return _("Опубликовано %(date)s") % {"date": self.published_at.strftime("%d.%m.%Y %H:%M")}
+        return str(_("Опубликовано"))
 
     def bump_draft_revision(self) -> None:
         self.draft_revision = int(self.draft_revision or 0) + 1
