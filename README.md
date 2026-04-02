@@ -1,40 +1,94 @@
 # Institutional Repository Prototype
 
-Стартовый каркас модульного монолита для прототипа институционального репозитория.
+Прототип институционального репозитория, разработанный в рамках ВКР «Разработка институционального репозитория с использованием интеллектуального анализа текстов».
 
-## Что уже заложено
+Проект объединяет:
+- каталог электронных изданий с расширенными метаданными;
+- keyword / semantic / hybrid поиск;
+- хранение и переиндексацию фрагментов документов в Milvus;
+- персональные коллекции и рекомендации;
+- публичный интерфейс с переключаемыми глобальными стилями и темами;
+- CMS-ветку на Wagtail для объявлений и редакторских страниц;
+- расширенную административную часть на Django admin + django-unfold.
 
-- Django как основа веб-приложения и административной панели.
-- Wagtail как CMS-слой для публикации объявлений и информационных страниц.
-- PostgreSQL как основное хранилище предметных сущностей.
-- Milvus как векторное хранилище для семантического поиска.
-- Извлечение текста из PDF и DOCX.
-- Три режима поиска: keyword, semantic, hybrid.
-- Пользовательские коллекции изданий.
+## Ключевые возможности
 
-## Структура
+### Публичный сайт
+- главная страница-витрина с новыми поступлениями, коллекциями, объявлениями и поиском;
+- каталог изданий и детальные карточки;
+- search page с режимами `keyword`, `semantic`, `hybrid`;
+- расширенные фильтры с мультивыбором и поиском по значениям;
+- объяснение, почему результат попал в выдачу;
+- пользовательские коллекции, рекомендации, история поиска;
+- переключение языка интерфейса и светлой/тёмной темы;
+- поддержка глобальных UI-стилей, управляемых из админки.
+
+### Редакторский и административный контур
+- удобный редактор издания / черновика с прогрессом заполнения;
+- загрузка исходного файла, автопредзаполнение метаданных и ручная загрузка превью;
+- Django admin для справочников, изданий, коллекций, статистики и технического управления;
+- Wagtail CMS для объявлений и свободных редакторских страниц.
+
+### Интеллектуальный поиск и индексация
+- извлечение текста из PDF и DOCX;
+- chunk-based индексация публикаций;
+- dense + sparse retrieval на `BAAI/bge-m3`;
+- опциональный rerank на `BAAI/bge-reranker-v2-m3`;
+- bulk reindex, warmup и benchmark-команды.
+
+## Технологический стек
+
+- Python 3.13
+- Django 5.2
+- Wagtail 7
+- django-unfold
+- PostgreSQL
+- Milvus 2.6
+- uv
+- Hugging Face / FlagEmbedding / PyTorch
+- WhiteNoise
+
+## Архитектура проекта
 
 ```text
 apps/
-  core/           базовые страницы и общие примеси
-  users/          регистрация и пользовательские сценарии
-  publications/   издания, авторы, типы изданий
-  collections_app/ пользовательские коллекции
-  ingestion/      извлечение текста и подготовка документа к индексации
-  search/         keyword / semantic / hybrid поиск
-  vector_store/   изоляция работы с Milvus
-  cms/            Wagtail-модели страниц
+  core/             общие страницы, dashboard, health-check
+  users/            регистрация, аутентификация, профиль, предпочтения
+  publications/     издания, черновики, редактор изданий, превью
+  collections_app/  пользовательские коллекции и работа с ними
+  search/           поиск, explain-блоки, рекомендации, история
+  ingestion/        извлечение текста и prefill метаданных
+  vector_store/     Milvus, reindex, warmup, embeddings
+  cms/              Wagtail-страницы, bootstrap CMS-структуры
+  ui/               глобальные стили интерфейса, темы, локализация UI
+
+config/
+  settings/         base / local / production настройки
+  urls.py           корневые маршруты
+
+docs/
+  architecture.md
+  development-workflows.md
+  search-and-indexing.md
+  ui-extension-guide.md
+  cms-guide.md
+  content-editor-guide.md
 ```
 
-## Инфраструктура в Docker
+Подробнее по архитектуре: [docs/architecture.md](docs/architecture.md)
 
-В Docker Compose поднимаются только инфраструктурные сервисы для разработки:
+## Основные маршруты
 
-- PostgreSQL на `localhost:5432`
-- Milvus Standalone на `localhost:19530`
-- Milvus WebUI / health endpoint на `localhost:9091`
-
-Само Django-приложение на данном этапе запускается локально через `uv`, без контейнеризации.
+- `/` — главная страница прототипа
+- `/publications/` — каталог изданий
+- `/publications/drafts/` — список черновиков (для редакторов)
+- `/search/` — интеллектуальный поиск
+- `/collections/` — каталог коллекций
+- `/accounts/` — регистрация и вход
+- `/admin/` — Django admin
+- `/cms-admin/` — Wagtail admin
+- `/pages/` — публичная CMS-ветка
+- `/pages/announcements/` — объявления
 
 ## Быстрый старт
 
@@ -44,10 +98,13 @@ apps/
 docker compose up -d
 ```
 
-Milvus будет поднят вместе со своими зависимостями `etcd` и `minio`.
+Docker Compose поднимает инфраструктурные сервисы для локальной разработки:
+- PostgreSQL
+- Milvus Standalone
+- MinIO
+- etcd
 
-`ensure_milvus_collection` только создаёт коллекцию и теперь не требует загрузки модели SPLADE.
-Для команд, которые реально строят embeddings (`reindex_publications`, семантический поиск, индексация при загрузке), PyTorch всё ещё нужен в окружении проекта.
+Само Django-приложение запускается локально через `uv`.
 
 ### 2. Подготовить окружение
 
@@ -56,246 +113,157 @@ cp .env.example .env
 uv sync
 ```
 
-Если окружение уже было создано ранее и в нём успела установиться несовместимая ветка `transformers`, просто повторно выполни `uv sync`, чтобы зафиксировать совместимую версию из `pyproject.toml`. В проект также добавлен `hf_xet`, чтобы модели Hugging Face на Xet Storage скачивались без дополнительных предупреждений.
-
-### 3. Применить миграции и инициализировать сервисы
+### 3. Применить миграции и инициализировать проект
 
 ```bash
-uv run python manage.py makemigrations
 uv run python manage.py migrate
 uv run python manage.py bootstrap_wagtail
 uv run python manage.py ensure_milvus_collection
 uv run python manage.py createsuperuser
 ```
 
-### 4. Запустить сервер приложения
+### 4. Запустить приложение
 
 ```bash
 uv run python manage.py runserver
 ```
 
+### 5. Собрать статику при необходимости
 
-## Важное замечание по актуализации схемы
-
-Доменные модели приведены в соответствие с эталонной физической схемой БД: добавлены словари, связи многие-ко-многим через отдельные таблицы и пользовательская модель `users.User`, соответствующая таблице `users`. Из-за смены `AUTH_USER_MODEL` и структуры доменных таблиц безопаснее всего работать с **чистой базой данных** и выполнить миграции заново.
-
-Если у тебя уже есть локальная БД от старой версии каркаса, её лучше удалить и пересоздать перед `makemigrations` / `migrate`.
-
-## Маршруты
-
-- `/` — главная страница
-- `/publications/` — каталог изданий
-- `/search/` — поиск
-- `/collections/` — коллекции
-- `/accounts/register/` — регистрация
-- `/admin/` — Django admin
-- `/cms-admin/` — Wagtail admin
-- `/pages/` — публичные страницы Wagtail
-
-## Переменные окружения для локальной разработки
-
-По умолчанию приложение подключается к сервисам, опубликованным Docker Compose на localhost:
-
-```env
-DATABASE_URL=postgresql://repository:repository@localhost:5432/repository
-MILVUS_URI=http://localhost:19530
-SEARCH_PAGE_SIZE=10
-SEARCH_CANDIDATE_POOL_SIZE=200
-```
-
-`SEARCH_PAGE_SIZE` управляет размером страниц в каталоге и поиске.
-`SEARCH_CANDIDATE_POOL_SIZE` определяет, сколько кандидатов заранее запрашивается для гибридного и семантического поиска, чтобы пагинация по этим режимам работала предсказуемо.
-
-Такой режим удобен для активной разработки: инфраструктура работает в Docker, а Django остаётся запущенным локально.
-
-Если позже приложение тоже будет перенесено в Docker Compose, эти значения нужно будет заменить на имена сервисов внутри compose-сети, например `db` и `milvus`.
-
-## Что делать дальше
-
-1. Зафиксировать сгенерированные миграции доменных приложений в репозитории.
-2. Привязать загрузку файлов к полноценному workflow черновика публикации.
-3. Расширить модель метаданных под конкретные виды изданий из диссертации.
-4. Добавить тестовый корпус документов и замерить качество поиска.
-
-
-## Подключение к базе данных
-
-Проект автоматически загружает переменные из файла `.env` в корне репозитория.
-По умолчанию используется PostgreSQL по адресу `postgresql://repository:repository@localhost:5432/repository`.
-SQLite теперь используется только при явном указании `DATABASE_URL=sqlite:///db.sqlite3`.
-
-
-## Обновлённый семантический поиск
-
-- Индексация идёт по фрагментам (`publication_chunks`), а не по одному вектору на документ.
-- По умолчанию используется `BAAI/bge-m3`: модель поддерживает dense+sparse retrieval, мультиязычность и длинный контекст.
-- Для повышения точности поверх retrieval включён cross-encoder rerank на `BAAI/bge-reranker-v2-m3`.
-- Для keyword / semantic / hybrid режимов добавлены настраиваемые пороги score, чтобы не показывать заведомо слабые результаты.
-- После обновления настроек рекомендуется использовать новое имя коллекции Milvus (`publications_chunks_hybrid_v1`) или удалить старую sparse-коллекцию.
-- После миграции БД нужно выполнить `uv run python manage.py migrate`, затем `uv sync`, `uv run python manage.py ensure_milvus_collection` и `uv run python manage.py reindex_publications`.
-
-### Новые настройки поиска
-
-```env
-SEARCH_KEYWORD_MIN_SCORE=20
-SEARCH_SEMANTIC_MIN_SCORE=0.2
-SEARCH_HYBRID_MIN_SCORE=0.2
-SEARCH_RERANK_ENABLED=True
-SEARCH_RERANK_MODEL=BAAI/bge-reranker-v2-m3
-SEARCH_RERANK_TOP_K=40
-SEARCH_RERANK_MAX_TEXT_CHARS=2400
-```
-
-Практический смысл этих параметров:
-- `SEARCH_KEYWORD_MIN_SCORE` — минимальный допустимый score в традиционном поиске.
-- `SEARCH_SEMANTIC_MIN_SCORE` — минимальный score после rerank для semantic режима.
-- `SEARCH_HYBRID_MIN_SCORE` — минимальный score после rerank для semantic-head гибридного режима.
-- `SEARCH_RERANK_TOP_K` — сколько лучших кандидатов отправлять на cross-encoder rerank.
-- `SEARCH_RERANK_MAX_TEXT_CHARS` — сколько текста фрагмента брать в reranker.
-
-## Профили поиска
-
-По умолчанию используется быстрый профиль `SEARCH_PROFILE=fast`: rerank отключён, пул кандидатов уменьшен, чтобы semantic/hybrid поиск оставался интерактивным на CPU.
-
-Если нужно сравнить качество с более тяжёлым режимом, можно переключиться на `SEARCH_PROFILE=quality` или вручную включить rerank через `SEARCH_RERANK_ENABLED=True`.
-
-Для прогрева моделей после установки зависимостей можно выполнить:
+Для обычной локальной разработки с `DEBUG=True` это часто не обязательно. Для production-like сценария или после заметных правок CSS/JS:
 
 ```bash
+uv run python manage.py collectstatic
+```
+
+## Базовые команды проекта
+
+### CMS
+```bash
+uv run python manage.py bootstrap_wagtail
+```
+Создаёт и синхронизирует базовую структуру Wagtail.
+
+### Milvus и модели поиска
+```bash
+uv run python manage.py ensure_milvus_collection
 uv run python manage.py warm_search_models
 ```
 
-Это позволит скачать и загрузить модели заранее, а не на первом пользовательском запросе.
-
-
-
-## Поисковый warmup и относительный отсев
-
-По умолчанию при старте `runserver` включён `SEARCH_WARMUP_ON_STARTUP=True`: сервис заранее загружает embedding-модель и подключает коллекцию Milvus, чтобы первый semantic/hybrid запрос не ждал инициализацию. Лог `Fetching 30 files` относится к скачиванию файлов модели с Hugging Face, а не к загрузке всех документов корпуса в память Django-процесса.
-
-Для дополнительного отсечения слабых результатов можно задать относительные пороги:
-
-```env
-SEARCH_KEYWORD_RELATIVE_CUTOFF=0.0
-SEARCH_SEMANTIC_RELATIVE_CUTOFF=0.35
-SEARCH_HYBRID_RELATIVE_CUTOFF=0.4
+### Индексация
+```bash
+uv run python manage.py reindex_publications
+uv run python manage.py reindex_publications --force
+uv run python manage.py reindex_publications --recreate-collection
 ```
 
-Значение трактуется как доля от score лучшего результата в выдаче. Например, `0.5` означает: показывать только материалы с score не ниже 50% от лучшего совпадения.
+### Превью изданий
+```bash
+uv run python manage.py generate_publication_previews
+uv run python manage.py generate_publication_previews --force
+```
 
-
-## Benchmark-режим поиска
-
-В проект добавлена management-команда для повторяемого замера качества и скорости поиска по контрольному набору запросов. Она умеет прогревать Milvus/модели, запускать кейсы во всех режимах поиска и сохранять JSON/CSV-отчёты.
-
-Базовый запуск:
-
+### Benchmark поиска
 ```bash
 uv run python manage.py benchmark_search
 ```
 
-По умолчанию команда читает спецификацию `benchmarks/search_benchmark.sample.json`. В ней можно задавать:
-- `query` — текст запроса;
-- `modes` — список режимов (`keyword`, `semantic`, `hybrid`);
-- `filters` — дополнительные фильтры;
-- `expected_publication_ids` или `expected_title_contains` — ожидаемые релевантные издания для расчёта Hits@K и MRR.
+Подробнее по поиску и индексации: [docs/search-and-indexing.md](docs/search-and-indexing.md)
 
-Пример с явной спецификацией и сохранением отчётов в отдельный каталог:
+## Переменные окружения
 
-```bash
-uv run python manage.py benchmark_search --spec benchmarks/search_benchmark.sample.json --runs 5 --top-k 5 --output-dir var/search_benchmarks
-```
-
-В JSON/CSV-отчётах сохраняются: latency (mean / median / p95), среднее число результатов, средний top score и, если для кейсов заданы ожидаемые документы, качества поиска по MRR, Hits@1/3/5, Precision@K и Recall@K.
-
-
-## Faster bulk indexing
-
-The `reindex_publications` command now supports a faster bulk pipeline:
-
-```bash
-uv run python manage.py reindex_publications
-uv run python manage.py reindex_publications --recreate-collection
-uv run python manage.py reindex_publications --force
-```
-
-What changed:
-- chunk/vector state is tracked by `vector_index_signature` and `vector_indexed_at` on publications;
-- unchanged publications are skipped automatically on repeated runs;
-- when the Milvus collection is recreated, existing stored chunks are reused without parsing files again;
-- chunk embeddings are generated in batches instead of one publication at a time;
-- vector upserts/deletes are also batched.
-
-Useful settings:
-- `MILVUS_BGE_M3_BATCH_SIZE`
-- `MILVUS_BGE_M3_DEVICE`
-- `MILVUS_BGE_M3_USE_FP16`
-- `MILVUS_UPSERT_BATCH_SIZE`
-- `VECTOR_INDEX_MAX_EMBED_TEXTS`
-- `VECTOR_REINDEX_PUBLICATION_BATCH_SIZE`
-- `VECTOR_INDEX_SCHEMA_VERSION`
-
-If you later change chunking/index-time logic in a way that should invalidate previous vectors, bump `VECTOR_INDEX_SCHEMA_VERSION` in `.env` and run `reindex_publications` again.
-
-
-## CUDA по умолчанию
-
-Проект теперь закрепляет `torch` на индекс PyTorch CUDA 12.6 через `uv`, а BGE-M3 по умолчанию использует `MILVUS_BGE_M3_DEVICE=auto`. Это означает: на машинах с доступной CUDA поиск и индексация будут работать через GPU, а на CPU-only окружениях сервис безопасно откатится на `cpu`. Конфигурация `uv` сделана через `[[tool.uv.index]]` и `[tool.uv.sources]`, что соответствует официальной документации uv для PyTorch индексов.
-
-
-Дополнительно можно включить прогрев не только модели и коллекции, но и первого запроса:
-
-- `SEARCH_WARMUP_RUN_QUERY=True`
-- `SEARCH_WARMUP_SAMPLE_QUERY=поиск`
-
-Это уменьшает задержку первого semantic/hybrid запроса после перезапуска сервера.
-
-
-## Healthcheck endpoints
-
-- `GET /health/live/` — liveness probe
-- `GET /health/ready/` — readiness probe with database, vector store and startup warmup status
-- `GET /health/` — alias of readiness probe
-
-When startup warmup is enabled, the application logs a final readiness message after the search stack finishes loading and the service becomes ready to accept requests.
-
-## Google OAuth2
-
-Для включения входа через Google укажи в `.env`:
+Минимальный набор для локальной разработки:
 
 ```env
-GOOGLE_OAUTH_CLIENT_ID=<client-id>
-GOOGLE_OAUTH_CLIENT_SECRET=<client-secret>
+DEBUG=True
+SECRET_KEY=change-me
+ALLOWED_HOSTS=127.0.0.1,localhost
+DATABASE_URL=postgresql://repository:repository@localhost:5432/repository
+MILVUS_URI=http://localhost:19530
+WAGTAILADMIN_BASE_URL=http://localhost:8000
 ```
 
-Для локальной разработки настрой в Google Cloud OAuth redirect URI:
+Дополнительные параметры поиска, индексации и рекомендаций уже описаны в `.env.example`.
 
-```
-http://127.0.0.1:8000/accounts/google/login/callback/
-```
+## Как работает проект
 
-После `uv sync` и `uv run python manage.py migrate` в системе будут доступны:
-- локальная регистрация и вход по email/паролю;
-- вход или регистрация через Google;
-- привязка и отвязка Google-аккаунта на странице `/accounts/oauth/`.
+### 1. Загрузка и публикация издания
+1. Редактор создаёт запись издания или черновик.
+2. Загружает файл, внешний URL и/или вручную заполняет метаданные.
+3. Система пытается извлечь текст и предзаполнить часть полей.
+4. Редактор может загрузить ручное превью либо использовать автогенерацию.
+5. После публикации запись становится доступна в каталоге.
+6. Команда/сигнал индексации подготавливает chunk-данные для поиска.
 
+### 2. Поиск
+1. Пользователь формирует запрос и фильтры.
+2. В зависимости от режима выполняется keyword, semantic или hybrid поиск.
+3. При необходимости применяется rerank.
+4. Выдача показывает не только результат, но и explain-блок с причинами попадания в выдачу.
+5. Для авторизованных пользователей поисковая история может использоваться для рекомендаций.
 
+### 3. Коллекции
+- пользователь может создавать свои коллекции;
+- коллекции имеют визуальное превью на основе верхних публикаций;
+- на странице коллекции можно делиться ссылкой;
+- реакции сведены к компактной цветной итоговой оценке.
 
-## Publication previews
+### 4. CMS-ветка
+- объявления и редакторские страницы живут в Wagtail;
+- структура дерева предзаполняется через `bootstrap_wagtail`;
+- CMS-страницы доступны из публичной навигации сайта.
 
-The prototype can generate visual previews for publications:
-- PDF files: render the first page into a preview image
-- uploaded image files: reuse the uploaded file as the preview source
-- other formats: generate a branded placeholder cover from metadata
+## Что уже можно расширять
 
-To backfill previews for already uploaded publications after migrations, run:
+### UI и темы
+См. [docs/ui-extension-guide.md](docs/ui-extension-guide.md)
 
-```bash
-uv run python manage.py generate_publication_previews
-```
+### CMS-структура
+См. [docs/cms-guide.md](docs/cms-guide.md)
 
-To force regeneration for all public publications:
+### Редакторские сценарии
+См. [docs/content-editor-guide.md](docs/content-editor-guide.md)
 
-```bash
-uv run python manage.py generate_publication_previews --force
-```
+## Роли и доступ
+
+### Посетитель
+- просмотр каталога и карточек изданий;
+- поиск;
+- просмотр объявлений и CMS-страниц;
+- просмотр публичных коллекций.
+
+### Авторизованный пользователь
+- история поиска;
+- рекомендации;
+- свои коллекции.
+
+### Редактор / администратор
+- работа с черновиками и публикациями;
+- загрузка файлов и превью;
+- управление справочниками;
+- Django admin;
+- Wagtail CMS.
+
+На текущем этапе редактирование изданий на сайте ограничено административными ролями (`is_staff`, `is_admin`, `is_superuser`).
+
+## Ограничения текущего прототипа
+
+- ручной upload превью поддерживается, но редакторские операции по изображениям пока минимальны;
+- Wagtail admin пока не брендируется глубоко, чтобы не ломать базовый интерфейс CMS;
+- для production потребуется донастроить storage, security, бэкапы и CI/CD;
+- часть эксплуатационных сценариев описана документально, но не покрыта автотестами полностью.
+
+## Карта документации
+
+- [docs/architecture.md](docs/architecture.md) — архитектура и границы модулей
+- [docs/development-workflows.md](docs/development-workflows.md) — локальная разработка и повседневные сценарии
+- [docs/search-and-indexing.md](docs/search-and-indexing.md) — поиск, Milvus, индексация, benchmark
+- [docs/ui-extension-guide.md](docs/ui-extension-guide.md) — темы, языки, UI-расширение
+- [docs/cms-guide.md](docs/cms-guide.md) — Wagtail, базовая структура CMS и её развитие
+- [docs/content-editor-guide.md](docs/content-editor-guide.md) — работа редактора с изданиями, черновиками, коллекциями и превью
+
+## Автор
+
+Проект выполнен **Maxim Merkurev**.
+
+GitHub проекта: <https://github.com/Bit-Maximum/institutional-repository-prototype>
