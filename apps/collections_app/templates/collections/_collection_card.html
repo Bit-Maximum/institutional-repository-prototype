@@ -1,0 +1,33 @@
+{% load i18n %}
+<article class="collection-card card stack-sm">
+  <div class="collection-card__top">
+    {% include 'collections/_preview_stack.html' with collection=collection compact=compact_preview %}
+    <div class="collection-card__body stack-sm">
+      <div class="collection-card__meta">
+        <span>{% trans "Автор" %}: {{ collection.author_user }}</span>
+        <span>{% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y" }}</span>
+      </div>
+      <h2 class="collection-card__title"><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
+      {% if collection.description %}
+        <p class="collection-card__description">{{ collection.description|truncatechars:210 }}</p>
+      {% else %}
+        <p class="collection-card__description collection-card__description--empty">{% trans "Описание коллекции пока не добавлено." %}</p>
+      {% endif %}
+      {% with score=collection.rating_score %}
+        <div class="collection-card__stats">
+          <span>{% trans "Изданий" %}: {{ collection.publication_count|default:0 }}</span>
+          <span class="collection-rating-pill{% if score > 0 %} collection-rating-pill--positive{% elif score < 0 %} collection-rating-pill--negative{% endif %}">
+            {% trans "Оценка" %}:
+            {% if score > 0 %}+{% endif %}{{ score }}
+          </span>
+        </div>
+      {% endwith %}
+      <div class="inline-actions collection-card__actions">
+        <a class="chip-link" href="{% url 'collections:detail' collection.pk %}">{% trans "Открыть коллекцию" %}</a>
+        {% if show_manage %}
+          <a class="button button--secondary" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать" %}</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</article>

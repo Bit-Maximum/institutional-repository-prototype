@@ -4,76 +4,65 @@
 {% block title %}{% trans "Коллекции" %}{% endblock %}
 
 {% block content %}
-  <div class="page-intro">
+  <div class="page-intro page-intro--compact">
     <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
-    <h1>{% trans "Пользовательские коллекции" %}</h1>
-    <p class="muted">{% trans "Здесь пользователи собирают тематические подборки изданий, делятся ими и оценивают их полезность." %}</p>
+    <h1>{% trans "Коллекции пользователей" %}</h1>
+    <p class="muted">{% trans "Тематические подборки изданий, которые помогают делиться найденными материалами и собирать собственные маршруты чтения." %}</p>
+    {% if request.user.is_authenticated %}
+      <div class="page-intro__actions inline-actions">
+        <a class="button" href="{% url 'collections:create' %}">{% trans "Создать коллекцию" %}</a>
+        <a class="chip-link" href="{% url 'collections:my-list' %}">{% trans "Мои коллекции" %}</a>
+      </div>
+    {% endif %}
   </div>
 
-  <form method="get" class="grid-auto">
-    <div>
-      <label for="id_q">{% trans "Поиск по коллекциям" %}</label>
-      <input id="id_q" type="text" name="q" value="{{ search_query }}" placeholder="{% trans 'Название, описание или автор коллекции' %}">
-    </div>
-    <div>
-      <label for="id_sort">{% trans "Сортировка" %}</label>
-      <select id="id_sort" name="sort">
-        <option value="popular" {% if sort_value == 'popular' %}selected{% endif %}>{% trans "Сначала популярные" %}</option>
-        <option value="updated" {% if sort_value == 'updated' %}selected{% endif %}>{% trans "Недавно обновлённые" %}</option>
-        <option value="newest" {% if sort_value == 'newest' %}selected{% endif %}>{% trans "Сначала новые" %}</option>
-      </select>
-    </div>
-    <div class="inline-actions">
-      <button type="submit">{% trans "Показать" %}</button>
-    </div>
-  </form>
+  <section class="collection-browser surface stack-md">
+    <form method="get" class="collection-browser__toolbar grid-auto grid-auto--wide">
+      <div>
+        <label for="id_q">{% trans "Поиск по коллекциям" %}</label>
+        <input id="id_q" type="text" name="q" value="{{ search_query }}" placeholder="{% trans 'Название, описание или автор коллекции' %}">
+      </div>
+      <div>
+        <label for="id_sort">{% trans "Сортировка" %}</label>
+        <select id="id_sort" name="sort">
+          <option value="popular" {% if sort_value == 'popular' %}selected{% endif %}>{% trans "Сначала популярные" %}</option>
+          <option value="updated" {% if sort_value == 'updated' %}selected{% endif %}>{% trans "Недавно обновлённые" %}</option>
+          <option value="newest" {% if sort_value == 'newest' %}selected{% endif %}>{% trans "Сначала новые" %}</option>
+        </select>
+      </div>
+      <div class="inline-actions collection-browser__toolbar-actions">
+        <button type="submit">{% trans "Показать" %}</button>
+      </div>
+    </form>
 
-  {% if request.user.is_authenticated %}
-    <div class="inline-actions">
-      <a class="button" href="{% url 'collections:create' %}">{% trans "Создать свою коллекцию" %}</a>
-      <a class="chip-link" href="{% url 'collections:my-list' %}">{% trans "Мои коллекции" %}</a>
-    </div>
-  {% endif %}
+    {% if my_collections %}
+      <section class="collection-browser__mine stack-sm">
+        <div class="section-heading">
+          <h2>{% trans "Ваши недавние коллекции" %}</h2>
+          <a class="chip-link" href="{% url 'collections:my-list' %}">{% trans "Открыть все" %}</a>
+        </div>
+        <div class="collection-card-grid collection-card-grid--compact">
+          {% for collection in my_collections %}
+            {% include 'collections/_collection_card.html' with collection=collection show_manage=True compact_preview=True %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
 
-  {% if my_collections %}
-    <section class="card stack-sm">
-      <h2>{% trans "Мои последние коллекции" %}</h2>
-      <ul class="stack-sm">
-        {% for collection in my_collections %}
-          <li>
-            <a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a>
-            — {{ collection.publication_count|default:0 }} {% trans "изд." %}
-            · 👍 {{ collection.like_count|default:0 }}
-            · 👎 {{ collection.dislike_count|default:0 }}
-          </li>
+    <section class="stack-sm">
+      <div class="section-heading">
+        <h2>{% trans "Открытые подборки" %}</h2>
+        <p class="muted">{% blocktrans with total=page_obj.paginator.count|default:collections|length %}Найдено коллекций: {{ total }}{% endblocktrans %}</p>
+      </div>
+      <div class="collection-card-grid">
+        {% for collection in collections %}
+          {% include 'collections/_collection_card.html' with collection=collection show_manage=False compact_preview=False %}
+        {% empty %}
+          <div class="empty-state">{% trans "Коллекции пока не созданы." %}</div>
         {% endfor %}
-      </ul>
+      </div>
     </section>
-  {% endif %}
-
-  <div class="card-list">
-    {% for collection in collections %}
-      <article class="card stack-sm">
-        <h2><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
-        <p><strong>{% trans "Автор" %}:</strong> {{ collection.author_user }}</p>
-        {% if collection.description %}
-          <p>{{ collection.description|truncatechars:240 }}</p>
-        {% endif %}
-        <p class="muted">
-          {% trans "Изданий" %}: {{ collection.publication_count|default:0 }}
-          · 👍 {{ collection.like_count|default:0 }}
-          · 👎 {{ collection.dislike_count|default:0 }}
-          · {% trans "Итоговая полезность" %}: {{ collection.rating_score }}
-        </p>
-        <p class="muted">
-          {% trans "Создана" %}: {{ collection.created_at|date:"d.m.Y H:i" }}
-          · {% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y H:i" }}
-        </p>
-      </article>
-    {% empty %}
-      <div class="empty-state">{% trans "Коллекции пока не созданы." %}</div>
-    {% endfor %}
-  </div>
+  </section>
 
   {% if is_paginated %}
     <nav class="pagination">

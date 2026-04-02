@@ -1,0 +1,20 @@
+{% load i18n %}
+<div class="collection-preview-stack{% if compact %} collection-preview-stack--compact{% endif %}">
+  <div class="collection-preview-stack__deck" aria-hidden="true">
+    {% if collection.preview_publications %}
+      {% for publication in collection.preview_publications %}
+        <div class="collection-preview-stack__layer collection-preview-stack__layer--{{ forloop.counter }}">
+          {% include 'publications/_preview.html' with publication=publication variant='collection' %}
+        </div>
+      {% endfor %}
+      {% if collection.publication_count|default:0 > 3 %}
+        <div class="collection-preview-stack__badge">+{{ collection.publication_count|add:"-3" }}</div>
+      {% endif %}
+    {% else %}
+      <div class="collection-preview-stack__empty">
+        <span class="collection-preview-stack__empty-mark" aria-hidden="true">▣</span>
+        <span>{% trans "Добавьте издания" %}</span>
+      </div>
+    {% endif %}
+  </div>
+</div>

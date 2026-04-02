@@ -4,17 +4,43 @@
 {% block title %}{% trans "Редактировать коллекцию" %}{% endblock %}
 
 {% block content %}
-  <div class="page-intro">
+  <div class="page-intro page-intro--compact">
     <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
     <h1>{% trans "Редактировать коллекцию" %}</h1>
-    <p><a class="chip-link" href="{% url 'collections:detail' object.pk %}">← {% trans "Вернуться к коллекции" %}</a></p>
+    <p class="muted">{% trans "Обновите название или описание. Управление составом коллекции доступно на странице самой подборки." %}</p>
   </div>
-  <form method="post" class="stack-md">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="inline-actions">
-      <button type="submit">{% trans "Сохранить изменения" %}</button>
-    </div>
-  </form>
-  <p class="muted">{% trans "Состав коллекции редактируется на странице самой коллекции через поиск по изданиям и кнопки добавления и удаления." %}</p>
+
+  <section class="collection-editor-layout">
+    <aside class="collection-editor-aside card stack-sm">
+      <h2>{% trans "Текущая коллекция" %}</h2>
+      {% include 'collections/_preview_stack.html' with collection=object compact=True %}
+      <div class="collection-card__stats">
+        <span>{% trans "Изданий" %}: {{ object.publication_count|default:object.publications.count }}</span>
+        <span>{% trans "Обновлена" %}: {{ object.updated_at|date:"d.m.Y H:i" }}</span>
+      </div>
+      <a class="chip-link" href="{% url 'collections:detail' object.pk %}">← {% trans "Вернуться к коллекции" %}</a>
+    </aside>
+
+    <section class="collection-editor-form card stack-md">
+      <h2>{% trans "Параметры коллекции" %}</h2>
+      <form method="post" class="stack-md">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="warning-note">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="form-field stack-xs">
+          <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+          {{ form.name }}
+          {% if form.name.errors %}<div class="field-errors">{{ form.name.errors }}</div>{% endif %}
+        </div>
+        <div class="form-field stack-xs">
+          <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+          {{ form.description }}
+          {% if form.description.errors %}<div class="field-errors">{{ form.description.errors }}</div>{% endif %}
+        </div>
+        <div class="inline-actions">
+          <button type="submit">{% trans "Сохранить изменения" %}</button>
+          <a class="chip-link" href="{% url 'collections:detail' object.pk %}">{% trans "Отмена" %}</a>
+        </div>
+      </form>
+    </section>
+  </section>
 {% endblock %}

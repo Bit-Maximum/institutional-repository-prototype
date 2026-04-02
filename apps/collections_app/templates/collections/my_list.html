@@ -4,27 +4,39 @@
 {% block title %}{% trans "Мои коллекции" %}{% endblock %}
 
 {% block content %}
-  <div class="page-intro">
+  <div class="page-intro page-intro--compact">
     <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
     <h1>{% trans "Мои коллекции" %}</h1>
-    <div class="inline-actions">
+    <p class="muted">{% trans "Управляйте своими подборками, обновляйте описание и пополняйте их изданиями из репозитория." %}</p>
+    <div class="page-intro__actions inline-actions">
       <a class="button" href="{% url 'collections:create' %}">{% trans "Создать новую коллекцию" %}</a>
       <a class="chip-link" href="{% url 'collections:list' %}">{% trans "Все коллекции" %}</a>
     </div>
   </div>
-  <div class="card-list">
-    {% for collection in collections %}
-      <article class="card stack-sm">
-        <h2><a href="{% url 'collections:detail' collection.pk %}">{{ collection.name }}</a></h2>
-        {% if collection.description %}<p>{{ collection.description|truncatechars:220 }}</p>{% endif %}
-        <p class="muted">{% trans "Изданий" %}: {{ collection.publication_count|default:0 }} · 👍 {{ collection.like_count|default:0 }} · 👎 {{ collection.dislike_count|default:0 }}</p>
-        <p class="muted">{% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y H:i" }}</p>
-        <div class="inline-actions">
-          <a class="chip-link" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать коллекцию" %}</a>
-        </div>
-      </article>
-    {% empty %}
-      <div class="empty-state">{% trans "У вас пока нет коллекций." %}</div>
-    {% endfor %}
-  </div>
+
+  <section class="collection-browser surface stack-sm">
+    <div class="section-heading">
+      <h2>{% trans "Ваши подборки" %}</h2>
+      <p class="muted">{% blocktrans with total=page_obj.paginator.count|default:collections|length %}Всего коллекций: {{ total }}{% endblocktrans %}</p>
+    </div>
+    <div class="collection-card-grid">
+      {% for collection in collections %}
+        {% include 'collections/_collection_card.html' with collection=collection show_manage=True compact_preview=False %}
+      {% empty %}
+        <div class="empty-state">{% trans "У вас пока нет коллекций." %}</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if is_paginated %}
+    <nav class="pagination">
+      {% if page_obj.has_previous %}
+        <a class="chip-link" href="?page={{ page_obj.previous_page_number }}">{% trans "Назад" %}</a>
+      {% endif %}
+      <span>{% blocktrans with number=page_obj.number total=page_obj.paginator.num_pages %}Страница {{ number }} из {{ total }}{% endblocktrans %}</span>
+      {% if page_obj.has_next %}
+        <a class="chip-link" href="?page={{ page_obj.next_page_number }}">{% trans "Вперёд" %}</a>
+      {% endif %}
+    </nav>
+  {% endif %}
 {% endblock %}

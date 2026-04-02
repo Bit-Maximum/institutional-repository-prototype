@@ -4,16 +4,45 @@
 {% block title %}{% trans "Создать коллекцию" %}{% endblock %}
 
 {% block content %}
-  <div class="page-intro">
+  <div class="page-intro page-intro--compact">
     <div class="page-intro__eyebrow">{% trans "Пользовательский контент" %}</div>
     <h1>{% trans "Создать коллекцию" %}</h1>
-    <p class="muted">{% trans "После создания коллекции можно найти опубликованные издания и добавить их в подборку." %}</p>
+    <p class="muted">{% trans "Соберите подборку материалов по теме, учебному курсу или исследовательскому маршруту. После сохранения вы сможете сразу добавить в неё издания из репозитория." %}</p>
   </div>
-  <form method="post" class="stack-md">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <div class="inline-actions">
-      <button type="submit">{% trans "Создать коллекцию" %}</button>
-    </div>
-  </form>
+
+  <section class="collection-editor-layout">
+    <aside class="collection-editor-aside card stack-sm">
+      <h2>{% trans "Как будет выглядеть коллекция" %}</h2>
+      <p class="muted">{% trans "На витрине коллекций отображается композиция из нескольких верхних изданий. Так пользователи сразу видят, что именно включено в подборку." %}</p>
+      <ol class="collection-editor-steps stack-xs">
+        <li>{% trans "Задайте короткое и понятное название." %}</li>
+        <li>{% trans "Добавьте описание, чтобы пользователи понимали замысел подборки." %}</li>
+        <li>{% trans "После сохранения откройте страницу коллекции и пополните её изданиями." %}</li>
+      </ol>
+      <div class="info-note">{% trans "Коллекцию можно редактировать позже: обновлять описание, добавлять материалы и делиться ссылкой с коллегами." %}</div>
+    </aside>
+
+    <section class="collection-editor-form card stack-md">
+      <h2>{% trans "Новая коллекция" %}</h2>
+      <form method="post" class="stack-md">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="warning-note">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="form-field stack-xs">
+          <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+          {{ form.name }}
+          {% if form.name.errors %}<div class="field-errors">{{ form.name.errors }}</div>{% endif %}
+        </div>
+        <div class="form-field stack-xs">
+          <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+          {{ form.description }}
+          <p class="muted">{% trans "Описание можно использовать как краткое приглашение к просмотру подборки." %}</p>
+          {% if form.description.errors %}<div class="field-errors">{{ form.description.errors }}</div>{% endif %}
+        </div>
+        <div class="inline-actions">
+          <button type="submit">{% trans "Создать коллекцию" %}</button>
+          <a class="chip-link" href="{% url 'collections:my-list' %}">{% trans "Отмена" %}</a>
+        </div>
+      </form>
+    </section>
+  </section>
 {% endblock %}

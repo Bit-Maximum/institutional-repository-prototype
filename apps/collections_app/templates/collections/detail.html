@@ -1,45 +1,120 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{{ collection.name }}{% endblock %}
 
-{% block content %}
-  <div class="page-intro">
-    <div class="page-intro__eyebrow">{% trans "Коллекция" %}</div>
-    <h1>{{ collection.name }}</h1>
-    <p><strong>{% trans "Автор коллекции" %}:</strong> {{ collection.author_user }}</p>
-    {% if collection.description %}
-      <p>{{ collection.description|linebreaksbr }}</p>
-    {% endif %}
-    <p class="muted">
-      {% trans "Изданий" %}: {{ collection.publication_count|default:collection.publications.count }} · 👍 {{ collection.like_count|default:0 }} · 👎 {{ collection.dislike_count|default:0 }} · {% trans "Итоговая полезность" %}: {{ collection.rating_score }}
-    </p>
-    <p class="muted">{% trans "Создана" %}: {{ collection.created_at|date:"d.m.Y H:i" }} · {% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y H:i" }}</p>
-  </div>
+{% block extra_head %}
+  <script defer src="{% static 'js/ui/collections-page.js' %}"></script>
+{% endblock %}
 
-  {% if request.user.is_authenticated %}
-    <section class="inline-actions">
-      <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="like"><button type="submit" {% if user_reaction == 1 %}disabled{% endif %}>👍 {% trans "Полезная коллекция" %}</button></form>
-      <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="dislike"><button type="submit" {% if user_reaction == -1 %}disabled{% endif %}>👎 {% trans "Не полезная" %}</button></form>
-      {% if user_reaction %}
-        <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="clear"><button type="submit">{% trans "Снять оценку" %}</button></form>
+{% block content %}
+  <section class="collection-detail-hero surface">
+    <div class="collection-detail-hero__preview">
+      {% include 'collections/_preview_stack.html' with collection=collection %}
+    </div>
+    <div class="collection-detail-hero__body stack-sm">
+      <div class="page-intro__eyebrow">{% trans "Коллекция" %}</div>
+      <h1>{{ collection.name }}</h1>
+      <div class="collection-detail-hero__meta">
+        <span>{% trans "Автор коллекции" %}: {{ collection.author_user }}</span>
+        <span>{% trans "Создана" %}: {{ collection.created_at|date:"d.m.Y" }}</span>
+        <span>{% trans "Обновлена" %}: {{ collection.updated_at|date:"d.m.Y" }}</span>
+      </div>
+      {% if collection.description %}
+        <p class="collection-detail-hero__description">{{ collection.description|linebreaksbr }}</p>
+      {% else %}
+        <p class="collection-detail-hero__description collection-detail-hero__description--empty">{% trans "Автор коллекции пока не добавил описание этой подборки." %}</p>
       {% endif %}
-      {% if can_manage_collection %}<a class="chip-link" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать коллекцию" %}</a>{% endif %}
-    </section>
-  {% endif %}
+      {% with score=collection.rating_score %}
+      <div class="collection-card__stats collection-card__stats--hero">
+        <span>{% trans "Изданий" %}: {{ collection.publication_count|default:collection.publications.count }}</span>
+        <span class="collection-rating-pill{% if score > 0 %} collection-rating-pill--positive{% elif score < 0 %} collection-rating-pill--negative{% endif %}">{% trans "Оценка" %}: {% if score > 0 %}+{% endif %}{{ score }}</span>
+      </div>
+      {% endwith %}
+      <div class="collection-social-bar">
+        <div class="collection-social-bar__reactions">
+          {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="like"><button class="button button--secondary button--compact{% if user_reaction == 1 %} is-active{% endif %}" type="submit">👍 {% trans "Полезно" %}</button></form>
+            <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="dislike"><button class="button button--secondary button--compact{% if user_reaction == -1 %} is-active{% endif %}" type="submit">👎 {% trans "Не полезно" %}</button></form>
+            {% if user_reaction %}
+              <form method="post" action="{% url 'collections:react' collection.pk %}">{% csrf_token %}<input type="hidden" name="reaction" value="clear"><button class="button button--secondary button--compact" type="submit">{% trans "Снять оценку" %}</button></form>
+            {% endif %}
+          {% else %}
+            <span class="muted">{% trans "Войдите в аккаунт, чтобы оценить подборку." %}</span>
+          {% endif %}
+        </div>
+        <div class="inline-actions collection-social-bar__actions">
+          <button type="button" class="chip-link" data-share-collection data-share-text="{{ share_text|escape }}" data-share-url="{{ share_url|escape }}" data-share-success="{% trans 'Текст приглашения скопирован' %}" data-share-failure="{% trans 'Не удалось скопировать автоматически' %}">{% trans "Поделиться коллекцией" %}</button>
+          <span class="collection-share-status muted" data-share-status aria-live="polite"></span>
+          {% if can_manage_collection %}<a class="button button--secondary button--compact" href="{% url 'collections:edit' collection.pk %}">{% trans "Редактировать" %}</a>{% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card stack-sm">
+    <div class="section-heading">
+      <h2>{% trans "Издания в коллекции" %}</h2>
+      <p class="muted">{% blocktrans with count=publications|length %}Показано изданий: {{ count }}{% endblocktrans %}</p>
+    </div>
+    {% if hidden_count %}
+      <p class="warning-note">{% blocktrans with count=hidden_count %}Часть связанных изданий скрыта от обычных пользователей, потому что переведена в черновики: {{ count }}.{% endblocktrans %}</p>
+    {% endif %}
+    <div class="card-list publication-row-list">
+      {% for publication in publications %}
+        <article class="card publication-row stack-sm">
+          <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">{% include 'publications/_preview.html' with publication=publication variant='row' %}</a>
+          <div class="publication-row__body stack-sm">
+            <div class="publication-tile__meta">
+              {% if publication.publication_type %}<span>{{ publication.publication_type }}</span>{% endif %}
+              {% if publication.publication_year %}<span>{{ publication.publication_year }}</span>{% endif %}
+            </div>
+            <h3><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
+            {% with authors=publication.authors.all %}{% if authors %}<p class="muted">{% trans "Авторы" %}: {% for author in authors|slice:":4" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}{% endwith %}
+            <p class="publication-row__summary">{% if publication.abstract %}{{ publication.abstract|truncatechars:260 }}{% else %}{% trans "Описание отсутствует." %}{% endif %}</p>
+            <div class="inline-actions">
+              <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "Открыть карточку" %}</a>
+              {% if can_manage_collection %}
+                <form method="post" action="{% url 'collections:remove-publication' collection.pk %}" class="inline-actions">
+                  {% csrf_token %}
+                  <input type="hidden" name="publication_id" value="{{ publication.pk }}">
+                  <button type="submit" class="button button--secondary button--compact">{% trans "Убрать из коллекции" %}</button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="empty-state">{% trans "В коллекции пока нет изданий." %}</div>
+      {% endfor %}
+    </div>
+  </section>
 
   {% if can_manage_collection %}
     <section class="card stack-sm">
-      <h2>{% trans "Добавить издание из репозитория" %}</h2>
-      <form method="get" class="stack-sm">
-        {{ search_form.as_p }}
-        <div class="inline-actions"><button type="submit">{% trans "Найти издание" %}</button></div>
+      <div class="section-heading">
+        <h2>{% trans "Пополнить коллекцию" %}</h2>
+        <p class="muted">{% trans "Найдите опубликованные издания по названию, автору или ключевым словам и добавьте их в подборку." %}</p>
+      </div>
+      <form method="get" class="collection-manage-search stack-sm">
+        <div class="grid-auto">
+          <div>
+            <label for="{{ search_form.q.id_for_label }}">{{ search_form.q.label }}</label>
+            {{ search_form.q }}
+          </div>
+          <div class="inline-actions collection-manage-search__actions">
+            <button type="submit">{% trans "Найти издание" %}</button>
+          </div>
+        </div>
       </form>
       {% if search_query %}
-        <h3>{% blocktrans with query=search_query %}Результаты поиска по запросу «{{ query }}»{% endblocktrans %}</h3>
+        <div class="section-heading section-heading--subtle">
+          <h3>{% blocktrans with query=search_query %}Результаты по запросу «{{ query }}»{% endblocktrans %}</h3>
+          <p class="muted">{% trans "Показаны только опубликованные издания, которых ещё нет в коллекции." %}</p>
+        </div>
         <div class="card-list publication-row-list">
           {% for publication in candidate_publications %}
-            <article class="card publication-row stack-sm">
+            <article class="card publication-row publication-row--secondary stack-sm">
               <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">{% include 'publications/_preview.html' with publication=publication variant='row' %}</a>
               <div class="publication-row__body stack-sm">
                 <h3><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
@@ -59,35 +134,4 @@
       {% endif %}
     </section>
   {% endif %}
-
-  <section class="card stack-sm">
-    <h2>{% trans "Издания в коллекции" %}</h2>
-    {% if hidden_count %}
-      <p class="warning-note">{% blocktrans with count=hidden_count %}Часть связанных изданий сейчас скрыта от обычных пользователей, потому что переведена в черновики: {{ count }}.{% endblocktrans %}</p>
-    {% endif %}
-    <div class="card-list publication-row-list">
-      {% for publication in publications %}
-        <article class="card publication-row stack-sm">
-          <a class="publication-row__media" href="{% url 'publications:detail' publication.pk %}">{% include 'publications/_preview.html' with publication=publication variant='row' %}</a>
-          <div class="publication-row__body stack-sm">
-            <div class="publication-tile__meta">
-              {% if publication.publication_type %}<span>{{ publication.publication_type }}</span>{% endif %}
-              {% if publication.publication_year %}<span>{{ publication.publication_year }}</span>{% endif %}
-            </div>
-            <h3><a href="{% url 'publications:detail' publication.pk %}">{{ publication.title }}</a></h3>
-            {% with authors=publication.authors.all %}{% if authors %}<p class="muted">{% trans "Авторы" %}: {% for author in authors|slice:":4" %}{{ author.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}{% endwith %}
-            {% if can_manage_collection %}
-              <form method="post" action="{% url 'collections:remove-publication' collection.pk %}" class="inline-actions">
-                {% csrf_token %}
-                <input type="hidden" name="publication_id" value="{{ publication.pk }}">
-                <button type="submit">{% trans "Убрать из коллекции" %}</button>
-              </form>
-            {% endif %}
-          </div>
-        </article>
-      {% empty %}
-        <div class="empty-state">{% trans "В коллекции пока нет изданий." %}</div>
-      {% endfor %}
-    </div>
-  </section>
 {% endblock %}

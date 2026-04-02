@@ -361,3 +361,111 @@ msgstr "Modify search"
 
 msgid "Скрыть поиск"
 msgstr "Hide search"
+
+msgid "Тематические подборки изданий, которые помогают делиться найденными материалами и собирать собственные маршруты чтения."
+msgstr "Curated sets of publications that help share useful materials and build your own reading paths."
+
+msgid "Ваши недавние коллекции"
+msgstr "Your recent collections"
+
+msgid "Открыть все"
+msgstr "Open all"
+
+msgid "Открытые подборки"
+msgstr "Public collections"
+
+msgid "Найдено коллекций: %(total)s"
+msgstr "Collections found: %(total)s"
+
+msgid "Открыть коллекцию"
+msgstr "Open collection"
+
+msgid "Описание коллекции пока не добавлено."
+msgstr "This collection does not have a description yet."
+
+msgid "Управляйте своими подборками, обновляйте описание и пополняйте их изданиями из репозитория."
+msgstr "Manage your curated sets, update their descriptions, and add publications from the repository."
+
+msgid "Всего коллекций: %(total)s"
+msgstr "Total collections: %(total)s"
+
+msgid "Соберите подборку материалов по теме, учебному курсу или исследовательскому маршруту. После сохранения вы сможете сразу добавить в неё издания из репозитория."
+msgstr "Create a collection for a topic, a course, or a research path. After saving, you can immediately add repository publications to it."
+
+msgid "Как будет выглядеть коллекция"
+msgstr "How the collection will look"
+
+msgid "На витрине коллекций отображается композиция из нескольких верхних изданий. Так пользователи сразу видят, что именно включено в подборку."
+msgstr "Collections are shown with a layered preview of top publications so users can immediately see what is included."
+
+msgid "Задайте короткое и понятное название."
+msgstr "Give the collection a short and clear title."
+
+msgid "Добавьте описание, чтобы пользователи понимали замысел подборки."
+msgstr "Add a description so users understand the purpose of the collection."
+
+msgid "После сохранения откройте страницу коллекции и пополните её изданиями."
+msgstr "After saving, open the collection page and add publications to it."
+
+msgid "Коллекцию можно редактировать позже: обновлять описание, добавлять материалы и делиться ссылкой с коллегами."
+msgstr "You can edit the collection later: update the description, add materials, and share the link with colleagues."
+
+msgid "Новая коллекция"
+msgstr "New collection"
+
+msgid "Описание можно использовать как краткое приглашение к просмотру подборки."
+msgstr "You can use the description as a short invitation to explore the collection."
+
+msgid "Отмена"
+msgstr "Cancel"
+
+msgid "Обновите название или описание. Управление составом коллекции доступно на странице самой подборки."
+msgstr "Update the title or description. The collection contents can be managed on the collection page itself."
+
+msgid "Текущая коллекция"
+msgstr "Current collection"
+
+msgid "Параметры коллекции"
+msgstr "Collection settings"
+
+msgid "Автор коллекции пока не добавил описание этой подборки."
+msgstr "The collection author has not added a description yet."
+
+msgid "Полезно"
+msgstr "Helpful"
+
+msgid "Не полезно"
+msgstr "Not helpful"
+
+msgid "Войдите в аккаунт, чтобы оценить подборку."
+msgstr "Sign in to rate this collection."
+
+msgid "Поделиться коллекцией"
+msgstr "Share collection"
+
+msgid "Текст приглашения скопирован"
+msgstr "Invitation text copied"
+
+msgid "Пополнить коллекцию"
+msgstr "Add more publications"
+
+msgid "Найдите опубликованные издания по названию, автору или ключевым словам и добавьте их в подборку."
+msgstr "Search published publications by title, author, or keywords and add them to the collection."
+
+msgid "Показано изданий: %(count)s"
+msgstr "Publications shown: %(count)s"
+
+msgid "Показаны только опубликованные издания, которых ещё нет в коллекции."
+msgstr "Only published publications that are not yet in the collection are shown."
+
+msgid "Добавьте издания"
+msgstr "Add publications"
+
+msgid "Полезность"
+msgstr "Usefulness"
+
+msgid "Посмотрите коллекцию «%(name)s» в институциональном репозитории: %(url)s"
+msgstr "Take a look at the collection “%(name)s” in the institutional repository: %(url)s"
+
+msgid "Результаты по запросу «%(query)s»"
+msgstr "Results for “%(query)s”"

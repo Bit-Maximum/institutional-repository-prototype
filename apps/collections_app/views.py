@@ -14,6 +14,7 @@ from apps.publications.previews import ensure_publication_previews
 
 from .forms import CollectionForm, CollectionPublicationSearchForm
 from .models import Collection, CollectionPublication, CollectionReaction
+from .services import attach_collection_preview_publications
 
 
 class CollectionOwnerRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -65,8 +66,11 @@ class CollectionListView(ListView):
         context = super().get_context_data(**kwargs)
         context["search_query"] = self.request.GET.get("q", "").strip()
         context["sort_value"] = (self.request.GET.get("sort") or "popular").strip()
+        collections = attach_collection_preview_publications(context["collections"])
+        context["collections"] = collections
         if self.request.user.is_authenticated:
-            context["my_collections"] = Collection.objects.with_stats().filter(author_user=self.request.user).select_related("author_user")[:5]
+            my_collections = list(Collection.objects.with_stats().filter(author_user=self.request.user).select_related("author_user")[:5])
+            context["my_collections"] = attach_collection_preview_publications(my_collections)
         else:
             context["my_collections"] = []
         return context
@@ -80,6 +84,11 @@ class MyCollectionListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return Collection.objects.with_stats().filter(author_user=self.request.user).select_related("author_user").order_by("-updated_at", "name")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["collections"] = attach_collection_preview_publications(context["collections"])
+        return context
 
 
 class CollectionDetailView(DetailView):
@@ -144,6 +153,9 @@ class CollectionDetailView(DetailView):
         candidate_publications_list = list(candidate_publications)
         ensure_publication_previews(visible_publications_list)
         ensure_publication_previews(candidate_publications_list)
+        attach_collection_preview_publications([collection])
+        share_url = self.request.build_absolute_uri(collection.get_absolute_url())
+        share_text = _("Посмотрите коллекцию «%(name)s» в институциональном репозитории: %(url)s") % {"name": collection.name, "url": share_url}
         context.update(
             {
                 "publications": visible_publications_list,
@@ -153,6 +165,8 @@ class CollectionDetailView(DetailView):
                 "search_form": search_form,
                 "search_query": search_query,
                 "candidate_publications": candidate_publications_list,
+                "share_url": share_url,
+                "share_text": share_text,
             }
         )
         return context
@@ -176,6 +190,11 @@ class CollectionUpdateView(CollectionOwnerRequiredMixin, UpdateView):
 
     def get_queryset(self):
         return Collection.objects.with_stats().select_related("author_user")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        attach_collection_preview_publications([context["object"]])
+        return context
 
     def form_valid(self, form):
         messages.success(self.request, _("Коллекция обновлена."))
