@@ -1,81 +1,255 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% if workflow_mode == "edit" %}{% trans "Редактирование издания" %}{% else %}{% trans "Добавить издание" %}{% endif %}{% endblock %}
 
+{% block extra_head %}
+  <script defer src="{% static 'js/ui/publication-editor.js' %}"></script>
+{% endblock %}
+
+{% block panel_class %}panel--editor{% endblock %}
+
 {% block content %}
-  <div class="page-intro">
+  <div class="page-intro page-intro--compact publication-editor-intro">
     <div class="page-intro__eyebrow">{% trans "Редакторский workflow" %}</div>
-    <h1>{% if workflow_mode == "edit" %}{% trans "Редактирование издания" %}{% else %}{% trans "Добавить издание" %}{% endif %}</h1>
-    <p class="muted">{% trans "Работа с изданием разделена на этапы: запись можно сохранить как черновик и опубликовать только после проверки полноты данных." %}</p>
+    <h1>{% if workflow_mode == "edit" %}{% trans "Редактирование издания" %}{% else %}{% trans "Новое издание" %}{% endif %}</h1>
+    <p class="muted">{% trans "Карточка издания собирается по этапам: источник, ключевые метаданные, участники и дополнительные сведения. Черновик можно сохранить в любой момент, а публикация станет доступна после проверки ключевых полей." %}</p>
   </div>
 
-  {% if publication and publication.pk %}
-    <section class="card stack-sm">
-      <h2>{% trans "Состояние текущей записи" %}</h2>
-      <p><strong>{% trans "Статус" %}:</strong> {{ publication.workflow_status_label }}</p>
-      <p><strong>{% trans "Ответственный за загрузку" %}:</strong> {{ publication.uploaded_by }}</p>
-      {% if publication.last_saved_by %}
-        <p><strong>{% trans "Последнее сохранение" %}:</strong> {{ publication.updated_at|date:"d.m.Y H:i" }} · {{ publication.last_saved_by }}</p>
-      {% endif %}
-      {% if publication.published_at %}
-        <p><strong>{% trans "Последняя публикация" %}:</strong> {{ publication.published_at|date:"d.m.Y H:i" }}{% if publication.published_by %} · {{ publication.published_by }}{% endif %}</p>
-      {% endif %}
-      {% if not publication.is_draft %}
-        <p class="warning-note">{% trans "После сохранения изменений как черновика издание временно исчезнет из общего каталога до повторной публикации." %}</p>
-      {% endif %}
-    </section>
-  {% endif %}
-
-  <section class="card stack-sm">
-    <h2>{% trans "Подсказки по файлу" %}</h2>
-    <p class="muted">{% trans "Система попытается извлечь текст и предложить черновик названия, года, языка, авторов, ключевых слов и краткого описания." %}</p>
-    <div class="inline-actions">
-      <button type="button" id="prefill-from-file" data-endpoint="{{ prefill_endpoint }}">{% trans "Предзаполнить из файла" %}</button>
-      <span id="prefill-status" aria-live="polite"></span>
-    </div>
-    <div id="prefill-summary" style="display:none;"></div>
-  </section>
-
-  <form method="post" enctype="multipart/form-data" id="publication-upload-form" class="stack-md">
+  <form method="post"
+        enctype="multipart/form-data"
+        id="publication-upload-form"
+        class="publication-editor"
+        data-editor-root
+        data-dictionary-create-endpoint="{{ dictionary_create_endpoint }}"
+        data-has-existing-file="{% if publication and publication.file %}true{% else %}false{% endif %}"
+        data-i18n-default-entity-label="{% trans 'элемент' %}"
+        data-i18n-create-title-prefix="{% trans 'Добавить' %}"
+        data-i18n-create-description="{% trans 'Новый элемент сразу появится в списке и будет выбран в карточке издания.' %}"
+        data-i18n-create-button-prefix="{% trans 'Добавить' %}"
+        data-i18n-create-input-required="{% trans 'Введите значение перед добавлением.' %}"
+        data-i18n-create-saving="{% trans 'Сохраняем…' %}"
+        data-i18n-create-failed="{% trans 'Не удалось добавить значение.' %}">
     {% csrf_token %}
-    {% if form.non_field_errors %}
-      <ul>
-        {% for error in form.non_field_errors %}
-          <li>{{ error }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
 
-    <div class="grid-auto grid-auto--wide">
-      {% for field in form %}
-        <div {% if field.name == "contents" or field.name == "grant_text" or field.name == "grif_text" %}style="grid-column: 1 / -1;"{% endif %}>
-          <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
-          {{ field }}
-          {% if field.help_text %}
-            <small style="display:block; margin-top:.35rem;">{{ field.help_text }}</small>
-          {% endif %}
-          {% if field.errors %}
-            <ul>
-              {% for error in field.errors %}
+    <div class="publication-editor__layout">
+      <div class="publication-editor__main stack-md">
+        {% if form.non_field_errors %}
+          <section class="card editor-alert stack-xs">
+            <h2>{% trans "Нужно проверить карточку" %}</h2>
+            <ul class="editor-field__errors">
+              {% for error in form.non_field_errors %}
                 <li>{{ error }}</li>
               {% endfor %}
             </ul>
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
+          </section>
+        {% endif %}
 
-    <div class="inline-actions">
-      <button type="submit" name="workflow_action" value="save_draft">{% trans "Сохранить как черновик" %}</button>
-      <button type="submit" name="workflow_action" value="publish">{% trans "Опубликовать" %}</button>
-      {% if publication and publication.pk %}
-        <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "К карточке издания" %}</a>
-      {% else %}
-        <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Отмена" %}</a>
-      {% endif %}
+        <section class="card editor-section stack-sm">
+          <div class="editor-section__header">
+            <div>
+              <p class="editor-section__eyebrow">{% trans "Шаг 1" %}</p>
+              <h2>{% trans "Источник и автоматическое предзаполнение" %}</h2>
+            </div>
+            <p class="muted">{% trans "Загрузите файл или укажите внешнюю ссылку. Система попытается извлечь текст и подготовить черновик метаданных." %}</p>
+          </div>
+          <div class="editor-grid editor-grid--source">
+            {% include "publications/_editor_field.html" with field=form.file publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.publication_format_link publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.preview_image full=True %}
+          </div>
+          {% if publication and publication.file %}<p class="editor-field__help">{% blocktrans with filename=publication.file.name %}Текущий файл: {{ filename }}{% endblocktrans %}</p>{% endif %}
+          {% if publication and publication.preview_image %}<p class="editor-field__help">{% trans "У записи уже есть пользовательское или автоматически сгенерированное превью." %}</p>{% endif %}
+          <div class="editor-prefill surface-subtle">
+            <div class="stack-xs">
+              <strong>{% trans "Подсказки по файлу" %}</strong>
+              <p class="muted">{% trans "Из файла можно получить черновик названия, года, языка, авторов, ключевых слов и краткого описания. Уже заполненные поля форма не перезапишет." %}</p>
+            </div>
+            <div class="inline-actions">
+              <button type="button" class="button button--secondary" id="prefill-from-file" data-endpoint="{{ prefill_endpoint }}">{% trans "Предзаполнить из файла" %}</button>
+              <span id="prefill-status" aria-live="polite"></span>
+            </div>
+          </div>
+          <div id="prefill-summary" class="editor-prefill-summary surface-subtle" hidden></div>
+        </section>
+
+        <section class="card editor-section stack-sm">
+          <div class="editor-section__header">
+            <div>
+              <p class="editor-section__eyebrow">{% trans "Шаг 2" %}</p>
+              <h2>{% trans "Ключевые метаданные" %}</h2>
+            </div>
+            <p class="muted">{% trans "Эти поля формируют основную карточку издания и используются при публикации в каталоге." %}</p>
+          </div>
+          <div class="editor-grid editor-grid--main">
+            {% include "publications/_editor_field.html" with field=form.title full=True publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.publication_year publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.language publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.publication_subtype full=True publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.contents full=True publication_required=True %}
+          </div>
+        </section>
+
+        <section class="card editor-section stack-sm">
+          <div class="editor-section__header">
+            <div>
+              <p class="editor-section__eyebrow">{% trans "Шаг 3" %}</p>
+              <h2>{% trans "Участники и тематические связи" %}</h2>
+            </div>
+            <p class="muted">{% trans "Начните вводить значение, чтобы быстро найти его в справочнике. Если нужного элемента нет, добавьте его прямо на сайте." %}</p>
+          </div>
+          <div class="editor-grid editor-grid--main">
+            {% include "publications/_editor_field.html" with field=form.authors publication_required=True %}
+            {% include "publications/_editor_field.html" with field=form.scientific_supervisors %}
+            {% include "publications/_editor_field.html" with field=form.keywords %}
+          </div>
+        </section>
+
+        <section class="card editor-section stack-sm">
+          <div class="editor-section__header">
+            <div>
+              <p class="editor-section__eyebrow">{% trans "Шаг 4" %}</p>
+              <h2>{% trans "Издательские и выпускные сведения" %}</h2>
+            </div>
+            <p class="muted">{% trans "Заполните всё, что помогает точнее классифицировать издание и показать его в каталоге." %}</p>
+          </div>
+          <div class="editor-grid editor-grid--main">
+            {% include "publications/_editor_field.html" with field=form.subject_code %}
+            {% include "publications/_editor_field.html" with field=form.periodicity %}
+            {% include "publications/_editor_field.html" with field=form.volume_number %}
+            {% include "publications/_editor_field.html" with field=form.issue_number %}
+            {% include "publications/_editor_field.html" with field=form.start_page %}
+            {% include "publications/_editor_field.html" with field=form.end_page %}
+            {% include "publications/_editor_field.html" with field=form.publication_places %}
+            {% include "publications/_editor_field.html" with field=form.publishers %}
+          </div>
+        </section>
+
+        <section class="card editor-section stack-sm">
+          <div class="editor-section__header">
+            <div>
+              <p class="editor-section__eyebrow">{% trans "Шаг 5" %}</p>
+              <h2>{% trans "Дополнительные сведения" %}</h2>
+            </div>
+            <p class="muted">{% trans "Необязательные поля можно заполнить сразу или вернуться к ним позже в черновике." %}</p>
+          </div>
+          <div class="editor-grid editor-grid--main">
+            {% include "publications/_editor_field.html" with field=form.grif_text full=True %}
+            {% include "publications/_editor_field.html" with field=form.grant_text full=True %}
+            {% include "publications/_editor_field.html" with field=form.copyrights full=True open_upward=True %}
+            {% include "publications/_editor_field.html" with field=form.bibliographies full=True open_upward=True %}
+            {% include "publications/_editor_field.html" with field=form.graphic_editions full=True open_upward=True %}
+          </div>
+        </section>
+
+        <section class="card editor-actions-card editor-actions-card--mobile stack-sm">
+          <div class="inline-actions editor-actions-bar">
+            <button type="submit" name="workflow_action" value="save_draft">{% trans "Сохранить как черновик" %}</button>
+            <button type="submit" name="workflow_action" value="publish">{% trans "Опубликовать" %}</button>
+            {% if publication and publication.pk %}
+              <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "К карточке издания" %}</a>
+            {% else %}
+              <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Отмена" %}</a>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+
+      <aside class="publication-editor__aside stack-md">
+        <section class="card editor-status-card stack-sm">
+          <div class="stack-xs">
+            <p class="editor-section__eyebrow">{% trans "Состояние записи" %}</p>
+            <h2>{% trans "Готовность к публикации" %}</h2>
+          </div>
+          <div class="editor-status-meta">
+            <span class="status-chip status-chip--strong">{% if publication and publication.pk %}{{ publication.workflow_status_label }}{% else %}{% trans "Новая карточка" %}{% endif %}</span>
+            {% if publication and publication.last_saved_by %}
+              <span class="status-chip">{% blocktrans with date=publication.updated_at|date:"d.m.Y H:i" user=publication.last_saved_by %}Последнее сохранение: {{ date }} · {{ user }}{% endblocktrans %}</span>
+            {% endif %}
+            {% if publication and publication.text_extraction_status %}
+              <span class="status-chip">{{ publication.get_text_extraction_status_display }}</span>
+            {% endif %}
+          </div>
+
+          <div class="editor-progress" data-editor-progress>
+            <div class="editor-progress__summary">
+              <strong data-editor-progress-count>{{ editor_progress.filled_count }}/{{ editor_progress.total }}</strong>
+              <span class="muted">{% trans "ключевых полей заполнено" %}</span>
+            </div>
+            <div class="editor-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ editor_progress.percent }}">
+              <div class="editor-progress__value" style="width: {{ editor_progress.percent }}%" data-editor-progress-value></div>
+            </div>
+            <ul class="editor-progress__list" data-editor-progress-list>
+              {% for item in editor_progress.items %}
+                <li class="editor-progress__item{% if item.filled %} is-complete{% endif %}" data-progress-key="{{ item.key }}">
+                  <span class="editor-progress__marker" aria-hidden="true">{% if item.filled %}✓{% else %}•{% endif %}</span>
+                  <span>{{ item.label }}</span>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
+
+        <section class="card editor-steps-card stack-sm">
+          <div class="stack-xs">
+            <p class="editor-section__eyebrow">{% trans "Этапы" %}</p>
+            <h2>{% trans "Что делать дальше" %}</h2>
+          </div>
+          <ol class="editor-step-list">
+            {% for step in editor_steps %}
+              <li>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.description }}</p>
+              </li>
+            {% endfor %}
+          </ol>
+        </section>
+
+        <section class="card editor-actions-card stack-sm">
+          <div class="stack-xs">
+            <p class="editor-section__eyebrow">{% trans "Действия" %}</p>
+            <h2>{% trans "Черновик или публикация" %}</h2>
+          </div>
+          <p class="muted">{% trans "Черновик можно сохранять сколько угодно раз. Публикация проверит ключевые поля и сразу отправит издание в каталог и индекс поиска." %}</p>
+          <div class="stack-xs">
+            <button type="submit" name="workflow_action" value="save_draft">{% trans "Сохранить как черновик" %}</button>
+            <button type="submit" name="workflow_action" value="publish">{% trans "Опубликовать" %}</button>
+            {% if publication and publication.pk %}
+              <a class="chip-link" href="{% url 'publications:detail' publication.pk %}">{% trans "К карточке издания" %}</a>
+            {% else %}
+              <a class="chip-link" href="{% url 'publications:list' %}">{% trans "Отмена" %}</a>
+            {% endif %}
+          </div>
+        </section>
+      </aside>
     </div>
   </form>
+
+  <div class="editor-modal" id="editor-create-modal" hidden>
+    <div class="editor-modal__backdrop" data-editor-modal-close></div>
+    <div class="editor-modal__dialog card stack-sm" role="dialog" aria-modal="true" aria-labelledby="editor-create-modal-title">
+      <div class="editor-modal__header">
+        <div class="stack-xs">
+          <p class="editor-section__eyebrow">{% trans "Новый элемент справочника" %}</p>
+          <h2 id="editor-create-modal-title">{% trans "Добавить значение" %}</h2>
+        </div>
+        <button type="button" class="button button--secondary button--compact" data-editor-modal-close>{% trans "Закрыть" %}</button>
+      </div>
+      <p class="muted" id="editor-create-modal-description">{% trans "Добавьте значение, если его нет в текущем справочнике." %}</p>
+      <form class="stack-sm" id="editor-create-modal-form">
+        <input type="hidden" name="field" id="editor-create-field-name">
+        <div class="editor-field">
+          <label class="editor-field__label" for="editor-create-value">{% trans "Название" %}</label>
+          <input type="text" id="editor-create-value" name="value" autocomplete="off">
+        </div>
+        <div class="inline-actions editor-modal__actions">
+          <button type="submit">{% trans "Добавить и выбрать" %}</button>
+          <button type="button" class="button button--secondary" data-editor-modal-close>{% trans "Отмена" %}</button>
+        </div>
+        <p class="editor-modal__status muted" id="editor-create-modal-status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
 
   <script>
     (function() {
@@ -115,6 +289,11 @@
         statusNode.style.color = isError ? '#8b0000' : '';
       }
 
+      function emitFieldUpdate(field) {
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
       function setFieldValue(fieldName, value) {
         if (value === null || value === undefined || value === '') {
           return false;
@@ -132,6 +311,7 @@
           Array.from(field.options).forEach(option => {
             option.selected = selectedValues.includes(option.value);
           });
+          emitFieldUpdate(field);
           return selectedValues.length > 0;
         }
         if (field.tagName === 'SELECT') {
@@ -139,7 +319,7 @@
             return false;
           }
           field.value = String(value);
-          field.dispatchEvent(new Event('change', { bubbles: true }));
+          emitFieldUpdate(field);
           return true;
         }
         if (field.type === 'checkbox') {
@@ -147,12 +327,14 @@
             return false;
           }
           field.checked = Boolean(value);
+          emitFieldUpdate(field);
           return true;
         }
         if (field.value && field.value.trim() !== '') {
           return false;
         }
         field.value = value;
+        emitFieldUpdate(field);
         return true;
       }
 
@@ -170,7 +352,7 @@
         const characteristics = Array.isArray(payload.characteristics) && payload.characteristics.length
           ? `<div><strong>${i18n.characteristics}:</strong><ul>${payload.characteristics.map(item => `<li><strong>${item.label}</strong>${item.detail ? ` — ${item.detail}` : ''}</li>`).join('')}</ul></div>`
           : '';
-        summaryNode.style.display = 'block';
+        summaryNode.hidden = false;
         summaryNode.innerHTML = `
           <p><strong>${i18n.processingMode}:</strong> ${payload.status_label || '—'}</p>
           ${payload.notes ? `<p><strong>${i18n.comment}:</strong> ${payload.notes}</p>` : ''}
@@ -188,7 +370,7 @@
           return;
         }
         setStatus(i18n.loading, false);
-        summaryNode.style.display = 'none';
+        summaryNode.hidden = true;
         trigger.disabled = true;
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
@@ -226,6 +408,7 @@
           }
           renderSummary(payload, appliedFields);
           setStatus(i18n.draftReady, false);
+          window.PublicationEditor?.refreshAll?.();
         } catch (error) {
           setStatus(error.message || i18n.fileAnalyzeError, true);
         } finally {

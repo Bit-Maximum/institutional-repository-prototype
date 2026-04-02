@@ -21,7 +21,7 @@
   <div class="card-list">
     {% for publication in drafts %}
       <article class="card stack-sm">
-        <h2><a href="{% url 'publications:edit' publication.pk %}"><strong>{{ publication.title }}</strong></a></h2>
+        <h2><a class="publication-draft-card__title-link" href="{% url 'publications:edit' publication.pk %}"><strong>{{ publication.title }}</strong></a></h2>
         <p class="muted">
           {% blocktrans with revision=publication.draft_revision|default:1 updated=publication.updated_at|date:"d.m.Y H:i" %}Редакция №{{ revision }} · обновлено {{ updated }}{% endblocktrans %}
           {% if publication.last_saved_by %} · {{ publication.last_saved_by }}{% endif %}
@@ -29,7 +29,7 @@
         <p class="muted">
           {% if publication.publication_type %}{{ publication.publication_type.name }}{% endif %}
           {% if publication.language %} · {{ publication.language.name }}{% endif %}
-          {% if publication.has_extracted_text %} · {% trans "основной текст извлечён" %}{% else %} · metadata-only{% endif %}
+          {% if publication.has_extracted_text %} · {% trans "основной текст извлечён" %}{% else %} · {% trans "только метаданные" %}{% endif %}
         </p>
       </article>
     {% empty %}

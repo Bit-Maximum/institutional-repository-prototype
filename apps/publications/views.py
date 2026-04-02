@@ -15,7 +15,35 @@ from apps.ingestion.services import generate_metadata_prefill_from_upload, inges
 from apps.publications.previews import ensure_publication_preview, ensure_publication_previews
 
 from .forms import PublicationForm
-from .models import Publication, PublicationUserEngagement
+from .models import (
+    Author,
+    Bibliography,
+    Copyright,
+    GraphicEdition,
+    Keyword,
+    Publication,
+    PublicationLanguage,
+    PublicationPeriodicity,
+    PublicationPlace,
+    PublicationSubtype,
+    PublicationUserEngagement,
+    Publisher,
+    ScientificSupervisor,
+)
+
+
+DICTIONARY_ENTRY_CONFIG = {
+    "language": {"model": PublicationLanguage, "create_field": "name", "label": _("язык")},
+    "periodicity": {"model": PublicationPeriodicity, "create_field": "name", "label": _("периодичность")},
+    "authors": {"model": Author, "create_field": "full_name", "label": _("автора")},
+    "scientific_supervisors": {"model": ScientificSupervisor, "create_field": "full_name", "label": _("научного руководителя")},
+    "keywords": {"model": Keyword, "create_field": "name", "label": _("ключевое слово")},
+    "publication_places": {"model": PublicationPlace, "create_field": "name", "label": _("место публикации")},
+    "publishers": {"model": Publisher, "create_field": "name", "label": _("издателя")},
+    "copyrights": {"model": Copyright, "create_field": "name", "label": _("копирайт")},
+    "bibliographies": {"model": Bibliography, "create_field": "bibliographic_description", "label": _("библиографическое описание")},
+    "graphic_editions": {"model": GraphicEdition, "create_field": "name", "label": _("графическое издание")},
+}
 
 
 class PublicationEditorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -168,11 +196,27 @@ class PublicationWorkflowMixin(PublicationEditorRequiredMixin):
     form_class = PublicationForm
     template_name = "publications/upload.html"
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        workflow_action = (self.request.POST.get("workflow_action") or "save_draft").strip() if self.request.method.lower() == "post" else "save_draft"
+        kwargs["workflow_action"] = workflow_action
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        form = context.get("form")
+        progress = form.get_progress_data() if form is not None else {"items": [], "filled_count": 0, "total": 0, "percent": 0}
         context["prefill_endpoint"] = reverse_lazy("publications:upload-prefill")
+        context["dictionary_create_endpoint"] = reverse_lazy("publications:dictionary-create")
         context["workflow_mode"] = getattr(self, "workflow_mode", "create")
         context["publication"] = getattr(self, "object", None)
+        context["editor_progress"] = progress
+        context["editor_steps"] = [
+            {"title": _("Источник"), "description": _("Загрузите файл или добавьте ссылку для анализа.")},
+            {"title": _("Метаданные"), "description": _("Проверьте название, язык, подтип и краткое описание.")},
+            {"title": _("Участники и связи"), "description": _("Добавьте авторов, ключевые слова и издательские сведения.")},
+            {"title": _("Черновик или публикация"), "description": _("Сохраните промежуточную версию или выпустите запись в каталог.")},
+        ]
         return context
 
     def _workflow_action(self) -> str:
@@ -247,6 +291,32 @@ class PublicationUpdateView(PublicationWorkflowMixin, UpdateView):
             "bibliographies",
             "graphic_editions",
         )
+
+
+class PublicationDictionaryEntryCreateView(PublicationEditorRequiredMixin, View):
+    http_method_names = ["post"]
+
+    def post(self, request, *args, **kwargs):
+        field_name = (request.POST.get("field") or "").strip()
+        raw_value = (request.POST.get("value") or "").strip()
+        config = DICTIONARY_ENTRY_CONFIG.get(field_name)
+        if config is None:
+            return JsonResponse({"error": _("Для выбранного поля быстрое добавление недоступно.")}, status=400)
+        if not raw_value:
+            return JsonResponse({"error": _("Введите значение перед добавлением в справочник.")}, status=400)
+
+        model = config["model"]
+        create_field = config["create_field"]
+        existing = model.objects.filter(**{f"{create_field}__iexact": raw_value}).first()
+        if existing is None:
+            existing = model.objects.create(**{create_field: raw_value})
+
+        return JsonResponse({
+            "id": str(existing.pk),
+            "label": str(existing),
+            "created": True,
+            "field": field_name,
+        })
 
 
 class PublicationMetadataPrefillView(PublicationEditorRequiredMixin, View):

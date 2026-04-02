@@ -469,3 +469,93 @@ msgstr "Take a look at the collection “%(name)s” in the institutional reposi
 
 msgid "Результаты по запросу «%(query)s»"
 msgstr "Results for “%(query)s”"
+
+msgid "Добавить"
+msgstr "Add"
+
+msgid "Новый элемент сразу появится в списке и будет выбран в карточке издания."
+msgstr "The new item will appear in the list immediately and will be selected in the publication card."
+
+msgid "Введите значение перед добавлением."
+msgstr "Enter a value before adding it."
+
+msgid "Сохраняем…"
+msgstr "Saving…"
+
+msgid "Не удалось добавить значение."
+msgstr "Could not add the value."
+
+msgid "элемент"
+msgstr "item"
+
+msgid "Код тематики"
+msgstr "Subject code"
+
+msgid "Год издания"
+msgstr "Publication year"
+
+msgid "Язык"
+msgstr "Language"
+
+msgid "Подтип издания"
+msgstr "Publication subtype"
+
+msgid "Гриф"
+msgstr "Grif"
+
+msgid "Номер тома"
+msgstr "Volume number"
+
+msgid "Номер выпуска"
+msgstr "Issue number"
+
+msgid "Начальная страница"
+msgstr "Start page"
+
+msgid "Последняя страница"
+msgstr "End page"
+
+msgid "Аннотация или описание"
+msgstr "Contents"
+
+msgid "Сведения о гранте"
+msgstr "Grant text"
+
+msgid "Авторы"
+msgstr "Authors"
+
+msgid "Научные руководители"
+msgstr "Scientific supervisors"
+
+msgid "Ключевые слова"
+msgstr "Keywords"
+
+msgid "Места публикации"
+msgstr "Publication places"
+
+msgid "Издатели"
+msgstr "Publishers"
+
+msgid "Копирайты"
+msgstr "Copyrights"
+
+msgid "Библиографические описания"
+msgstr "Bibliographies"
+
+msgid "Графические издания"
+msgstr "Graphic editions"
+
+msgid "Файл издания"
+msgstr "Publication file"
+
+msgid "Внешняя ссылка"
+msgstr "External link"
+
+msgid "только метаданные"
+msgstr "metadata only"
+
+msgid "Текущий файл"
+msgstr "Current file"
+
+msgid "Заменить файл"
+msgstr "Replace file"

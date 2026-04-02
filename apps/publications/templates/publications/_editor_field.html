@@ -1,0 +1,18 @@
+{% load i18n %}
+<div class="editor-field{% if full %} editor-field--full{% endif %}{% if field.errors %} has-error{% endif %}"{% if open_upward %} data-editor-dropdown-direction="up"{% endif %}>
+  <label class="editor-field__label" for="{{ field.id_for_label }}">
+    <span>{{ field.label }}</span>
+    {% if publication_required %}<span class="editor-field__badge">{% trans "К публикации" %}</span>{% endif %}
+  </label>
+  {{ field }}
+  {% if field.help_text %}
+    <p class="editor-field__help">{{ field.help_text }}</p>
+  {% endif %}
+  {% if field.errors %}
+    <ul class="editor-field__errors">
+      {% for error in field.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
