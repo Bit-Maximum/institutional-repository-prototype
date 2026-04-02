@@ -111,6 +111,7 @@
                 <a class="nav-pill" href="{% url 'home' %}">{% trans "Главная" %}</a>
                 <a class="nav-pill" href="{% url 'publications:list' %}">{% trans "Издания" %}</a>
                 <a class="nav-pill" href="{% url 'search:results' %}">{% trans "Поиск" %}</a>
+                {% if cms_announcements_page %}<a class="nav-pill" href="{{ cms_announcements_page.url }}">{% trans "Объявления" %}</a>{% else %}<a class="nav-pill" href="/pages/announcements/">{% trans "Объявления" %}</a>{% endif %}
               </div>
 
               <div class="site-nav-section site-nav-section--secondary">
@@ -157,9 +158,9 @@
                 <div class="nav-group" data-disclosure>
                   <button type="button" class="nav-group__summary" aria-expanded="false" aria-controls="about-project-menu" data-disclosure-trigger>{% trans "О проекте" %}</button>
                   <div class="nav-group__menu" id="about-project-menu" data-disclosure-menu hidden>
-                    <a class="nav-menu-link" href="/pages/">
-                      <span class="nav-menu-link__label">{% trans "Страницы CMS" %}</span>
-                      <span class="nav-menu-link__meta">{% trans "Новости, объявления и статические страницы" %}</span>
+                    <a class="nav-menu-link" href="https://github.com/Bit-Maximum/institutional-repository-prototype" target="_blank" rel="noopener noreferrer">
+                      <span class="nav-menu-link__label">GitHub</span>
+                      <span class="nav-menu-link__meta">{% trans "Исходный код прототипа и история разработки" %}</span>
                     </a>
                   </div>
                 </div>
@@ -215,12 +216,16 @@
             <strong>{{ ui_state.site_title }}</strong>
             {% if ui_state.site_tagline %}<p>{{ ui_state.site_tagline }}</p>{% endif %}
             <small>{% blocktrans with style=ui_style.label %}Прототип ВКР · активный стиль: {{ style }}{% endblocktrans %}</small>
+            <small>{% trans "Проект создан Maxim Merkurev." %}</small>
           </div>
           <nav class="page-footer__nav" aria-label="{% trans 'Навигация в футере' %}">
             <a href="{% url 'home' %}">{% trans "Главная" %}</a>
             <a href="{% url 'publications:list' %}">{% trans "Издания" %}</a>
             <a href="{% url 'search:results' %}">{% trans "Поиск" %}</a>
             <a href="{% url 'collections:list' %}">{% trans "Коллекции" %}</a>
+            {% if cms_announcements_page %}<a href="{{ cms_announcements_page.url }}">{% trans "Объявления" %}</a>{% else %}<a href="/pages/announcements/">{% trans "Объявления" %}</a>{% endif %}
+            {% if cms_home_page %}<a href="{{ cms_home_page.url }}">{% trans "CMS-раздел" %}</a>{% else %}<a href="/pages/">{% trans "CMS-раздел" %}</a>{% endif %}
+            <a href="https://github.com/Bit-Maximum/institutional-repository-prototype" target="_blank" rel="noopener noreferrer">GitHub</a>
           </nav>
         </div>
       </footer>

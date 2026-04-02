@@ -1,0 +1,40 @@
+{% extends "cms/base_page.html" %}
+{% load i18n %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+  <section class="cms-shell stack-xl">
+    <section class="cms-hero card stack-md">
+      <div class="page-intro">
+        <div class="page-intro__eyebrow">{% trans "Редакционный раздел" %}</div>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<div class="cms-hero__lead">{{ page.intro|richtext }}</div>{% endif %}
+      </div>
+      <div class="inline-actions">
+        {% if cms_announcements_page %}<a class="chip-link" href="{{ cms_announcements_page.url }}">{% trans "Объявления" %}</a>{% endif %}
+        {% if cms_home_page %}<a class="chip-link" href="{{ cms_home_page.url }}">{% trans "CMS-раздел" %}</a>{% endif %}
+        <a class="chip-link" href="{% url 'home' %}">{% trans "Открыть репозиторий" %}</a>
+      </div>
+    </section>
+
+    <section class="stack-md">
+      <div class="home-section__head">
+        <div>
+          <div class="page-intro__eyebrow">{% trans "Страницы" %}</div>
+          <h2>{% trans "Все редакторские страницы" %}</h2>
+        </div>
+      </div>
+      <div class="cms-card-grid">
+        {% for content_page in pages %}
+          <article class="card stack-xs cms-mini-card">
+            <h3><a href="{{ content_page.url }}">{{ content_page.title }}</a></h3>
+            {% if content_page.summary_text %}<p class="muted">{{ content_page.summary_text }}</p>{% endif %}
+          </article>
+        {% empty %}
+          <div class="empty-state">{% trans "Пока нет страниц. Редакторы могут создать первую страницу прямо в CMS." %}</div>
+        {% endfor %}
+      </div>
+    </section>
+  </section>
+{% endblock %}

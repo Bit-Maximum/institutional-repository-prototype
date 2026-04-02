@@ -1,0 +1,58 @@
+{% extends "cms/base_page.html" %}
+{% load i18n %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+  <article class="cms-shell stack-xl">
+    <section class="cms-hero card stack-md">
+      <div class="page-intro">
+        <div class="page-intro__eyebrow">{% trans "Редакторская страница" %}</div>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<p class="cms-hero__summary">{{ page.intro }}</p>{% endif %}
+      </div>
+      <div class="inline-actions">
+        {% if cms_home_page %}<a class="chip-link" href="{{ cms_home_page.url }}">{% trans "К разделу CMS" %}</a>{% endif %}
+        <a class="chip-link" href="{% url 'home' %}">{% trans "Открыть репозиторий" %}</a>
+      </div>
+    </section>
+
+    {% include 'cms/includes/streamfield.html' with stream_value=page.body %}
+
+    {% if child_pages %}
+      <section class="stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Внутри раздела" %}</div>
+            <h2>{% trans "Дочерние страницы" %}</h2>
+          </div>
+        </div>
+        <div class="cms-card-grid">
+          {% for child in child_pages %}
+            <article class="card stack-xs cms-mini-card">
+              <h3><a href="{{ child.url }}">{{ child.title }}</a></h3>
+              {% if child.summary_text %}<p class="muted">{{ child.summary_text }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% elif sibling_pages %}
+      <section class="stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Соседние материалы" %}</div>
+            <h2>{% trans "Другие страницы этого уровня" %}</h2>
+          </div>
+        </div>
+        <div class="cms-card-grid">
+          {% for sibling in sibling_pages %}
+            <article class="card stack-xs cms-mini-card">
+              <h3><a href="{{ sibling.url }}">{{ sibling.title }}</a></h3>
+              {% if sibling.summary_text %}<p class="muted">{{ sibling.summary_text }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </article>
+{% endblock %}

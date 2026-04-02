@@ -1,0 +1,52 @@
+{% load i18n wagtailcore_tags wagtailimages_tags %}
+
+{% if stream_value %}
+  <div class="cms-stream stack-lg">
+    {% for block in stream_value %}
+      {% if block.block_type == "heading" %}
+        <h2 class="cms-stream__heading">{{ block.value }}</h2>
+      {% elif block.block_type == "paragraph" %}
+        <div class="cms-stream__richtext">{{ block.value|richtext }}</div>
+      {% elif block.block_type == "image" %}
+        <figure class="cms-media-card card card--soft stack-xs">
+          {% image block.value fill-1200x675 class="cms-media-card__image" %}
+          {% if block.value.contextual_alt_text %}<figcaption class="muted">{{ block.value.contextual_alt_text }}</figcaption>{% endif %}
+        </figure>
+      {% elif block.block_type == "document" %}
+        <section class="cms-callout card--soft stack-xs">
+          <div class="page-intro__eyebrow">{% trans "Документ" %}</div>
+          <a class="nav-link--primary" href="{{ block.value.document.url }}">{{ block.value.title|default:block.value.document.title }}</a>
+        </section>
+      {% elif block.block_type == "embed" %}
+        <div class="cms-embed card--soft">{{ block.value }}</div>
+      {% elif block.block_type == "callout" %}
+        <section class="cms-callout card--soft stack-xs">
+          {% if block.value.eyebrow %}<div class="page-intro__eyebrow">{{ block.value.eyebrow }}</div>{% endif %}
+          <h3>{{ block.value.title }}</h3>
+          <p>{{ block.value.text }}</p>
+        </section>
+      {% elif block.block_type == "quote" %}
+        <blockquote class="cms-quote">
+          <p>{{ block.value.text }}</p>
+          {% if block.value.attribution %}<footer>{{ block.value.attribution }}</footer>{% endif %}
+        </blockquote>
+      {% elif block.block_type == "buttons" %}
+        <div class="cms-button-row">
+          {% for button in block.value %}
+            <a class="{% if button.style == 'primary' %}nav-link--primary{% else %}chip-link{% endif %}" href="{{ button.url }}">{{ button.label }}</a>
+          {% endfor %}
+        </div>
+      {% elif block.block_type == "cards" %}
+        <div class="cms-card-grid">
+          {% for card in block.value %}
+            <article class="card stack-xs cms-mini-card">
+              {% if card.eyebrow %}<div class="page-intro__eyebrow">{{ card.eyebrow }}</div>{% endif %}
+              <h3>{{ card.title }}</h3>
+              {% if card.text %}<p class="muted">{{ card.text }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}

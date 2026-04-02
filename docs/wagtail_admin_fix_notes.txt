@@ -1,0 +1,6 @@
+Delete these old override templates if they exist in your project:
+templates/wagtailadmin/base.html
+templates/wagtailadmin/admin_base.html
+templates/wagtailadmin/home.html
+templates/wagtailadmin/login.html
+templates/wagtailadmin/userbar/base.html

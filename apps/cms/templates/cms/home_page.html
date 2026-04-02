@@ -1,0 +1,68 @@
+{% extends "cms/base_page.html" %}
+{% load i18n wagtailcore_tags %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+  <section class="cms-shell stack-xl">
+    <section class="cms-hero card stack-md">
+      <div class="page-intro">
+        <div class="page-intro__eyebrow">{% trans "Редакционный раздел" %}</div>
+        <h1>{{ page.hero_title|default:page.title }}</h1>
+        {% if page.body %}<div class="cms-hero__lead">{{ page.body|richtext }}</div>{% endif %}
+      </div>
+      <div class="inline-actions">
+        {% if announcement_index %}<a class="nav-link--primary" href="{{ announcement_index.url }}">{% trans "Перейти к объявлениям" %}</a>{% endif %}
+        {% if content_index %}<a class="chip-link" href="{{ content_index.url }}">{% trans "Страницы редакции" %}</a>{% endif %}
+        <a class="chip-link" href="{% url 'home' %}">{% trans "Вернуться к репозиторию" %}</a>
+      </div>
+    </section>
+
+    <div class="cms-home-grid">
+      <section class="card stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Объявления" %}</div>
+            <h2>{% trans "Последние редакционные публикации" %}</h2>
+          </div>
+          {% if announcement_index %}<a class="chip-link" href="{{ announcement_index.url }}">{% trans "Все объявления" %}</a>{% endif %}
+        </div>
+        <div class="cms-list stack-sm">
+          {% for announcement in latest_announcements %}
+            <article class="cms-list-card">
+              <div class="stack-xs">
+                <div class="cms-meta-line">
+                  <span>{{ announcement.published_at|date:"d.m.Y" }}</span>
+                  {% if announcement.is_pinned %}<span class="status-badge status-badge--success">{% trans "Закреплено" %}</span>{% endif %}
+                </div>
+                <h3><a href="{{ announcement.url }}">{{ announcement.title }}</a></h3>
+                {% if announcement.summary_text %}<p class="muted">{{ announcement.summary_text }}</p>{% endif %}
+              </div>
+            </article>
+          {% empty %}
+            <div class="empty-state">{% trans "Редакционные объявления пока не опубликованы." %}</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="card stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Свободные страницы" %}</div>
+            <h2>{% trans "Новые разделы, которые могут создавать редакторы" %}</h2>
+          </div>
+        </div>
+        <div class="cms-card-grid">
+          {% for content_page in editorial_pages %}
+            <article class="card stack-xs cms-mini-card">
+              <h3><a href="{{ content_page.url }}">{{ content_page.title }}</a></h3>
+              {% if content_page.summary_text %}<p class="muted">{{ content_page.summary_text }}</p>{% endif %}
+            </article>
+          {% empty %}
+            <div class="empty-state">{% trans "Пока нет дополнительных страниц. Редакторы могут создавать их прямо в CMS." %}</div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </section>
+{% endblock %}

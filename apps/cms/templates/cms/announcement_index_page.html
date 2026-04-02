@@ -1,0 +1,87 @@
+{% extends "cms/base_page.html" %}
+{% load i18n wagtailcore_tags %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+  <section class="cms-shell stack-xl">
+    <section class="cms-hero card stack-md">
+      <div class="page-intro">
+        <div class="page-intro__eyebrow">{% trans "Редакционный раздел" %}</div>
+        <h1>{{ page.title }}</h1>
+        {% if page.intro %}<div class="cms-hero__lead">{{ page.intro|richtext }}</div>{% endif %}
+      </div>
+      <div class="inline-actions">
+        <a class="chip-link" href="{% url 'home' %}">{% trans "Открыть репозиторий" %}</a>
+        {% if cms_home_page %}<a class="chip-link" href="{{ cms_home_page.url }}">{% trans "CMS раздел" %}</a>{% endif %}
+      </div>
+    </section>
+
+    {% if pinned_announcements %}
+      <section class="stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Фокус" %}</div>
+            <h2>{% trans "Закреплённые объявления" %}</h2>
+          </div>
+        </div>
+        <div class="cms-feature-grid">
+          {% for announcement in pinned_announcements %}
+            <article class="card stack-sm cms-feature-card">
+              <div class="cms-meta-line">
+                <span>{{ announcement.published_at|date:"d.m.Y" }}</span>
+                <span class="status-badge status-badge--success">{% trans "Закреплено" %}</span>
+              </div>
+              <h3><a href="{{ announcement.url }}">{{ announcement.title }}</a></h3>
+              {% if announcement.summary_text %}<p class="muted">{{ announcement.summary_text }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="stack-md">
+      <div class="home-section__head">
+        <div>
+          <div class="page-intro__eyebrow">{% trans "Лента" %}</div>
+          <h2>{% trans "Все объявления" %}</h2>
+        </div>
+      </div>
+      <div class="cms-list stack-sm">
+        {% for announcement in announcements %}
+          <article class="cms-list-card">
+            <div class="stack-xs">
+              <div class="cms-meta-line">
+                <span>{{ announcement.published_at|date:"d.m.Y" }}</span>
+                {% if announcement.is_pinned %}<span class="status-badge status-badge--success">{% trans "Закреплено" %}</span>{% endif %}
+              </div>
+              <h3><a href="{{ announcement.url }}">{{ announcement.title }}</a></h3>
+              {% if announcement.summary_text %}<p class="muted">{{ announcement.summary_text }}</p>{% endif %}
+            </div>
+          </article>
+        {% empty %}
+          <div class="empty-state">{% trans "Объявления пока не опубликованы." %}</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% if related_pages %}
+      <section class="stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Дополнительно" %}</div>
+            <h2>{% trans "Другие страницы редакционного раздела" %}</h2>
+          </div>
+        </div>
+        <div class="cms-card-grid">
+          {% for content_page in related_pages %}
+            <article class="card stack-xs cms-mini-card">
+              <h3><a href="{{ content_page.url }}">{{ content_page.title }}</a></h3>
+              {% if content_page.summary_text %}<p class="muted">{{ content_page.summary_text }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </section>
+{% endblock %}

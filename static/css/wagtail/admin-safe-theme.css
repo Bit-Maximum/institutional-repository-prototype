@@ -1,0 +1,94 @@
+:root,
+.w-theme-light {
+  --repo-admin-bg: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  --repo-admin-surface: rgba(255, 255, 255, 0.96);
+  --repo-admin-border: rgba(15, 23, 42, 0.08);
+  --repo-admin-border-strong: rgba(15, 23, 42, 0.12);
+  --repo-admin-text: #0f172a;
+  --repo-admin-muted: #64748b;
+  --repo-admin-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
+  --repo-admin-radius: 16px;
+  --repo-admin-accent: #1d4ed8;
+}
+
+.w-theme-dark {
+  --repo-admin-bg: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+  --repo-admin-surface: rgba(15, 23, 42, 0.92);
+  --repo-admin-border: rgba(148, 163, 184, 0.14);
+  --repo-admin-border-strong: rgba(148, 163, 184, 0.22);
+  --repo-admin-text: #e2e8f0;
+  --repo-admin-muted: #94a3b8;
+  --repo-admin-shadow: 0 20px 46px rgba(2, 6, 23, 0.45);
+  --repo-admin-radius: 16px;
+  --repo-admin-accent: #60a5fa;
+}
+
+body.wagtail,
+body.w-admin {
+  background: var(--repo-admin-bg);
+}
+
+.w-header,
+.w-slim-header,
+aside[aria-label="Sidebar"],
+nav[aria-label="Main menu"] {
+  background: color-mix(in srgb, var(--repo-admin-surface), transparent 8%);
+  border-color: var(--repo-admin-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.w-panel,
+.w-summary,
+.w-tabs,
+.w-dropdown__content,
+.chooser,
+.sequence-member,
+.struct-block,
+.w-dialog {
+  background: var(--repo-admin-surface);
+  border-color: var(--repo-admin-border);
+  border-radius: var(--repo-admin-radius);
+  box-shadow: var(--repo-admin-shadow);
+}
+
+.w-tabs__tab,
+.w-tabs__wrapper,
+.w-field,
+.w-field__error,
+.w-field__help,
+.w-field__hint,
+.help-block,
+.help,
+.helptext,
+small,
+[data-field-help] {
+  color: inherit;
+}
+
+.button,
+.w-button,
+button,
+input[type="submit"],
+input[type="button"] {
+  border-radius: 0.9rem;
+}
+
+/* Safe, closed-state control polish only. Avoid restyling native popups. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select,
+.w-field__input,
+.chooser__title {
+  border-color: var(--repo-admin-border-strong);
+  border-radius: 0.95rem;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+textarea:focus,
+select:focus,
+.w-field__input:focus {
+  outline: none;
+  border-color: var(--repo-admin-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--repo-admin-accent), transparent 78%);
+}

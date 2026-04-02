@@ -1,0 +1,50 @@
+{% extends "cms/base_page.html" %}
+{% load i18n %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+  <article class="cms-shell stack-xl">
+    <section class="cms-hero card stack-md">
+      <div class="page-intro">
+        <div class="cms-meta-line cms-meta-line--wide">
+          <span class="page-intro__eyebrow">{% trans "Объявление" %}</span>
+          <span>{{ page.published_at|date:"d.m.Y" }}</span>
+          {% if page.is_pinned %}<span class="status-badge status-badge--success">{% trans "Закреплено" %}</span>{% endif %}
+        </div>
+        <h1>{{ page.title }}</h1>
+        {% if page.summary_text %}<p class="cms-hero__summary">{{ page.summary_text }}</p>{% endif %}
+      </div>
+      <div class="inline-actions">
+        <a class="chip-link" href="{{ page.get_parent.url }}">{% trans "Все объявления" %}</a>
+        {% if cms_home_page %}<a class="chip-link" href="{{ cms_home_page.url }}">{% trans "CMS раздел" %}</a>{% endif %}
+        <a class="chip-link" href="{% url 'home' %}">{% trans "Открыть репозиторий" %}</a>
+      </div>
+    </section>
+
+    {% include 'cms/includes/streamfield.html' with stream_value=page.body %}
+
+    {% if more_announcements %}
+      <section class="stack-md">
+        <div class="home-section__head">
+          <div>
+            <div class="page-intro__eyebrow">{% trans "Далее" %}</div>
+            <h2>{% trans "Другие объявления" %}</h2>
+          </div>
+        </div>
+        <div class="cms-card-grid">
+          {% for announcement in more_announcements %}
+            <article class="card stack-xs cms-mini-card">
+              <div class="cms-meta-line">
+                <span>{{ announcement.published_at|date:"d.m.Y" }}</span>
+                {% if announcement.is_pinned %}<span class="status-badge status-badge--success">{% trans "Закреплено" %}</span>{% endif %}
+              </div>
+              <h3><a href="{{ announcement.url }}">{{ announcement.title }}</a></h3>
+              {% if announcement.summary_text %}<p class="muted">{{ announcement.summary_text }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </article>
+{% endblock %}

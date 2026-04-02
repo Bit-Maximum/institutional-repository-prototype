@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load static i18n wagtailcore_tags %}
+
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/ui/cms.css' %}">
+{% endblock %}
+
+{% block panel_class %}panel--cms{% endblock %}

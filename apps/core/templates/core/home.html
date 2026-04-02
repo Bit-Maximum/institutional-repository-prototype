@@ -74,6 +74,7 @@
               <div class="page-intro__eyebrow">{% trans "Объявления" %}</div>
               <h2>{% trans "Последние новости и публикации CMS" %}</h2>
             </div>
+            {% if cms_announcements_page %}<a class="chip-link" href="{{ cms_announcements_page.url }}">{% trans "Все объявления" %}</a>{% else %}<a class="chip-link" href="/pages/announcements/">{% trans "Все объявления" %}</a>{% endif %}
           </div>
           <ul class="list-reset stack-sm">
             {% for announcement in latest_announcements %}

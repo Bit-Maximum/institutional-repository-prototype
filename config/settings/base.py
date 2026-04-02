@@ -113,6 +113,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "apps.ui.context_processors.ui_context",
+                "apps.cms.context_processors.cms_context",
             ],
         },
     },
@@ -227,7 +228,7 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-WAGTAIL_SITE_NAME = "Institutional Repository"
+WAGTAIL_SITE_NAME = _("Институциональный репозиторий")
 WAGTAILADMIN_BASE_URL = env("WAGTAILADMIN_BASE_URL", "http://localhost:8000")
 
 UNFOLD = {
